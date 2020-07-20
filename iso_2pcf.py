@@ -1,5 +1,5 @@
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, cdist
 import time
 
@@ -25,10 +25,13 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_
     data = np.loadtxt(fname=data_location, delimiter=" ", usecols=(0,1,2))
     rand0 = np.loadtxt(fname=rand_location, delimiter=" ", usecols=(0,1,2))
         
+    if not data.shape == rand0.shape:
+        raise Exception("The data file and rand file do not have the same size")
+        
     start = time.perf_counter()
     DR = np.zeros(bins_number)
     for point in data:
-        distances = point-data
+        distances = point-rand0
         DR_temp, bins_DR = np.histogram(np.sqrt(distances[:,0]**2+distances[:,1]**2+distances[:,2]**2), bins=bins_number, range=(0, d_max))
         #DR_temp, bins_DR = np.histogram(np.sqrt(np.sum((point-rand0)**2,1)), bins=bins_number, range=(0, d_max))
         DR += DR_temp
@@ -50,12 +53,31 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_
     return DD, RR, DR, bins_DR
 
 #Landy-Szalay
-def estim_LS(DD, RR, DR):
+def LS_cf(DD, RR, DR):
+    """
+    Calculates the two dimentional Landy-Szalay correlation function estimator from the DD, RR and DR histograms.
+    args:
+        -DD: numpy array. Histogram with the data-data distances
+        -RR: numpy array. Histogram with the random-random distances
+        -DR: numpy array. Histogram with the random-data distances
+    return:
+        -LS: numpy array. Correlation function estimator
+    """
     return (DD - 2*DR + RR)/RR
     
 #Hamilton
-def estim_HM(DD, RR, DR):
+def HM_cf(DD, RR, DR):
+    """
+    Calculates the two dimentional Hamilton correlation function estimator from the DD, RR and DR histograms.
+    args:
+        -DD: numpy array. Histogram with the data-data distances
+        -RR: numpy array. Histogram with the random-random distances
+        -DR: numpy array. Histogram with the random-data distances
+    return:
+        -LS: numpy array. Correlation function estimator
+    """
     return (DD*RR/DR**2) - 1
+
 
 start = time.perf_counter()
 
@@ -66,5 +88,28 @@ DD, RR, DR, bins = pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_
 end = time.perf_counter()
 print(f'Took {end-start} seconds to calculate DD, RR, and DR histograms')
 
-LS = estim_LS(DD, RR, DR)
-HM = estim_HM(DD, RR, DR)
+LS = LS_cf(DD, RR, DR)
+HM = HM_cf(DD, RR, DR)
+
+plt.plot(bins[1:],LS,'--')
+plt.plot(bins[1:],LS,'bs',label="LS")
+
+plt.plot(bins[1:],HM,'r--')
+plt.plot(bins[1:],HM,'rs',label="HM")
+
+plt.ylim(-.1,.1)
+plt.ylabel('ξ(r)',fontsize=18)
+plt.xlabel("r [MPc]")
+plt.legend()
+plt.grid()
+plt.show()
+
+plt.plot(bins[1:],(bins[1:]**2)*LS,'--')
+plt.plot(bins[1:],(bins[1:]**2)*LS,'bs',label="LS")
+plt.plot(bins[1:],(bins[1:]**2)*HM,'r--')
+plt.plot(bins[1:],(bins[1:]**2)*HM,'rs',label="HM")
+plt.ylabel('$r^2 ξ(r)$')
+plt.xlabel("r [MPc]")
+plt.legend()
+plt.grid()
+plt.show()
