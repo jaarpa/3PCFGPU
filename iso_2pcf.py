@@ -24,17 +24,28 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_
     
     data = np.loadtxt(fname=data_location, delimiter=" ", usecols=(0,1,2))
     rand0 = np.loadtxt(fname=rand_location, delimiter=" ", usecols=(0,1,2))
+        
+    start = time.perf_counter()
+    DR = np.zeros(bins_number)
+    for point in data:
+        distances = point-data
+        DR_temp, bins_DR = np.histogram(np.sqrt(distances[:,0]**2+distances[:,1]**2+distances[:,2]**2), bins=bins_number, range=(0, d_max))
+        #DR_temp, bins_DR = np.histogram(np.sqrt(np.sum((point-rand0)**2,1)), bins=bins_number, range=(0, d_max))
+        DR += DR_temp
+    end = time.perf_counter()
+    print(f'{end-start} for the DR histogram')
 
+    start = time.perf_counter()
     DD, bins_DD = np.histogram(pdist(data), bins=bins_number, range=(0,d_max))
     DD *= 2
+    end = time.perf_counter()
+    print(f'{end-start} for the DD histogram')
 
+    start = time.perf_counter()
     RR, bins_RR = np.histogram(pdist(rand0), bins=bins_number, range=(0,d_max))
     RR *= 2
-    
-    DR, bins_DR = np.histogram(np.sqrt(np.sum((data[0]-rand0)**2,1)), bins=bins_number, range=(0, d_max))
-    for point in data[1:]:
-        DR_temp, bins_DR = np.histogram(np.sqrt(np.sum((point-rand0)**2,1)), bins=bins_number, range=(0, d_max))
-        DR += DR_temp
+    end = time.perf_counter()
+    print(f'{end-start} for the RR histogram')
         
     return DD, RR, DR, bins_DR
 
