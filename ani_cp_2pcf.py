@@ -56,12 +56,11 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='f
         DD_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         DD +=DD_temp
 
-        distance_vectors = points[1] - rand0[i:]
-        medium_point_vectors = 0.5*(points[1] + rand0[i:])-observation_point
-        #medium_point_vectors = normalize(medium_point_vectors)
+        medium_point_vectors = (0.5*(points[1]+rand0[i:])) - observation_point
+        distance_vectors = points[1]-rand0[i:]
         medium_point_vectors = (medium_point_vectors.T/np.sqrt((medium_point_vectors[:,0]**2)+(medium_point_vectors[:,1]**2)+(medium_point_vectors[:,2]**2))).T
-        r_ll = np.sum(np.multiply(distance_vectors,medium_point_vectors),1)
-        r_T = np.sqrt(np.sum(distance_vectors**2,1)-r_ll*2)
+        r_ll = np.sum(np.multiply(medium_point_vectors,distance_vectors),1)
+        r_T = np.sqrt(np.sum(distance_vectors**2,1) - r_ll**2)
         RR_temp, x_edges, y_edges = np.histogram2d(r_ll, r_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         RR += RR_temp
 
