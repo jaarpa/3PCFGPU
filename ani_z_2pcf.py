@@ -23,9 +23,9 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_
     
     """
     
+    #d_max = d_max**2
     data = np.loadtxt(fname=data_location, delimiter=" ", usecols=(0,1,2))
     rand0 = np.loadtxt(fname=rand_location, delimiter=" ", usecols=(0,1,2))
-    d_max = d_max**2
         
     if not data.shape == rand0.shape:
         raise Exception("The data file and rand file do not have the same size")
@@ -34,8 +34,8 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_
     DR = np.zeros((bins_number,bins_number))
     for point in data:
         distances = point-rand0
-        d_ll = distances[:,2]**2
-        d_T = np.sum(distances[:,:2]**2,1)
+        d_ll = distances[:,2]
+        d_T = np.sqrt(np.sum(distances[:,:2]**2,1))
         DR_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         #DR_temp, bins_DR = np.histogram(np.sqrt(np.sum((point-rand0)**2,1)), bins=bins_number, range=(0, d_max))
         DR += DR_temp
@@ -48,14 +48,14 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_
     for i, points in enumerate(zip(data,rand0),1):
         d_distances = points[0]-data[i:]
         #d_distances = np.array([d[0]-d[1] for d in list(combinations(data[:n],2))])
-        d_ll = d_distances[:,2]**2
-        d_T = np.sum(d_distances[:,:2]**2,1)
+        d_ll = d_distances[:,2]
+        d_T = np.sqrt(np.sum(d_distances[:,:2]**2,1))
         DD_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         DD += DD_temp
         
         r_distances = points[1]-rand0[i:]
         r_ll = r_distances[:,2]
-        r_T = np.sum(r_distances[:,:2]**2,1)
+        r_T = np.sqrt(np.sum(r_distances[:,:2]**2,1))
         RR_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         RR += RR_temp
     
@@ -106,6 +106,7 @@ print(f'Took {end-start} seconds to calculate DD, RR, and DR histograms')
 LS = LS_cf(DD, RR, DR)
 HM = HM_cf(DD, RR, DR)
 
+"""
 def imag(x,y,t,cmap):
     plt.figure(figsize=(6,6), dpi=100)
     plt.imshow(x,origin='lower',cmap=cmap)
@@ -132,29 +133,4 @@ sig = 1
 
 blur_OH = cv2.blur(LS,(p,p))
 imag(blur_OH,'Función de Correlación','$\epsilon(r)$',cmap='RdBu')
-
-
-"""
-#Plots LS and HM histograms
-plt.plot(bins[1:],LS,'--')
-plt.plot(bins[1:],LS,'bs',label="LS")
-plt.plot(bins[1:],HM,'r--')
-plt.plot(bins[1:],HM,'rs',label="HM")
-plt.ylim(-.1,.1)
-plt.ylabel('ξ(r)',fontsize=18)
-plt.xlabel("r [MPc]")
-plt.legend()
-plt.grid()
-plt.show()
-
-#Plots r**2*LS and r**2*HM histograms
-plt.plot(bins[1:],(bins[1:]**2)*LS,'--')
-plt.plot(bins[1:],(bins[1:]**2)*LS,'bs',label="LS")
-plt.plot(bins[1:],(bins[1:]**2)*HM,'r--')
-plt.plot(bins[1:],(bins[1:]**2)*HM,'rs',label="HM")
-plt.ylabel('$r^2 ξ(r)$')
-plt.xlabel("r [MPc]")
-plt.legend()
-plt.grid()
-plt.show()
 """
