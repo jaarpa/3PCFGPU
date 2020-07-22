@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import normalize
 import matplotlib as plt
+import time
 
 def pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', observation_point=np.array([0,0,0]), d_max=180.0, bins_number=30):
     """
@@ -31,6 +33,8 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='f
     for data_point in data:
         distance_vectors = data_point - rand0
         medium_point_vectors = 0.5*(distance_vectors)-observation_point
+        #normalize medium_point_vectors 
+        medium_point_vectors = normalize(medium_point_vectors)
         d_ll = np.sum(np.multiply(distance_vectors,medium_point_vectors),1)
         d_T = np.sqrt((distance_vectors[:,0]**2+distance_vectors[:,1]**2+distance_vectors[:,2]**2)-d_ll**2 )
         DR_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
@@ -44,13 +48,15 @@ def pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='f
     RR = np.zeros((bins_number,bins_number))
     for i, points in enumerate(zip(data,rand0),1):
         distance_vectors = points[0] - data[i:]
-        medium_point_vectors = 0.5*(distance_vectors_DD)-observation_point
+        medium_point_vectors = 0.5*(distance_vectors)-observation_point
+        medium_point_vectors = normalize(medium_point_vectors)
         d_ll = np.sum(np.multiply(distance_vectors,medium_point_vectors),1)
         d_T = np.sqrt((distance_vectors[:,0]**2+distance_vectors[:,1]**2+distance_vectors[:,2]**2)-d_ll**2 )
         DR_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
 
         distance_vectors = points[1] - rand0[i:]
         medium_point_vectors = 0.5*(distance_vectors)-observation_point
+        medium_point_vectors = normalize(medium_point_vectors)
         r_ll = np.sum(np.multiply(distance_vectors,medium_point_vectors),1)
         r_T =  np.sqrt((distance_vectors[:,0]**2+distance_vectors[:,1]**2+distance_vectors[:,2]**2)-r_ll**2 )
         RR_temp, x_edges, y_edges = np.histogram2d(r_ll, r_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
