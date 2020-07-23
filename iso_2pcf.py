@@ -4,7 +4,7 @@ from scipy.spatial.distance import pdist#, cdist
 import time
 
 
-def pcf2_iso_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_DATA/DATOS/rand0.dat', d_max=180.0, bins_number=30):
+def pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30):
     """
     Calculates the DD, RR, DR onedimentional histograms for the isotropic points given in the data and random text files. Both files must have the same number of points with three dimesions.
     
@@ -78,7 +78,7 @@ def HM_cf(DD, RR, DR):
     """
     return (DD*RR/DR**2) - 1
 
-
+"""
 start = time.perf_counter()
 
 #d_max = 180
@@ -113,3 +113,4 @@ plt.xlabel("r [MPc]")
 plt.legend()
 plt.grid()
 plt.show()
+"""

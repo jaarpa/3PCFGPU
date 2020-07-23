@@ -1,9 +1,9 @@
 import numpy as np
-from sklearn.preprocessing import normalize
+#from sklearn.preprocessing import normalize
 import matplotlib as plt
 import time
 
-def pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', observation_point=np.array([0,0,0]), d_max=180.0, bins_number=30):
+def pcf2_ani_cp_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', observation_point=np.array([0,0,0]), d_max=180.0, bins_number=30):
     """
     Calculates the DD, RR, DR bidimensional histograms for the anisotropic points given in the data and random text files and the point of observation.  Both files must have the same number of points with three dimesions.
     
@@ -98,14 +98,16 @@ def HM_cf(DD, RR, DR):
     """
     return (DD*RR/DR**2) - 1
 
+"""
 start = time.perf_counter()
 
 #d_max = 180
 #bins_number = 30
-DD, RR, DR, x_edges, y_edges = pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', observation_point=np.array([125,125,1000000]))
+DD, RR, DR, x_edges, y_edges = pcf2_ani_cp_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', observation_point=np.array([125,125,1000000]))
 
 end = time.perf_counter()
 print(f'Took {end-start} seconds to calculate DD, RR, and DR histograms')
 
 LS = LS_cf(DD, RR, DR)
 HM = HM_cf(DD, RR, DR)
+"""
