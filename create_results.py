@@ -18,7 +18,9 @@ data_files.sort()
 files = zip(data_files,random_files)
 
 for data, rand in files:
+    print(f'started with the file {data}')
     #isotropic
+    print('started isotropic calculations')
     DD, RR, DR, bins = pcf2_iso_histo(data_location=files_dir+data,rand_location=files_dir+rand,d_max=180.0, bins_number=30)
     
     report_name = data[:-4] + "_DD_isotropic.dat"
@@ -29,8 +31,10 @@ for data, rand in files:
     
     report_name = data[:-4] + "_DR_isotropic.dat"
     np.savetxt(report_name, DR)
+    print('finished isotropic calculations')
 
     #anisotropic z axis
+    print('started anisotropic calculations with z axis as reference')
     DD, RR, DR, x_edges, y_edges = pcf2_ani_z_histo(data_location=files_dir+data,rand_location=files_dir+rand,d_max=180.0, bins_number=30)
     
     report_name = data[:-4] + "_DD_anisotropic_z_axis.dat"
@@ -41,8 +45,10 @@ for data, rand in files:
     
     report_name = data[:-4] + "_DR_anisotropic_z_axis.dat"
     np.savetxt(report_name, DR)
+    print('finished anisotropic calculations with z axis as reference')
 
     #anisotropic observation point
+    print('started anisotropic calculations with [125,125,1000000] observarion point')
     DD, RR, DR, x_edges, y_edges= pcf2_ani_cp_histo(data_location=files_dir+data,rand_location=files_dir+rand, observation_point=np.array([125,125,1000000]),d_max=180.0, bins_number=30)
     
     report_name = data[:-4] + "_DD_anisotropic_obs_point.dat"
@@ -53,3 +59,4 @@ for data, rand in files:
     
     report_name = data[:-4] + "_DR_anisotropic_obs_point.dat"
     np.savetxt(report_name, DR)
+    print('finished anisotropic calculations with [125,125,1000000] observarion point')
