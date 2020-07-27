@@ -176,8 +176,6 @@ def write_into_file(filenme,data):
             # with 2 decimal places.  
             np.savetxt(outfile, data_slice)
 
-
-
 #Unsimetrized histograms. Combinations without repetition.
 start = time.perf_counter()
 RRR, DDD, DDR, RRD, edges = pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30)
@@ -195,6 +193,8 @@ RRD = simetrize_3dhistogram(RRD)
 end = time.perf_counter()
 print(f'Finished simetrization of all the histograms in {end-start} s')
 
+#To load up the files into a python interpreter use
+#np.loadtxt('filename').reshape((30,30,30))
 write_into_file('500_points_RRD.dat', RRD)
 write_into_file('500_points_RRR.dat', RRR)
 write_into_file('500_points_DDD.dat', DDD)
