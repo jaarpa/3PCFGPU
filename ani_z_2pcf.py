@@ -34,7 +34,7 @@ def pcf2_ani_z_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location=
     DR = np.zeros((bins_number,bins_number))
     for point in data:
         distances = point-rand0
-        d_ll = distances[:,2]
+        d_ll = np.abs(distances[:,2])
         d_T = np.sqrt(np.sum(distances[:,:2]**2,1))
         DR_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         #DR_temp, bins_DR = np.histogram(np.sqrt(np.sum((point-rand0)**2,1)), bins=bins_number, range=(0, d_max))
@@ -48,13 +48,13 @@ def pcf2_ani_z_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location=
     for i, points in enumerate(zip(data,rand0),1):
         d_distances = points[0]-data[i:]
         #d_distances = np.array([d[0]-d[1] for d in list(combinations(data[:n],2))])
-        d_ll = d_distances[:,2]
+        d_ll = np.abs(d_distances[:,2])
         d_T = np.sqrt(np.sum(d_distances[:,:2]**2,1))
         DD_temp, x_edges, y_edges = np.histogram2d(d_ll, d_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         DD += DD_temp
         
         r_distances = points[1]-rand0[i:]
-        r_ll = r_distances[:,2]
+        r_ll = np.abs(r_distances[:,2])
         r_T = np.sqrt(np.sum(r_distances[:,:2]**2,1))
         RR_temp, x_edges, y_edges = np.histogram2d(r_ll, r_T, bins=bins_number, range=[[0, d_max],[0, d_max]])
         RR += RR_temp
