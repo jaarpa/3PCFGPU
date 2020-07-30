@@ -5,7 +5,7 @@ from ani_cp_2pcf import pcf2_ani_cp_histo
 from ani_z_2pcf import pcf2_ani_z_histo
 from iso_2pcf import pcf2_iso_histo
 
-files_dir = os.path.dirname(os.path.realpath(__file__))+'/fake_DATA/DATOS/'
+files_dir = os.path.dirname(os.path.realpath(__file__))+'../fake_DATA/DATOS/'
 files = os.listdir(files_dir)
 
 #Assuming all the files state whether it is a file of random or data points.

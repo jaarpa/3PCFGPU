@@ -5,7 +5,7 @@ from itertools import combinations
 import time
 
 
-def pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30):
+def pcf2_iso_histo(data_location='../fake_DATA/DATOS/data_500.dat',rand_location='../fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30):
     """
     Calculates the DDD, RRR, RRD, DDR multidimesional histograms for the isotropic points given in the data and random text files. Both files must have the same number of points with three dimesions.
     
@@ -179,7 +179,7 @@ def write_into_file(filenme,data):
 """
 #Unsimetrized histograms. Combinations without repetition.
 start = time.perf_counter()
-RRR, DDD, DDR, RRD, edges = pcf2_iso_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30)
+RRR, DDD, DDR, RRD, edges = pcf2_iso_histo(data_location='../fake_DATA/DATOS/data_500.dat',rand_location='../fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30)
 end = time.perf_counter()
 print(f'Finished the all the unsimetrized histograms in {end-start} s')
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import time
 
 
-def pcf2_ani_z_histo(data_location='fake_DATA/DATOS/data_500.dat',rand_location='fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30):
+def pcf2_ani_z_histo(data_location='../fake_DATA/DATOS/data_500.dat',rand_location='../fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30):
     """
     Calculates the DD, RR, DR bidimensional histograms for the anisotropic points given in the data and random text files.  Both files must have the same number of points with three dimesions.
     
@@ -99,7 +99,7 @@ start = time.perf_counter()
 
 #d_max = 180
 #bins_number = 30
-DD, RR, DR, x_edges, y_edges = pcf2_ani_z_histo(data_location='fake_DATA/DATOS/data.dat',rand_location='fake_DATA/DATOS/rand0.dat')
+DD, RR, DR, x_edges, y_edges = pcf2_ani_z_histo(data_location='../fake_DATA/DATOS/data.dat',rand_location='../fake_DATA/DATOS/rand0.dat')
 
 end = time.perf_counter()
 print(f'Took {end-start} seconds to calculate DD, RR, and DR histograms')
