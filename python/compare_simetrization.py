@@ -11,9 +11,9 @@ def simetrize_3dhistogram(histogram):
     """
     N =len(histogram)
     n_histogram = np.zeros((N,N,N))
-    for i in range(N-2):
-        for j in range(i+1,N-1):
-            for k in range(j+1, N):
+    for i in range(N):
+        for j in range(i,N):
+            for k in range(j, N):
                 S = histogram[i][j][k] + histogram[k][i][j] + histogram[j][k][i] + histogram[i][k][j] + histogram[j][i][k] + histogram[k][j][i]
                 n_histogram[i][j][k] = S
                 n_histogram[k][i][j] = S
@@ -54,10 +54,6 @@ XYZ, edges = np.histogramdd(fake_sample, bins=(bins_number,bins_number,bins_numb
 sim2_XYZ = simetrize_3dhistogram(XYZ) #simetrización externa
 
 sim1_XYZ = simetrizeinteral_3dhistogram(fake_sample,d_max,bins_number) #simetrización interna
-
-
-print(sim1_XYZ)
-print(sim2_XYZ)
 
 sim1_fails = []
 sim2_fails = []

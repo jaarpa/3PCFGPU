@@ -149,13 +149,19 @@ def simetrize_3dhistogram(histogram):
             -simetrized: histogram. The same histogram but simetrized, where any combination of its indices has the very same value.
     """
     N =len(histogram)
-    for i in range(N-2):
-        for j in range(i+1,N-1):
-            for k in range(j+1, N):
+    n_histogram = np.zeros((N,N,N))
+    for i in range(N):
+        for j in range(i,N):
+            for k in range(j, N):
                 S = histogram[i][j][k] + histogram[k][i][j] + histogram[j][k][i] + histogram[i][k][j] + histogram[j][i][k] + histogram[k][j][i]
-                [histogram[i][j][k], histogram[k][i][j], histogram[j][k][i], histogram[i][k][j], histogram[j][i][k], histogram[k][j][i]] = [S,S,S,S,S,S]
+                n_histogram[i][j][k] = S
+                n_histogram[k][i][j] = S
+                n_histogram[j][k][i] = S
+                n_histogram[i][k][j] = S
+                n_histogram[j][i][k] = S
+                n_histogram[k][j][i] = S
                 #a[i][j][k], a[k][i][j], a[j][k][i], a[i][k][j], a[j][i][k], a[k][j][i]
-    return histogram
+    return n_histogram
 
 def write_into_file(filenme,data):
     # Write the array to disk
@@ -176,7 +182,6 @@ def write_into_file(filenme,data):
             # with 2 decimal places.  
             np.savetxt(outfile, data_slice)
 
-"""
 #Unsimetrized histograms. Combinations without repetition.
 start = time.perf_counter()
 RRR, DDD, DDR, RRD, edges = pcf2_iso_histo(data_location='../../fake_DATA/DATOS/data_500.dat',rand_location='../../fake_DATA/DATOS/rand0_500.dat', d_max=180.0, bins_number=30)
@@ -200,4 +205,3 @@ write_into_file('500_points_RRD.dat', RRD)
 write_into_file('500_points_RRR.dat', RRR)
 write_into_file('500_points_DDD.dat', DDD)
 write_into_file('500_points_DDR.dat', DDR)
-"""
