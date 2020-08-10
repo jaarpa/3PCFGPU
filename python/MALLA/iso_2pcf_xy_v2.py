@@ -31,16 +31,25 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=5):
     node_labels = np.array([((i%n_nodes)*dnodes,int(i/n_nodes)*dnodes) for i in range(n_nodes**2)])
 
     calc_internodal_distance = []
+    calc_internodalDR_distance = []
     for i in range(n_nodes**2):
-        node_distance_vectors = np.abs(node_labels[i]-node_labels[i+1:]) #distance betweem every lowest left most corner of the nodes
-        minimum_node_distance_vectors = node_distance_vectors-(node_distance_vectors>=1e-5)*dnodes #corrects depending on the orientation
+        #node_distance_vectors = np.abs(node_labels[i]-node_labels[i+1:]) #distance betweem every lowest left most corner of the nodes
+        #minimum_node_distance_vectors = node_distance_vectors-(node_distance_vectors>=1e-5)*dnodes #corrects depending on the orientation
+        ##array which has True if the distance between the node i is smaller than the maximum distance
+        #nodedistances_es_small = (np.sqrt(minimum_node_distance_vectors[:,0]**2+minimum_node_distance_vectors[:,1]**2))<d_max
+        #calc_internodal_distance += [[idx for idx,j in enumerate(nodedistances_es_small,i+1) if j]]
+        
+        nodeDR_distance_vectors = np.abs(node_labels[i]-node_labels) #distance betweem every lowest left most corner of the nodes
+        minimum_nodeDR_distance_vectors = nodeDR_distance_vectors-(nodeDR_distance_vectors>=1e-5)*dnodes #corrects depending on the orientation
         #array which has True if the distance between the node i is smaller than the maximum distance
-        nodedistances_es_small = (np.sqrt(minimum_node_distance_vectors[:,0]**2+minimum_node_distance_vectors[:,1]**2))<d_max
-        calc_internodal_distance += [[idx for idx,j in enumerate(nodedistances_es_small,i+1) if j]]
+        nodeDRdistances_es_small = (np.sqrt(minimum_nodeDR_distance_vectors[:,0]**2+minimum_nodeDR_distance_vectors[:,1]**2))<d_max
+        calc_internodal_distance += [[idx for idx,j in enumerate(nodeDRdistances_es_small[i+1:],i+1) if j]]
+        calc_internodalDR_distance += [[idx for idx,j in enumerate(nodeDRdistances_es_small) if j]]
 
     #List of lists, with the first index coincides with the pivot node index, and the list in that index contains the indices of the non-empty nodes nearer than 180
     internodal_DD = [[idx for idx in pivot if classified_data_points[idx]] for pivot in calc_internodal_distance]
     internodal_RR = [[idx for idx in pivot if classified_random_points[idx]] for pivot in calc_internodal_distance]
+    internodal_DR = [[idx for idx in pivot if classified_data_points[idx]] for pivot in calc_internodalDR_distance]    
 
     nonempty_data_nodes = [idx for idx, node in enumerate(classified_data_points) if node]
     nonempty_rand_nodes = [idx for idx, node in enumerate(classified_random_points) if node]
@@ -70,9 +79,9 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=5):
 
     start = time.perf_counter()
     for i in nonempty_rand_nodes:
-        if classified_data_points[i]:
-            DR_distances += [pdist(np.array(classified_random_points[i]))]
-        for j in internodal_DD[i]:
+        #if classified_data_points[i]:
+            #DR_distances += [pdist(np.array(classified_random_points[i]))]
+        for j in internodal_DR[i]:
             DR_distances += [cdist(classified_random_points[i],classified_data_points[j]).reshape(-1)]
     end = time.perf_counter()
     print(f'Took {end-start} s for DR distances')
@@ -130,14 +139,10 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=5):
     DD_distances = np.concatenate(DD_distances)
     RR_distances = np.concatenate(RR_distances)
     DR_distances = np.concatenate(DR_distances)
-    DR_distances_t = cdist(data,rand).reshape(-1)
 
     DD, b = np.histogram(DD_distances, bins=bins_number, range=(0, d_max))
     RR, b = np.histogram(RR_distances, bins=bins_number, range=(0, d_max))
     DR, b = np.histogram(DR_distances, bins=bins_number, range=(0, d_max))
-    DR_t, b = np.histogram(DR_distances_t, bins=bins_number, range=(0, d_max))
-
-    print(DR_t==DR)
 
     DD *= 2
     RR *= 2
@@ -154,8 +159,11 @@ data = np.loadtxt(fname=os.path.dirname(os.path.realpath(__file__))+data_locatio
 rand = np.loadtxt(fname=os.path.dirname(os.path.realpath(__file__))+rand_location, delimiter=" ", usecols=(0,1))
 
 start = time.perf_counter()
+start_process = time.process_time()
 DD, RR, DR, edges = histo(data, rand)
 end = time.perf_counter()
+end_process = time.process_time()
+print(f'Total process time {end_process-start_process}')
 print(f'Total time {end-start}')
 
 DD_BF = np.loadtxt('DD_BF.dat')
@@ -165,7 +173,7 @@ DR_BF = np.loadtxt('DR_BF.dat')
 print (f'is DD correct? {DD==DD_BF}')
 print (f'is RR correct? {RR==RR_BF}')
 print (f'is DR correct? {DR==DR_BF}')
-print (f'is DR smaller than from BF? {DR<DR_BF}')
+#print (f'is DR smaller than from BF? {DR<DR_BF}')
 
 np.savetxt('DD_malla.dat', DD)
 np.savetxt('RR_malla.dat', RR)
