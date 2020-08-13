@@ -5,7 +5,7 @@ import os
 
 #Total time to enhance: 0.334310835999986
 
-def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=5):
+def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
     """
     """
     
