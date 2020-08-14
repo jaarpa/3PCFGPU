@@ -31,6 +31,7 @@ void read_file(string file_loc, Punto *data){
             n_line++;
         }
     }
+    //cout << "Succesfully readed " << file_loc << endl;
 }
 
 void guardar_Histograma(string nombre,int dim, long int*histograma){
@@ -113,7 +114,7 @@ int main(int argc, char **argv){
     
     float d;
     //Hace el conteo para el histograma DD
-    
+    //cout << "Todo listo para hacer los histogramas" << endl;
     for (int i=0; i<N-1; i++){
         for (int j=i+1; j<N; j++){
             d = distance(data[i],data[j]);
