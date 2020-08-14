@@ -54,7 +54,7 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
     nonempty_data_nodes = [idx for idx, node in enumerate(classified_data_points) if node]
     nonempty_rand_nodes = [idx for idx, node in enumerate(classified_random_points) if node]
     end = time.perf_counter()
-    print(f'{end-start}s for knowing what nodes to calculate')
+    print('{}s for knowing what nodes to calculate'.format(end-start))
 
     DD_distances = []
     RR_distances = []
@@ -67,7 +67,7 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
         for j in internodal_DD[i]:
             DD_distances += [cdist(classified_data_points[i],classified_data_points[j]).reshape(-1)]
     end = time.perf_counter()
-    print(f'Took {end-start} s for DD distances')
+    print('Took {} s for DD distances'.format(end-start))
 
     start = time.perf_counter()
     for i in nonempty_rand_nodes:
@@ -75,7 +75,7 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
         for j in internodal_RR[i]:
             RR_distances += [cdist(classified_random_points[i],classified_random_points[j]).reshape(-1)]
     end = time.perf_counter()
-    print(f'Took {end-start} s for RR distances')
+    print('Took {} s for RR distances'.format(end-start))
 
     start = time.perf_counter()
     for i in nonempty_rand_nodes:
@@ -84,7 +84,7 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
         for j in internodal_DR[i]:
             DR_distances += [cdist(classified_random_points[i],classified_data_points[j]).reshape(-1)]
     end = time.perf_counter()
-    print(f'Took {end-start} s for DR distances')
+    print('Took {} s for DR distances'.format(end-start))
 
     """
     t_interDDnodal = 0
@@ -163,16 +163,16 @@ start_process = time.process_time()
 DD, RR, DR, edges = histo(data, rand)
 end = time.perf_counter()
 end_process = time.process_time()
-print(f'Total process time {end_process-start_process}')
-print(f'Total time {end-start}')
+print('Total process time {}'.format(end_process-start_process))
+print('Total time {}'.format(end-start))
 
 DD_BF = np.loadtxt('DD_BF.dat')
 RR_BF = np.loadtxt('RR_BF.dat')
 DR_BF = np.loadtxt('DR_BF.dat')
 
-print (f'is DD correct? {DD==DD_BF}')
-print (f'is RR correct? {RR==RR_BF}')
-print (f'is DR correct? {DR==DR_BF}')
+#print (f'is DD correct? {DD==DD_BF}')
+#print (f'is RR correct? {RR==RR_BF}')
+#print (f'is DR correct? {DR==DR_BF}')
 #print (f'is DR smaller than from BF? {DR<DR_BF}')
 
 np.savetxt('DD_malla.dat', DD)
