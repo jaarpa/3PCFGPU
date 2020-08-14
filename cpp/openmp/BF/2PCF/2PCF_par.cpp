@@ -78,9 +78,9 @@ int main(int argc, char **argv){
         int ID = omp_get_thread_num();
         string file = argv[ID+1];
         file.insert(0,mypathto_files);
-        
-        cout << "Number of threads to read file: " << omp_get_num_threads() << endl;
+        #pragma omp single
         if (ID==0) read_file(file,data);
+        #pragma omp single
         if (ID==1) read_file(file,rand);
     }
     
