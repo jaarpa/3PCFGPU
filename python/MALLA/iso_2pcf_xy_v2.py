@@ -113,12 +113,12 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
             RR_distances += [pdist(np.array(random_node))] #Calcula las distancias de los puntos dentro del nodo 
             
             s_start=time.perf_counter() 
-            for j, calculate in enumerate(nodedistances_es_small, i+1): #Para cada nodo (indice de nodo, si el nodo está a menos de 180 True)
-                if calculate: #Si el nodo con índice j está a menos de 180
-                    if classified_random_points[j]: #Y el nodo random con índice j no está vacío
+            for j, calculate in enumerate(nodedistances_es_small, i+1): #Para cada nodo (indice de nodo, si el nodo esta a menos de 180 True)
+                if calculate: #Si el nodo con indice j esta a menos de 180
+                    if classified_random_points[j]: #Y el nodo random con indice j no esta vacio
                         RR_distances += [cdist(random_node,classified_random_points[j]).reshape(-1)] #Agrega las distancias de los puntos en el nodo random pivote a los puntos en el nodo random [j]
 
-                    if classified_data_points[j]: # Y el nodo data con índce j no está vacío
+                    if classified_data_points[j]: # Y el nodo data con indce j no esta vacio
                         DR_distances += [cdist(random_node,classified_data_points[j]).reshape(-1)] #Agrega las distancias entre los puntos del nodo random pivote a los puntos del nodo data [j]
 
             s_end=time.perf_counter()
