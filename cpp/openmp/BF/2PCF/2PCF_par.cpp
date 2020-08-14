@@ -61,6 +61,9 @@ Parameters:
 5 Distancia maxima
 */
 int main(int argc, char **argv){
+    
+    double tot_start = omp_get_wtime();
+    
     string mypathto_files = "../../../../fake_DATA/DATOS/";
     
     unsigned int N = stoi(argv[3]), bins=stoi(argv[4]);
@@ -175,6 +178,9 @@ int main(int argc, char **argv){
     guardar_Histograma("DD_par.dat", bins, DD);
     guardar_Histograma("RR_par.dat", bins, RR);
     guardar_Histograma("DR_par.dat", bins, DR);
+    
+    double tot_end = omp_get_wtime();
+    cout << tot_start-tot_end << endl;
     
     return 0;
 }
