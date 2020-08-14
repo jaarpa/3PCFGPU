@@ -33,7 +33,7 @@ void read_file(string file_loc, Punto *data){
     }
 }
 
-void guardar_Histograma(string nombre,int dim, float*histograma){
+void guardar_Histograma(string nombre,int dim, long int*histograma){
     ofstream archivo;
     archivo.open(nombre.c_str(),ios::out | ios::binary);
     if (archivo.fail()){
@@ -52,68 +52,6 @@ float distance(Punto p1, Punto p2){
     return sqrt(x*x + y*y + z*z);
 }
 
-/*
-void histogramasPuros(float *DD, float *RR, flat){
-    int i,j, pos;
-    float dd, rr, ds = (float)(num_bins), aux;
-    ds /= d_max;
-    printf("\n -- ds = %f -- \n", ds);
-    for (i = 0; i < num_puntos-1; i++)
-    {
-        for (j = i+1; j < num_puntos; j++)
-        {
-            // Metodo aprox
-            //aux = distancia(data[i].x - data[j].x, data[i].y - data[j].y);
-            //dd = distancia(aux, data[i].z - data[j].z);
-            //aux = distancia(rand[i].x - rand[j].x, rand[i].y - rand[j].y);
-            //rr = distancia(aux, rand[i].z - rand[j].z);
-
-            // Distancia euclidea
-            //dd = dist(data[i].x-data[j].x, data[i].y - data[j].y, data[i].z - data[j].z);
-            //rr = dist(rand[i].x-rand[j].x, rand[i].y - rand[j].y, rand[i].z - rand[j].z);
-
-            //2D
-            dd = euclidean_distance2D(data[i].x - data[j].x, data[i].y - data[j].y);
-            rr = euclidean_distance2D(rand[i].x - rand[j].x, rand[i].y - rand[j].y);
-            if (dd < d_max)
-            {
-                pos = (int)(dd*ds);
-                DD[pos] += 2;
-            }
-            if (rr < d_max)
-            {
-                pos = (int)(rr*ds);
-                RR[pos] += 2;
-            }   
-        }
-    }
-}
-void histogramasMixtos(float *DR){
-    int i,j,pos;
-    float dr, s, aux;
-    s = (float)(num_bins)/d_max;
-    for (i = 0; i < num_puntos; i++)
-    {
-        for (j = 0; j < num_puntos; j++)
-        {
-            // Método aprox
-            //aux = distancia(data[i].x - rand[j].x, data[i].y - rand[j].y);
-            //dr = distancia(aux, data[i].z - rand[j].z);
-
-            // Distancia euclidea
-           // dr = dist(data[i].x - rand[j].x, data[i].y - rand[j].y, data[i].z - rand[j].z);
-
-           //2D
-           dr = euclidean_distance2D(data[i].x - rand[j].x, data[i].y - rand[j].y);
-            if (dr < d_max)
-            {
-                pos = (int)(dr*s);
-                DR[pos] += 1;
-            }
-        }
-    }
-}
-*/
 
 /*
 Parameters:
@@ -163,10 +101,10 @@ int main(int argc, char **argv){
     */
 
     // Crea los histogramas
-    float *DD, *DR, *RR;
-    DD = new float[bins];
-    DR = new float[bins];
-    RR = new float[bins];
+    long int *DD, *DR, *RR;
+    DD = new long int[bins];
+    DR = new long int[bins];
+    RR = new long int[bins];
     //Inicializa en 0
     for (int i=0; i<bins; i++){
         DD[i] = 0.0, RR[i] = 0.0, DR[i] = 0.0;     

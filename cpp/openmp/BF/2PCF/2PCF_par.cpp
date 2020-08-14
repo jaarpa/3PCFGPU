@@ -33,7 +33,7 @@ void read_file(string file_loc, Punto *data){
     }
 }
 
-void guardar_Histograma(string nombre,int dim, int*histograma){
+void guardar_Histograma(string nombre,int dim, long int*histograma){
     ofstream archivo;
     archivo.open(nombre.c_str(),ios::out | ios::binary);
     if (archivo.fail()){
@@ -105,12 +105,12 @@ int main(int argc, char **argv){
     */
 
     // Crea los histogramas
-    int *DD, *DR, *RR;
-    DD = new int[bins];
+    long int *DD, *DR, *RR;
+    DD = new long int[bins];
     omp_lock_t DD_lock[bins];
-    DR = new int[bins];
+    DR = new long int[bins];
     omp_lock_t DR_lock[bins];
-    RR = new int[bins];
+    RR = new long int[bins];
     omp_lock_t RR_lock[bins];
     
     //omp_init_lock()
