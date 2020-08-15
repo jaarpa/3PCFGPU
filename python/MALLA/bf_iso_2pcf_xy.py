@@ -53,7 +53,7 @@ def pcf2_iso_histo(data_location='../../fake_DATA/DATOS/data_500.dat',rand_locat
 
 start = time.perf_counter()
 
-DD, RR, DR, bins_DR = pcf2_iso_histo()
+DD, RR, DR, bins_DR = pcf2_iso_histo(data_location='../../fake_DATA/DATOS/data.dat',rand_location ='../../fake_DATA/DATOS/rand0.dat')
 
 end = time.perf_counter()
 print(f'total time: {end-start}')
