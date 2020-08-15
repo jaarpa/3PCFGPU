@@ -5,7 +5,7 @@ import os
 
 #Total time to enhance: 0.334310835999986
 
-def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
+def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=10):
     """
     """
     
@@ -152,8 +152,8 @@ def histo(data, rand, d_max=180.0, bins_number=30, n_nodes=2):
 
 
 
-data_location='/../../fake_DATA/DATOS/data_500.dat'
-rand_location='/../../fake_DATA/DATOS/rand0_500.dat'
+data_location='/../../fake_DATA/DATOS/data.dat'
+rand_location='/../../fake_DATA/DATOS/rand0.dat'
 
 data = np.loadtxt(fname=os.path.dirname(os.path.realpath(__file__))+data_location, delimiter=" ", usecols=(0,1))
 rand = np.loadtxt(fname=os.path.dirname(os.path.realpath(__file__))+rand_location, delimiter=" ", usecols=(0,1))
@@ -170,10 +170,10 @@ DD_BF = np.loadtxt('DD_BF.dat')
 RR_BF = np.loadtxt('RR_BF.dat')
 DR_BF = np.loadtxt('DR_BF.dat')
 
-#print (f'is DD correct? {DD==DD_BF}')
-#print (f'is RR correct? {RR==RR_BF}')
-#print (f'is DR correct? {DR==DR_BF}')
-#print (f'is DR smaller than from BF? {DR<DR_BF}')
+print (f'is DD correct? {DD==DD_BF}')
+print (f'is RR correct? {RR==RR_BF}')
+print (f'is DR correct? {DR==DR_BF}')
+print (f'is DR smaller than from BF? {DR<DR_BF}')
 
 np.savetxt('DD_malla.dat', DD)
 np.savetxt('RR_malla.dat', RR)
