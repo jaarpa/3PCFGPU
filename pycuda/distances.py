@@ -51,7 +51,7 @@ __global__ void XX(float *dest, float *a){
    d = sqrt(pow(a[p_x] - a[x],2)+pow(a[p_y]-a[y],2) + pow(a[p_z]-a[z],2));
       if (d<=180){
          bin = (int) (d/6.0);
-         atomicAdd(&dest[bin],1);
+         atomicAdd(&dest[bin],2);
       }
    }
 
