@@ -82,8 +82,8 @@ dest = np.zeros_like(data[:30,0])
 start = time.perf_counter()
 XX(drv.Out(dest), drv.In(rand), block=(500,1,1), grid = (500,1))
 end = time.perf_counter()
-print(f'DD {end-start}s in GPU')
-np.savetxt('DD.dat', dest)
+print(f'RR {end-start}s in GPU')
+np.savetxt('RR.dat', dest)
 
 
 start = time.perf_counter()
