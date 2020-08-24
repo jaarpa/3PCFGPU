@@ -10,44 +10,95 @@ import time
 mod = SourceModule("""
 #include <stdio.h>
 #include <math.h>
-__global__ void multiply_them(float *dest, float *a, float *b)
+__global__ void XY(float *dest, float *a, float *b)
 {
    int id = threadIdx.x;
    int x = id*3;
    int y = x+1;
    int z = y+1;
 
-   dest[id] = sqrt(pow(a[x] - b[x],2)+pow(a[y]-b[y],2) + pow(a[z]-b[z],2));
+   int p_id = blockIdx.x;
+   int p_x = p_id*3;
+   int p_y = p_x+1;
+   int p_z = p_y+1;
 
-   //dest[x] = sqrt(pow(a[x] - b[x],2)+pow(a[y]-b[y],2) + pow(a[z]-b[z],2));
+   float d;
+   //float histo[30];
+   int bin;
+   d = sqrt(pow(a[p_x] - b[x],2)+pow(a[p_y]-b[y],2) + pow(a[p_z]-b[z],2));
+   if (d<=180){
+      bin = (int) (d/6.0);
+      atomicAdd(&dest[bin],1);
+   }
    //printf("I am %d.%d\\n", blockIdx.x, blockIdx.y);
+}
+__global__ void XX(float *dest, float *a){
+   int p_id = blockIdx.x;
+   int p_x = p_id*3;
+   int p_y = p_x+1;
+   int p_z = p_y+1;
+
+   float d;
+   int bin;
+
+   int id = threadIdx.x;
+   int x = id*3;
+   int y = x+1;
+   int z = y+1;
+
+   if (p_id<=id){
+   d = sqrt(pow(a[p_x] - a[x],2)+pow(a[p_y]-a[y],2) + pow(a[p_z]-a[z],2));
+      if (d<=180){
+         bin = (int) (d/6.0);
+         atomicAdd(&dest[bin],2);
+      }
+   }
+
 }
 """)
 
-multiply_them = mod.get_function("multiply_them")
+XY = mod.get_function("XY")
+XX = mod.get_function("XX")
 
 data = np.loadtxt(fname='../fake_DATA/DATOS/data_500.dat', delimiter=" ", usecols=(0,1,2)).astype(np.float32)
 rand = np.loadtxt(fname='../fake_DATA/DATOS/rand0_500.dat', delimiter=" ", usecols=(0,1,2)).astype(np.float32)
 
-dest = np.zeros_like(data[:,0])
-
-N = len(data)
-
+t = 0.0
+dest = np.zeros_like(data[:30,0])
 start = time.perf_counter()
-multiply_them(
-        drv.Out(dest), drv.In(data), drv.In(rand),
-        block=(500,1,1), grid = (500,1))
+XY(drv.Out(dest), drv.In(data), drv.In(rand), block=(500,1,1), grid=(500,1))
 end = time.perf_counter()
-print(f'{end-start}s in GPU')
+print(f'DR {end-start}s in GPU')
+t+=(end-start)
+np.savetxt('DR.dat', dest)
 
-np.savetxt('dest.dat', dest)
+dest = np.zeros_like(data[:30,0])
+start = time.perf_counter()
+XX(drv.Out(dest), drv.In(data), block=(500,1,1), grid = (500,1))
+end = time.perf_counter()
+print(f'DD {end-start}s in GPU')
+np.savetxt('DD.dat', dest)
+t+=(end-start)
+
+dest = np.zeros_like(data[:30,0])
+start = time.perf_counter()
+XX(drv.Out(dest), drv.In(rand), block=(500,1,1), grid = (500,1))
+end = time.perf_counter()
+print(f'RR {end-start}s in GPU')
+np.savetxt('RR.dat', dest)
+t+=(end-start)
+
+print(f'Total time {t} s')
+
 
 start = time.perf_counter()
-test_r = np.sqrt(np.sum((data-rand)**2,axis=1))
+count = np.zeros(30)
+for i,point in enumerate(rand):
+    test_r = np.sqrt(np.sum((point-rand[i:])**2,axis=1))
+    t_count, edges = np.histogram(test_r, bins=30, range=(0,180))
+    count += t_count
+count*=2
 end = time.perf_counter()
 print(f'{end-start} s in CPU')
 
-#print(dest)
-#print(dest.shape)
-print(np.abs(dest-test_r)<=1e-4)
-#print(dest-np.linalg.norm((data-rand),axis=1))
+print(np.abs(dest-count)<=1e-10)
