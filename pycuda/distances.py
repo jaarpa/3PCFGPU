@@ -8,56 +8,55 @@ from pycuda.compiler import SourceModule
 import time
 
 mod = SourceModule("""
-#include <stdio.h>
-#include <math.h>
-__global__ void XY(float *dest, float *a, float *b, int *N)
-{
-   //threadIdx.x + blockIdx.x * blockDim.x;
-   int id = threadIdx.x + blockDim.x*blockIdx.x;
-   if (id < *N){
-   int x = id*3;
-   int y = x+1;
-   int z = y+1;
+    #include <stdio.h>
+    #include <math.h>
+    __global__ void XY(float *dest, float *a, float *b, int *N){
+        int p_id = threadIdx.x + blockDim.x*blockIdx.x;
+        int id = threadIdx.y + blockDim.y*blockIdx.y;
 
-   int p_id = blockIdx.y;
-   int p_x = p_id*3;
-   int p_y = p_x+1;
-   int p_z = p_y+1;
+        if (id < *N && p_id <*N){
+            int x = id*3;
+            int y = x+1;
+            int z = y+1;
 
-   float d;
-   //float histo[30];
-   int bin;
-   d = sqrt(pow(a[p_x] - b[x],2)+pow(a[p_y]-b[y],2) + pow(a[p_z]-b[z],2));
-   if (d<=180){
-      bin = (int) (d/6.0);
-      atomicAdd(&dest[bin],1);
-   }
-   //printf("I am %d.%d\\n", blockIdx.x, blockIdx.y);
-   }
-}
-__global__ void XX(float *dest, float *a){
-   int p_id = blockIdx.y;
-   int p_x = p_id*3;
-   int p_y = p_x+1;
-   int p_z = p_y+1;
+            int p_x = p_id*3;
+            int p_y = p_x+1;
+            int p_z = p_y+1;
+            float d;
+            //float histo[30];
+            int bin;
+            d = sqrt(pow(a[p_x] - b[x],2)+pow(a[p_y]-b[y],2) + pow(a[p_z]-b[z],2));
+            if (d<=180){
+                bin = (int) (d/6.0);
+                atomicAdd(&dest[bin],1);
+            }
+        }
+    }
 
-   float d;
-   int bin;
+    __global__ void XX(float *dest, float *a, int *N){
+        int p_id = threadIdx.x + blockDim.x*blockIdx.x;
+        int id = threadIdx.y + blockDim.y*blockIdx.y;
 
-   int id = threadIdx.x;
-   int x = id*3;
-   int y = x+1;
-   int z = y+1;
+        if (p_id<*N && id<*N && p_id<=id){
 
-   if (p_id<=id){
-   d = sqrt(pow(a[p_x] - a[x],2)+pow(a[p_y]-a[y],2) + pow(a[p_z]-a[z],2));
-      if (d<=180){
-         bin = (int) (d/6.0);
-         atomicAdd(&dest[bin],2);
-      }
-   }
+            int p_x = p_id*3;
+            int p_y = p_x+1;
+            int p_z = p_y+1;
 
-}
+            float d;
+            int bin;
+
+            int x = id*3;
+            int y = x+1;
+            int z = y+1;
+
+            d = sqrt(pow(a[p_x] - a[x],2)+pow(a[p_y]-a[y],2) + pow(a[p_z]-a[z],2));
+            if (d<=180){
+                bin = (int) (d/6.0);
+                atomicAdd(&dest[bin],2);
+            }
+        }
+    }
 """)
 
 XY = mod.get_function("XY")
@@ -68,33 +67,29 @@ rand = np.loadtxt(fname='../fake_DATA/DATOS/rand0_500.dat', delimiter=" ", useco
 
 N = len(data)
 
-if N<1024: #Use simpler parallelization
-    grid_dim = (1,N,1)
-    block_dim = (N,1,1)
-    N_even = N
-else:
-    N_even = N+(N%2 != 0) #Converts N into an even number.
-    temp = []
-    for i in range(1,11):
-        threads = 2**i
-        blocks = int(N_even/threads)+1
-        unused_cores = (blocks*threads)-N_even
-        temp += [(threads,blocks,unused_cores, blocks*unused_cores)]
-    temp.sort(key=lambda tup: tup[3])
-    threads, blocks, unused_cores, score = temp[0] #Gets the arrange of threads and blocks with the minimum number of blocks and unused cores
-    block_dim = (threads,1,1)
-    grid_dim = (blocks,blocks,1)
-#block dim has the number  of threads in the block. Threads*grid_dim[1] > number of points. Threads*grid_dim[0] = Pivot point id
+N_even = N+(N%2 != 0) #Converts N into an even number.
+temp = []
+
+for i in range(1,11):
+    threads = 2**i
+    blocks = int(N_even/threads)+1
+    unused_cores = (blocks*threads)-N_even
+    temp += [(threads,blocks,unused_cores, blocks*unused_cores)]
+
+temp.sort(key=lambda tup: tup[3])
+threads, blocks, unused_cores, score = temp[0] #Gets the arrange of threads and blocks with the minimum number of blocks and unused cores
+block_dim = (threads,threads,1)
+grid_dim = (blocks,blocks,1)
 
 #template_array = np.arange(30)
-N32 = np.int32(N)
+N = np.int32(N) #Number of points
 DD = np.zeros_like(data[:30,0]) #teplate_array)
 RR = np.zeros_like(data[:30,0]) #template_array)
 DR = np.zeros_like(data[:30,0]) #template_array)
 
 t=0
 start = time.perf_counter()
-XY(drv.Out(DR), drv.In(data), drv.In(rand), drv.In(N32), block=block_dim, grid=grid_dim)
+XY(drv.Out(DR), drv.In(data), drv.In(rand), drv.In(N), block=block_dim, grid=grid_dim)
 end = time.perf_counter()
 print(f'DR {end-start}s in GPU')
 t+=(end-start)
