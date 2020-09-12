@@ -14,6 +14,7 @@ struct Punto{
 };
 
 void read_file(string file_loc, Punto *data){
+    cout << file_loc << endl;
     string line; //No uso esta variable realmente, pero con eof() no se detenía el loop
     
     ifstream archivo(file_loc);
@@ -54,7 +55,8 @@ float distance(Punto p1, Punto p2){
     return sqrt(x*x + y*y + z*z);
 }
 
-__global__ void XY(float *dest, float *a, float *b, int *N){
+__global__
+void XY(float *dest, float *a, float *b, int *N){
     int p_id = threadIdx.x + blockDim.x*blockIdx.x;
     int id = threadIdx.y + blockDim.y*blockIdx.y;
 
@@ -77,7 +79,8 @@ __global__ void XY(float *dest, float *a, float *b, int *N){
     }
 }
 
-__global__ void XX(float *dest, float *a, int *N){
+__global__
+void XX(float *dest, float *a, int *N){
     int p_id = threadIdx.x + blockDim.x*blockIdx.x;
     int id = threadIdx.y + blockDim.y*blockIdx.y;
 
@@ -106,7 +109,7 @@ int main(int argc, char **argv){
         
     string data_loc = argv[1];
     string rand_loc = argv[2];
-    string mypathto_files = "../../../../fake_DATA/DATOS/";
+    string mypathto_files = "../fake_DATA/DATOS/";
     //This creates the full path to where I have my data files
     data_loc.insert(0,mypathto_files);
     rand_loc.insert(0,mypathto_files);
@@ -130,5 +133,8 @@ int main(int argc, char **argv){
         DD[i] = 0.0, RR[i] = 0.0, DR[i] = 0.0;     
     }
     double dbin = d_max/(double)bins;
+
+    cout << dbin << endl;
+    cout << argv[4] << endl;
     return 0;
 }
