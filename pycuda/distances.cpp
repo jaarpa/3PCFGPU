@@ -1,8 +1,9 @@
 #include<iostream>
 #include<fstream>
 #include<string.h>
-#include<cmath>
-#include<omp.h>
+
+#include <stdio.h>
+#include <math.h>
 
 using namespace std;
 
@@ -34,7 +35,7 @@ void read_file(string file_loc, Punto *data){
     //cout << "Succesfully readed " << file_loc << endl;
 }
 
-void guardar_Histograma(string nombre,int dim, unsigned int*histograma){
+void guardar_Histograma(string nombre,int dim, long int *histograma){
     ofstream archivo;
     archivo.open(nombre.c_str(),ios::out | ios::binary);
     if (archivo.fail()){
@@ -53,18 +54,56 @@ float distance(Punto p1, Punto p2){
     return sqrt(x*x + y*y + z*z);
 }
 
+__global__ void XY(float *dest, float *a, float *b, int *N){
+    int p_id = threadIdx.x + blockDim.x*blockIdx.x;
+    int id = threadIdx.y + blockDim.y*blockIdx.y;
 
-/*
-Parameters:
-1 Data file name
-2 Random file name
-3 Number of points
-4 Numero de bins
-5 Distancia maxima
-*/
+    if (id < *N && p_id <*N){
+        int x = id*3;
+        int y = x+1;
+        int z = y+1;
+
+        int p_x = p_id*3;
+        int p_y = p_x+1;
+        int p_z = p_y+1;
+        float d;
+        //float histo[30];
+        int bin;
+        d = sqrt(pow(a[p_x] - b[x],2)+pow(a[p_y]-b[y],2) + pow(a[p_z]-b[z],2));
+        if (d<=180){
+            bin = (int) (d/6.0);
+            atomicAdd(&dest[bin],1);
+        }
+    }
+}
+
+__global__ void XX(float *dest, float *a, int *N){
+    int p_id = threadIdx.x + blockDim.x*blockIdx.x;
+    int id = threadIdx.y + blockDim.y*blockIdx.y;
+
+    if (p_id<*N && id<*N && p_id<id){
+
+        int p_x = p_id*3;
+        int p_y = p_x+1;
+        int p_z = p_y+1;
+
+        float d;
+        int bin;
+
+        int x = id*3;
+        int y = x+1;
+        int z = y+1;
+
+        d = sqrt(pow(a[p_x] - a[x],2)+pow(a[p_y]-a[y],2) + pow(a[p_z]-a[z],2));
+        if (d<=180){
+            bin = (int) (d/6.0);
+            atomicAdd(&dest[bin],2);
+        }
+    }
+}
+
 int main(int argc, char **argv){
-    double tot_start = omp_get_wtime();
-    
+        
     string data_loc = argv[1];
     string rand_loc = argv[2];
     string mypathto_files = "../../../../fake_DATA/DATOS/";
@@ -82,51 +121,14 @@ int main(int argc, char **argv){
     read_file(rand_loc,rand);
 
     // Crea los histogramas
-    unsigned int *DD, *DR, *RR;
-    DD = new unsigned int[bins];
-    DR = new unsigned int[bins];
-    RR = new unsigned int[bins];
+    long int *DD, *DR, *RR;
+    DD = new long int[bins];
+    DR = new long int[bins];
+    RR = new long int[bins];
     //Inicializa en 0
     for (int i=0; i<bins; i++){
         DD[i] = 0.0, RR[i] = 0.0, DR[i] = 0.0;     
     }
     double dbin = d_max/(double)bins;
-    
-    float d;
-    //Hace el conteo para el histograma DD
-    //cout << "Todo listo para hacer los histogramas" << endl;
-    for (int i=0; i<N-1; i++){
-        for (int j=i+1; j<N; j++){
-            d = distance(data[i],data[j]);
-            if (d<=d_max){
-                //cout << (int)(d/dbin) <<endl;
-                DD[(int)(d/dbin)]+=2;
-            }
-	        d = distance(rand[i],rand[j]);
-            if (d<=d_max){
-                //cout << (int)(d/dbin) <<endl;
-                RR[(int)(d/dbin)]+=2;
-            }
-        }
-    }
-    
-    //Hace el conteo para el histograma DR
-    for (int i=0; i<N; i++){
-        for (int j=0; j<N; j++){
-            d = distance(rand[i],data[j]);
-            if (d<=d_max){
-                //cout << (int)(d/dbin) <<endl;
-                DR[(int)(d/dbin)]+=1;
-            }
-        }
-    }
-    
-    // Guarda los histogramas
-    guardar_Histograma("DD.dat", bins, DD);
-    guardar_Histograma("RR.dat", bins, RR);
-    guardar_Histograma("DR.dat", bins, DR);
-
-    double tot_end = omp_get_wtime();
-    cout << tot_start-tot_end << endl;
     return 0;
 }
