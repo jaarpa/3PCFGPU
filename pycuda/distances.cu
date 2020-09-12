@@ -115,6 +115,7 @@ int main(int argc, char **argv){
     rand_loc.insert(0,mypathto_files);
     
     unsigned int N = stoi(argv[3]), bins=stoi(argv[4]);
+    unsigned int N_even = N+(N%2!=0);
     float d_max=stof(argv[5]);
     Punto *data = new Punto[N]; //Crea un array de N puntos
     Punto *rand = new Punto[N]; //Crea un array de N puntos
@@ -133,8 +134,5 @@ int main(int argc, char **argv){
         DD[i] = 0.0, RR[i] = 0.0, DR[i] = 0.0;     
     }
     double dbin = d_max/(double)bins;
-
-    cout << dbin << endl;
-    cout << argv[4] << endl;
     return 0;
 }
