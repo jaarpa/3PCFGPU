@@ -139,7 +139,7 @@ int main(int argc, char **argv){
     float score=pow(blocks,2)+pow((blocks*threads)-N_even,2), score_test;
 
     for (int i=1; i<6; i++){
-        threads_test = 2**i;
+        threads_test = pow(2,i);
         blocks_test = (int)(N_even/threads_test)+1;
         score_test = pow(blocks_test,2)+pow((blocks_test*threads_test)-N_even,2);
 
@@ -150,6 +150,7 @@ int main(int argc, char **argv){
             blocks=blocks_test;
             score=score_test;
         }
+    }
 
     cout << threads << ',' << blocks << ',' << score << endl;
 
