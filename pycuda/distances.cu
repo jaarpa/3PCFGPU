@@ -142,8 +142,6 @@ int main(int argc, char **argv){
         threads_test = pow(2,i);
         blocks_test = (int)(N_even/threads_test)+1;
         score_test = pow(blocks_test,2)+pow((blocks_test*threads_test)-N_even,2);
-
-        cout << threads_test << ',' << blocks_test << ',' << score_test << endl;
         
         if (score_test<score){
             threads=threads_test;
@@ -151,8 +149,6 @@ int main(int argc, char **argv){
             score=score_test;
         }
     }
-
-    cout << threads << ',' << blocks << ',' << score << endl;
 
     return 0;
 }
