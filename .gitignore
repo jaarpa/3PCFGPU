@@ -2,3 +2,9 @@
 data_comparison/
 miniconda3/
 .swiph
+
+#Ignorando todos los arhivos inecesarios# 
+*.txt
+*.out
+*.jpg
+*.dat
