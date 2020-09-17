@@ -118,26 +118,26 @@ int main(int argc, char **argv){
     unsigned int n_pts = stoi(argv[3]), bn=stoi(argv[4]);
     unsigned int N_even = n_pts+(n_pts%2!=0);
     float d_max=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
-    double dbin = d_max/(double)bins;
+    double dbin = d_max/(double)bn;
 
-    Punto *data = new Punto[N]; //Crea un array de N puntos
-    Punto *rand = new Punto[N]; //Crea un array de N puntos
+    Punto *data = new Punto[n_pts]; //Crea un array de n_pts puntos
+    Punto *rand = new Punto[n_pts]; //Crea un array de N puntos
 
     //Llama a una funcion que lee los puntos y los guarda en la memoria asignada a data y rand
     read_file(data_loc,data);
     read_file(rand_loc,rand);
 
     // Crea los histogramas
-    long int *DD, *DR, *RR;
-    DDD = new long int[bins][bins][bins];
-    DDR = new long int[bins][bins][bins];
-    DRR = new long int[bins][bins][bins];
-    RRR = new long int[bins][bins][bins];
+    long int **DDD, **DDR, **DRR, **RRR;
+    DDD = new long int[bn][bn][bn];
+    DDR = new long int[bn][bn][bn];
+    DRR = new long int[bn][bn][bn];
+    RRR = new long int[bn][bn][bn];
     
     //Inicializa en 0
-    for (i=0; i<bn; i++){
-        for (j=0; j<bn; j++){
-            for (k = 0; k < bn; k++){
+    for (int i=0; i<bn; i++){
+        for (int j=0; j<bn; j++){
+            for (int k = 0; k < bn; k++){
                 DDD[i][j][k]= 0;
                 DDR[i][j][k]= 0;   
                 DRR[i][j][k]= 0;
