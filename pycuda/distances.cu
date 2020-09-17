@@ -1,5 +1,6 @@
 #include<iostream>
 #include<fstream>
+#include<vector>
 #include<string.h>
 
 #include <stdio.h>
@@ -114,9 +115,11 @@ int main(int argc, char **argv){
     data_loc.insert(0,mypathto_files);
     rand_loc.insert(0,mypathto_files);
     
-    unsigned int N = stoi(argv[3]), bins=stoi(argv[4]);
-    unsigned int N_even = N+(N%2!=0);
-    float d_max=stof(argv[5]);
+    unsigned int n_pts = stoi(argv[3]), bn=stoi(argv[4]);
+    unsigned int N_even = n_pts+(n_pts%2!=0);
+    float d_max=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
+    double dbin = d_max/(double)bins;
+
     Punto *data = new Punto[N]; //Crea un array de N puntos
     Punto *rand = new Punto[N]; //Crea un array de N puntos
 
@@ -126,14 +129,22 @@ int main(int argc, char **argv){
 
     // Crea los histogramas
     long int *DD, *DR, *RR;
-    DD = new long int[bins];
-    DR = new long int[bins];
-    RR = new long int[bins];
+    DDD = new long int[bins][bins][bins];
+    DDR = new long int[bins][bins][bins];
+    DRR = new long int[bins][bins][bins];
+    RRR = new long int[bins][bins][bins];
+    
     //Inicializa en 0
-    for (int i=0; i<bins; i++){
-        DD[i] = 0.0, RR[i] = 0.0, DR[i] = 0.0;     
+    for (i=0; i<bn; i++){
+        for (j=0; j<bn; j++){
+            for (k = 0; k < bn; k++){
+                DDD[i][j][k]= 0;
+                DDR[i][j][k]= 0;   
+                DRR[i][j][k]= 0;
+                RRR[i][j][k]= 0;
+            }
+        }
     }
-    double dbin = d_max/(double)bins;
 
     int threads=1, blocks=N_even, threads_test, blocks_test;
     float score=pow(blocks,2)+pow((blocks*threads)-N_even,2), score_test;
