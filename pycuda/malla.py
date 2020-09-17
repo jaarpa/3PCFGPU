@@ -47,9 +47,14 @@ class PCF3:
         self.size_node = np.float32(2.17*self.size_box/self.bins)
         self.partitions = np.int32(np.ceil(self.size_box/self.size_node))
         kernel_classification = SourceModule("""
-            #include<iostream>
-            __global__ subhisto(float *dest, float *datos, int *Nnodes, float *Snode){
-                cout<<"hola<<endl;
+            #include <stdio.h>
+            __global__ void subhisto(float *dest, float *datos, int *Nnodes, float *Snode){
+                printf("hola");
             }
         """)
         nodes_memsize = np.zeros((self.partitions,self.partitions,self.partitions), dtype=np.int32)
+
+
+t = PCF3()
+t.create_grid()
+
