@@ -28,7 +28,7 @@ __global__ void suma_gpu(float*,float*,float*);
 
 int main(int argc, char *argv[]){
 
-    int num_iteraciones = 65500;
+    int num_iteraciones = 65500,i;
     float *A,*B,*C;
     float *a,*b,*c;
     a = (float*)malloc(num_iteraciones*sizeof(float));
@@ -49,6 +49,7 @@ int main(int argc, char *argv[]){
     suma_cpu(a,b,c,num_iteraciones);
     auto cpu_end = Clock::now();
 
+
     cout << "vector_add_cpu: " << std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_end - cpu_start).count() << " nanoseconds.\n";
 
     auto gpu_start = Clock::now();
@@ -57,6 +58,11 @@ int main(int argc, char *argv[]){
     auto gpu_end = Clock::now();
     cout << "vector_add_gpu: " << std::chrono::duration_cast<std::chrono::nanoseconds>(gpu_end - gpu_start).count() << " nanoseconds.\n";
 
+    for (i = 0; i < 10; i++)
+    {
+        cout << C[i] << "\t" << c[i] << endl;
+    }
+    
     //Liberamos memoria del CPU
     free(a);
     free(b);
