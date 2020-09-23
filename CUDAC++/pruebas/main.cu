@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdlib.h>
 #include <chrono>
-#include "/usr/local/cuda/include/cuda_runtime.h"
 
 typedef std::chrono::high_resolution_clock Clock;
 using namespace std;
@@ -42,7 +41,8 @@ int main(int argc, char *argv[]){
     for(int i = 0; i< num_iteraciones; i++){
         *(a+i) = (float)(i);
         *(b+i) = (float)(i);
-        *(c+i) = (float)(i);
+        *(A+i) = (float)(i);
+        *(B+i) = (float)(i);
     }
 
     auto cpu_start = Clock::now();
