@@ -23,7 +23,8 @@ void suma_cpu(float*,float*,float*,int);
 
 __global__ void suma_gpu(float* A,float* B,float* C){
     int i = threadIdx.x;
-    *(C+i) =  *(A + i) + *(B + i);
+    C[i] =  A[i] + B[i];
+
 }
 
 int main(int argc, char *argv[]){
