@@ -21,9 +21,10 @@ void suma_cpu(float*,float*,float*,int);
 =================================================
 */
 
-
-__global__ void suma_gpu(float*,float*,float*);
-
+__global__ void suma_gpu(float* A,float* B,float* C){
+    int i = threadIdx.x;
+    *(C+i) =  *(A + i) + *(B + i);
+}
 
 int main(int argc, char *argv[]){
 
@@ -74,12 +75,6 @@ int main(int argc, char *argv[]){
     cudaFree(C);
 
     return 0;
-}
-
-
-__global__ void suma_gpu(float* A,float* B,float* C){
-    int i = threadIdx.x;
-    *(C+i) =  *(A + i) + *(B + i);
 }
 
 void suma_cpu(float* a, float *b, float* c, int n){
