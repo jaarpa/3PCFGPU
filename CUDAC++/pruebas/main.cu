@@ -37,10 +37,10 @@ int main(int argc, char *argv[]){
     cudaMallocManaged(&C_gpu,N*sizeof(float));
     
     for(i = 0; i<N; i++){
-        *(a+i) = 1.0;
-        *(b+i) = 4.0;
-        *(A_gpu + i) = 1.0;
-        *(B_gpu + i) = 4.0;
+        *(a+i) = (float)(i);
+        *(b+i) = (float)(i);
+        *(A_gpu + i) = (float)(i);
+        *(B_gpu + i) = (float)(i);
     }
 
     auto cpu_start = Clock::now();
