@@ -28,10 +28,12 @@ void suma_gpu(float *, float *, float*, int);
 int main(int argc, char *argv[]){
     int N = 1e6, i;
     cout << N << endl;
-    float *a, *b,*c, *C_gpu;
+    float *A_gpu, *B_gpu, *C_gpu, *a, *b, *c;
     a = (float*)malloc(N*sizeof(float));
     b = (float*)malloc(N*sizeof(float));
     c = (float*)malloc(N*sizeof(float));
+    cudaMallocManaged(&A_gpu,N*sizeof(float));
+    cudaMallocManaged(&B_gpu,N*sizeof(float));
     cudaMallocManaged(&C_gpu,N*sizeof(float));
 
     cudaMallocManaged(&i,sizeof(int));
@@ -39,6 +41,8 @@ int main(int argc, char *argv[]){
     for(i = 0; i<N; i++){
         *(a+i) = 1.0;
         *(b+i) = 4.0;
+        *(A_gpu + i) = 1.0;
+        *(B_gpu + i) = 4.0;
     }
 
     auto cpu_start = Clock::now();
@@ -46,7 +50,7 @@ int main(int argc, char *argv[]){
     auto cpu_end = Clock::now();
 
     auto gpu_start = Clock::now();
-    suma_gpu<<<1,1>>>(a,b,C_gpu,N);
+    suma_gpu<<<1,1>>>(A_gpu,B_gpu,C_gpu,N);
     cudaDeviceSynchronize();
     auto gpu_end = Clock::now();
 
@@ -58,6 +62,8 @@ int main(int argc, char *argv[]){
     free(b);
     free(c);
     cudaFree(C_gpu);
+    cudaFree(A_gpu);
+    cudaFree(B_gpu);
 
     return 0;
 }
