@@ -3,6 +3,7 @@
 #include <chrono>
 
 typedef std::chrono::high_resolution_clock Clock;
+
 using namespace std;
 
  
@@ -12,7 +13,7 @@ using namespace std;
 =================================================
 */
 
-void suma_cpu(float*,float*,float*,int);
+void suma_cpu(float *, float *, float *, int);
 
 
 /*
@@ -21,66 +22,60 @@ void suma_cpu(float*,float*,float*,int);
 =================================================
 */
 
-__global__ void suma_gpu(float* A,float* B,float* C){
-    int i = threadIdx.x;
-    C[i] =  A[i] + B[i];
-
-}
+__global__
+void suma_gpu(float *, float *, float*, int);
 
 int main(int argc, char *argv[]){
-
-    int num_iteraciones = 65500,i;
-    float *A,*B,*C;
-    float *a,*b,*c;
-    a = (float*)malloc(num_iteraciones*sizeof(float));
-    b = (float*)malloc(num_iteraciones*sizeof(float));
-    c = (float*)malloc(num_iteraciones*sizeof(float));
-
-    cudaMallocManaged(&A,num_iteraciones*sizeof(float));
-    cudaMallocManaged(&B,num_iteraciones*sizeof(float));
-    cudaMallocManaged(&C,num_iteraciones*sizeof(float));
-
-    for(int i = 0; i< num_iteraciones; i++){
-        *(a+i) = (float)(i);
-        *(b+i) = (float)(i);
-        *(A+i) = (float)(i);
-        *(B+i) = (float)(i);
+    int N = 1e6, i;
+    cout << N << endl;
+    float *a, *b,*c, *C_gpu;
+    a = (float*)malloc(N*sizeof(float));
+    b = (float*)malloc(N*sizeof(float));
+    c = (float*)malloc(N*sizeof(float));
+    cudaMallocManaged(&C_gpu,N*sizeof(float));
+    
+    for(i = 0; i<n; i++){
+        *(a+i) = 1.0;
+        *(b+i) = 4.0;
     }
 
     auto cpu_start = Clock::now();
-    suma_cpu(a,b,c,num_iteraciones);
+    suma_cpu(a,b,c,N);
     auto cpu_end = Clock::now();
 
-
-    cout << "vector_add_cpu: " << std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_end - cpu_start).count() << " nanoseconds.\n";
-
     auto gpu_start = Clock::now();
-    suma_gpu <<<1, num_iteraciones>>> (A, B, C);
+    suma_gpu<<<1,1>>>(a,b,C_gpu,N);
     cudaDeviceSynchronize();
     auto gpu_end = Clock::now();
-    cout << "vector_add_gpu: " << std::chrono::duration_cast<std::chrono::nanoseconds>(gpu_end - gpu_start).count() << " nanoseconds.\n";
 
-    for (i = 0; i < 10; i++)
-    {
-        cout << C[i] << "\t" << c[i] << endl;
+    for(i=0; i<10;i++){
+        cout << *(c+i) << "\t" << *(C_gpu + i) << endl;
     }
-    
-    //Liberamos memoria del CPU
+
     free(a);
     free(b);
     free(c);
-
-    //Liberamos memoria del GPU
-    cudaFree(A);
-    cudaFree(B);
-    cudaFree(C);
+    cudaFree(C_gpu);
 
     return 0;
 }
 
-void suma_cpu(float* a, float *b, float* c, int n){
-    int i;
-    for(i = 0; i<n; i++){
-        c[i] = a[i] + b[i]; 
+
+void suma_cpu(float *a, float *b, float *c, int n){
+
+    for(int i = 0; i<n ; i++){
+        *(c+i) = *(a+i) + *(b+i);
     }
+
+}
+
+
+
+__global__
+void suma_gpu(float *a, float *b, float* c, int n){
+
+    for(int i = 0; i < n; i++){
+        *(c+i) = *(a+i) + *(b+i);
+    }
+
 }
