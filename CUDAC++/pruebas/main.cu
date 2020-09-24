@@ -33,6 +33,8 @@ int main(int argc, char *argv[]){
     b = (float*)malloc(N*sizeof(float));
     c = (float*)malloc(N*sizeof(float));
     cudaMallocManaged(&C_gpu,N*sizeof(float));
+
+    cudaMallocManaged(&i,sizeof(int));
     
     for(i = 0; i<N; i++){
         *(a+i) = 1.0;
