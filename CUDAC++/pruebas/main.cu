@@ -56,6 +56,11 @@ int main(int argc, char *argv[]){
         cout << *(c+i) << "\t" << *(C_gpu + i) << endl;
     }
 
+    // funciona, solo falta agregar la parte de contador temporal.
+
+    cout << "CPU time: " << chrono::duration_cast<chrono::nanoseconds>(cpu_end - cpu_start).count() << " nanoseconds.\n";
+    cout << "GPU time: " << chrono::duration_cast<chrono::nanoseconds>(gpu_end - gpu_start).count() << " nanoseconds.\n";
+
     free(a);
     free(b);
     free(c);
