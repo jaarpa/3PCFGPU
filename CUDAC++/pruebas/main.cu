@@ -27,7 +27,7 @@ __global__
 void suma_gpu(float *, float *, float*, int);
 
 int main(int argc, char *argv[]){
-
+    int i;
     int N = 1e6; // cantidad de iteraciones
     int dim_bloque = 256;//cantidad de hilos en cada bloque (multiplo de 32, 32x8 = 256)
     int num_bloques = ceil(N/dim_bloque); // redondeamos al mayor numero, para asegurar que haya siempre los hilos justos
@@ -94,7 +94,6 @@ void suma_gpu(float *a, float *b, float* c, int n){
         threadId.x.--> regresa el índice del hilo actual (de 0 a dim_bloque -1 )
 
     */
-    int dim_grid = gridDim.x; // esto es igual al numero de bloques num_bloques
     int indice = blockIdx.x*blockDim.x + threadIdx.x; // localiza un hilo 0-255 , 256 - 511 , etc
     int paso = blockDim.x * gridDim.x; // tamaño del paso, igual a la cantidad de hilos en todo el grid, como hay tantos hilos como iteraciones
     // el kernel se ejecutara al menos n veces, y los hilos cuyo indice i exceda n no entra al ciclo, y cada hilo se ejecuta una sola vez, de allí 
