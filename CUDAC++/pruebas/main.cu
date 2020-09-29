@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
     auto cpu_end = Clock::now();
 
     auto gpu_start = Clock::now();
-    suma_gpu<<<1,1>>>(A_gpu,B_gpu,C_gpu,N);
+    suma_gpu<<<1,256>>>(A_gpu,B_gpu,C_gpu,N);
     cudaDeviceSynchronize();
     auto gpu_end = Clock::now();
 
@@ -83,7 +83,9 @@ void suma_cpu(float *a, float *b, float *c, int n){
 __global__
 void suma_gpu(float *a, float *b, float* c, int n){
 
-    for(int i = 0; i < n; i++){
+    int indice = threadIdx.x;
+    int paso = blockDim.x;
+    for(int i = indice; i < n; i+= paso){
         *(c+i) = *(a+i) + *(b+i);
     }
 
