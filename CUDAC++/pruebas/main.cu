@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdlib.h>
+#include <math.h>
 #include <chrono>
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -26,8 +27,11 @@ __global__
 void suma_gpu(float *, float *, float*, int);
 
 int main(int argc, char *argv[]){
-    int N = 1e6, i;
-    cout << N << endl;
+
+    int N = 1e6; // cantidad de iteraciones
+    int dim_bloque = 256;//cantidad de hilos en cada bloque (multiplo de 32, 32x8 = 256)
+    int num_bloques = ceil(N/dim_bloque); // redondeamos al mayor numero, para asegurar que haya siempre los hilos justos
+    cout << "Iteraciones: "<< N << "\n Numero de bloques: "<< num_bloques "\nHilos por bloque: " << dim_bloque << endl;
     float *A_gpu, *B_gpu, *C_gpu, *a, *b, *c;
     a = (float*)malloc(N*sizeof(float));
     b = (float*)malloc(N*sizeof(float));
@@ -48,7 +52,7 @@ int main(int argc, char *argv[]){
     auto cpu_end = Clock::now();
 
     auto gpu_start = Clock::now();
-    suma_gpu<<<1,256>>>(A_gpu,B_gpu,C_gpu,N);
+    suma_gpu<<<num_bloques,blockDim>>>(A_gpu,B_gpu,C_gpu,N);
     cudaDeviceSynchronize();
     auto gpu_end = Clock::now();
 
@@ -82,9 +86,19 @@ void suma_cpu(float *a, float *b, float *c, int n){
 
 __global__
 void suma_gpu(float *a, float *b, float* c, int n){
+    /*
+        gridDim.x  --> regresa la cantidad de bloques (en este caso igual a la variable num_bloques)
+        blockDim.x --> regresa la cantidad de hilos en cada bloque (en este caso igual a la variable dim_bloque)
+        gridId.x   --> regresa el índice del grid actual (en este caso 0)
+        blockIdx.x --> regresa el índice del bloque actual (de 0 a num_bloques-1 )
+        threadId.x.--> regresa el índice del hilo actual (de 0 a dim_bloque -1 )
 
-    int indice = threadIdx.x;
-    int paso = blockDim.x;
+    */
+    int dim_grid = gridDim.x; // esto es igual al numero de bloques num_bloques
+    int indice = blockIdx.x*blockDim.x + threadIdx.x; // localiza un hilo 0-255 , 256 - 511 , etc
+    int paso = blockDim.x * gridDim.x; // tamaño del paso, igual a la cantidad de hilos en todo el grid, como hay tantos hilos como iteraciones
+    // el kernel se ejecutara al menos n veces, y los hilos cuyo indice i exceda n no entra al ciclo, y cada hilo se ejecuta una sola vez, de allí 
+    // elegir el paso como eso.
     for(int i = indice; i < n; i+= paso){
         *(c+i) = *(a+i) + *(b+i);
     }
