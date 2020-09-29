@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
     int N = 1e6; // cantidad de iteraciones
     int dim_bloque = 256;//cantidad de hilos en cada bloque (multiplo de 32, 32x8 = 256)
     int num_bloques = ceil(N/dim_bloque); // redondeamos al mayor numero, para asegurar que haya siempre los hilos justos
-    cout << "Iteraciones: "<< N << "\n Numero de bloques: "<< num_bloques "\nHilos por bloque: " << dim_bloque << endl;
+    cout << "Iteraciones: "<< N << "\n Numero de bloques: "<< num_bloques << "\nHilos por bloque: " << dim_bloque << endl;
     float *A_gpu, *B_gpu, *C_gpu, *a, *b, *c;
     a = (float*)malloc(N*sizeof(float));
     b = (float*)malloc(N*sizeof(float));
