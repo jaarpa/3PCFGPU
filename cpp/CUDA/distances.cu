@@ -132,7 +132,7 @@ void create_grid(double *test, Punto *datos, unsigned int n_pts)
     */
 }
 
-void make_nodos(Node ***nod, Point3D *dat){
+void make_nodos(Node ***nod, Punto *dat){
 	/*
 	Función para crear los nodos con los datos y puntos random
 	
@@ -152,7 +152,7 @@ void make_nodos(Node ***nod, Point3D *dat){
 				nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+p_med;
 				nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node))+p_med;
 				nod[row][col][mom].len = 0;
-				nod[row][col][mom].elements = new Point3D[0];
+				nod[row][col][mom].elements = new Punto[0];
 			}
 		}
 	}
@@ -165,9 +165,9 @@ void make_nodos(Node ***nod, Point3D *dat){
 	}
 }
 //=================================================================== 
-void add(Point3D *&array, int &lon, float _x, float _y, float _z){
+void add(Punto *&array, int &lon, float _x, float _y, float _z){
 	lon++;
-	Point3D *array_aux = new Point3D[lon];
+	Punto *array_aux = new Punto[lon];
 	for (int i=0; i<lon-1; i++){
 		array_aux[i].x = array[i].x;
 		array_aux[i].y = array[i].y;
