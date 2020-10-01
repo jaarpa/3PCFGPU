@@ -115,11 +115,11 @@ void XX(float *dest, float *a, int *N){
 
 // Kernel function to populate the grid of nodes
 __global__
-void create_grid(Punto *data_node, Punto *data, unsigned int n_pts)
+void create_grid(long int ***XXX, Punto *data_node, Punto *data, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
-       data[1].x = data_node[1].x + data_node[1].y +data_node[1].z;
+       XXX[0][0][0] = (int) (data_node[1].x + data_node[1].y +data_node[1].z;)
     }
     
     /*
@@ -269,15 +269,20 @@ int main(int argc, char **argv){
     Punto *data_node;
     cudaMalloc((void **) &data_node, nodeD[0][0][0].len*sizeof(Punto));
     cudaMemcpy(data_node, nodeD[0][0][0].elements, nodeD[0][0][0].len*sizeof(Punto), cudaMemcpyHostToDevice);
-    create_grid<<<1,256>>>(data_node, data, n_pts);
+    long int ***d_DDD;
+    cudaMalloc((void **) &d_DDD, bn*bn*bn*sizeof(long int));
+    cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(long int), cudaMemcpyHostToDevice);
+    create_grid<<<1,256>>>(d_DDD, data_node, data, n_pts);
+    cudaMemcpy(DDD, d_DDD, bn*bn*bn*sizeof(long int), cudaMemcpyDeviceToHost);
     cudaFree(data_node);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    cout << data[1].x << endl; //-(double)24.909824 << endl;
+    cout << DDD[0][0][0] << endl; //-(double)24.909824 << endl;
 
     // Free memory
+    cudaFree(d_DDD);
     //cudaFree(&nodeD);
     cudaFree(&data);
     cudaFree(&rand);
