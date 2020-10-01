@@ -119,7 +119,7 @@ void create_grid(double *test, Punto *datos, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
-       test = datos[1].x + datos[1].y +datos[1].z;
+       datos[1].x = datos[1].x + datos[1].y +datos[1].z;
     }
     
     /*
@@ -130,6 +130,54 @@ void create_grid(double *test, Punto *datos, unsigned int n_pts)
         printf("El valor es %d.\n", *(node_grid[nodeid].elements+1));
     }
     */
+}
+
+void make_nodos(Node ***nod, Point3D *dat){
+	/*
+	Función para crear los nodos con los datos y puntos random
+	
+	Argumentos
+	nod: arreglo donde se crean los nodos.
+	dat: datos a dividir en nodos.
+	
+	*/
+	int i, row, col, mom;
+	float p_med = size_node/2;
+	
+	// Inicializamos los nodos vacíos:
+	for (row=0; row<partitions; row++){
+		for (col=0; col<partitions; col++){
+			for (mom=0; mom<partitions; mom++){
+				nod[row][col][mom].nodepos.x = ((float)(row)*(size_node))+p_med;
+				nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+p_med;
+				nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node))+p_med;
+				nod[row][col][mom].len = 0;
+				nod[row][col][mom].elements = new Point3D[0];
+			}
+		}
+	}
+	// Llenamos los nodos con los puntos de dat:
+	for (i=0; i<n_pts; i++){
+		row = (int)(dat[i].x/size_node);
+        	col = (int)(dat[i].y/size_node);
+        	mom = (int)(dat[i].z/size_node);
+		add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
+	}
+}
+//=================================================================== 
+void add(Point3D *&array, int &lon, float _x, float _y, float _z){
+	lon++;
+	Point3D *array_aux = new Point3D[lon];
+	for (int i=0; i<lon-1; i++){
+		array_aux[i].x = array[i].x;
+		array_aux[i].y = array[i].y;
+		array_aux[i].z = array[i].z;
+	}
+	delete[] array;
+	array = array_aux;
+	array[lon-1].x = _x;
+	array[lon-1].y = _y; 
+	array[lon-1].z = _z; 
 }
 
 int main(int argc, char **argv){
@@ -180,17 +228,6 @@ int main(int argc, char **argv){
         }
     }
 
-    Punto *data = new Punto[n_pts]; //Crea un array de n_pts puntos
-    Punto *rand = new Punto[n_pts]; //Crea un array de N puntos
-
-    //Punto *data, *rand; //, *d_data, *d_rand;
-    cudaMallocManaged(&data, n_pts*sizeof(Punto));
-    cudaMallocManaged(&rand, n_pts*sizeof(Punto));
-
-    //Llama a una funcion que lee los puntos y los guarda en la memoria asignada a data y rand
-    read_file(data_loc,data);
-    read_file(rand_loc,rand);
-
     //Sets GPU arrange of threads
     int threads=1, blocks=N_even, threads_test, blocks_test;
     float score=pow(blocks,2)+pow((blocks*threads)-N_even,2), score_test;
@@ -206,19 +243,28 @@ int main(int argc, char **argv){
         }
     }
 
+    Punto *data = new Punto[n_pts]; //Crea un array de n_pts puntos
+    Punto *rand = new Punto[n_pts]; //Crea un array de N puntos    
+    cudaMallocManaged(&data, n_pts*sizeof(Punto));
+    cudaMallocManaged(&rand, n_pts*sizeof(Punto));
+    //Llama a una funcion que lee los puntos y los guarda en la memoria asignada a data y rand
+    read_file(data_loc,data);
+    read_file(rand_loc,rand);
 
-    double *test;
-    test = 0;
-    cudaMallocManaged(&test, sizeof(double));
-    create_grid<<<1,256>>>(test, data, n_pts);
+    //Create Nodes
+    Node ***nodeD;
+    make_nodos(nodeD,dataD);
+    cout << nodeD[0][0][0].len << endl;
+
+    create_grid<<<1,256>>>(data, n_pts);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    cout << test-(double)24.909824 << endl;
+    cout << datos[1].x-(double)24.909824 << endl;
 
     // Free memory
-    cudaFree(&test);
+
     cudaFree(&data);
     cudaFree(&rand);
 
