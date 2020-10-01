@@ -123,7 +123,7 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
        //XXX[0][0][0].elements[1].y = data_node[1].x + data_node[1].y +data_node[1].z;
        //XXX[0][0][0].elements[1].z = data_node[1].x + data_node[1].y +data_node[1].z;
        DDD[0][0][0]=100;
-       XXX[0][0][0].len = (int) (data_node[1].x + data_node[1].y +data_node[1].z);
+       XXX[0][0][0].len = (int) (XXX[0][0][0].elements[1].x + XXX[0][0][0].elements[1].y +XXX[0][0][0].elements[1].z);
        printf("Exit the kernel");
     }
     
