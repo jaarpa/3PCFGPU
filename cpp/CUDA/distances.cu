@@ -16,10 +16,9 @@ struct Punto{
 };
 
 struct Node{
-    //Punto nodepos;	// Coordenadas del nodo (posición del nodo)
+    Punto nodepos;	// Coordenadas del nodo (posición del nodo)
     int len=0;		// Cantidad de elementos en el nodo.
-    //vector<Punto> elements;	// Elementos del nodo.
-    Punto *elements = new Punto[110];
+    Punto *elements;
 };
 
 void read_file(string file_loc, Punto *data){
@@ -116,15 +115,19 @@ void XX(float *dest, float *a, int *N){
 
 // Kernel function to populate the grid of nodes
 __global__
-void create_grid(Node *node_grid, Punto *datos, unsigned int n_pts, float size_node, unsigned int partitions)
+void create_grid(float *test, Punto *datos, unsigned int n_pts)
 {
-    unsigned int nodeid;
+    if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
+        test = datos[1].x + datos[1].x +datos[1].y;
+    }
+    /*
     for(int i=0; i<n_pts;i++){
         nodeid = (int)(datos[i].x/size_node) + (int)((datos[i].y/size_node))*partitions + (int)((datos[i].z/size_node))*partitions*partitions;
         //node_grid[nodeid].elements[node_grid[nodeid].len]=datos[i];
         node_grid[nodeid].len++;
         printf("El valor es %d.\n", *(node_grid[nodeid].elements+1));
     }
+    */
 }
 
 int main(int argc, char **argv){
@@ -141,20 +144,7 @@ int main(int argc, char **argv){
     float d_max=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
     unsigned int partitions = (int)(ceil(size_box/size_node));
     double dbin = d_max/(double)bn;
-
-    //Punto *data = new Punto[n_pts]; //Crea un array de n_pts puntos
-    //Punto *rand = new Punto[n_pts]; //Crea un array de N puntos
-
-    Punto *data, *rand;
-    cudaMallocManaged(&data, n_pts*sizeof(Punto));
-    cudaMallocManaged(&rand, n_pts*sizeof(Punto));
-
-    //Llama a una funcion que lee los puntos y los guarda en la memoria asignada a data y rand
-    read_file(data_loc,data);
-    read_file(rand_loc,rand);
-    //read_file(data_loc,d_data);
-    //read_file(rand_loc,d_rand);
-
+    
     // Crea los histogramas
     long int ***DDD, ***DDR, ***DRR, ***RRR;
     // inicializamos los histogramas
@@ -188,9 +178,20 @@ int main(int argc, char **argv){
         }
     }
 
+    Punto *data, *rand; //, *d_data, *d_rand;
+    Punto *data = new Punto[n_pts]; //Crea un array de n_pts puntos
+    Punto *rand = new Punto[n_pts]; //Crea un array de N puntos
+
+    cudaMallocManaged(&data, n_pts*sizeof(Punto));
+    cudaMallocManaged(&rand, n_pts*sizeof(Punto));
+
+    //Llama a una funcion que lee los puntos y los guarda en la memoria asignada a data y rand
+    read_file(data_loc,data);
+    read_file(rand_loc,rand);
+
+    //Sets GPU arrange of threads
     int threads=1, blocks=N_even, threads_test, blocks_test;
     float score=pow(blocks,2)+pow((blocks*threads)-N_even,2), score_test;
-
     for (int i=1; i<6; i++){
         threads_test = pow(2,i);
         blocks_test = (int)(N_even/threads_test)+1;
@@ -203,45 +204,18 @@ int main(int argc, char **argv){
         }
     }
 
-    //Inicializar nodos
-    Node *h_node_grid, *d_node_grid;
-    h_node_grid = new Node[partitions*partitions*partitions];
 
-    // Allocate Unified Memory – accessible from CPU or GPU
-    cudaMalloc((void**)&d_node_grid,partitions*partitions*partitions*sizeof(Node));
-    cudaMemcpy(d_node_grid,h_node_grid,partitions*partitions*partitions*sizeof(Node),cudaMemcpyHostToDevice);
-    //cudaMallocManaged(&node_grid, partitions*partitions*partitions*sizeof(Node));
+    float *test;
+    cudaMallocManaged(&test, sizeof(float));
+    create_grid<<<1,1>>>(test, data, n_pts);
 
-    //node_grid = new Node[partitions*partitions*partitions];
-    create_grid<<<1,1>>>(d_node_grid, data, n_pts, size_node, partitions);
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    // Sustituir por kernel
-    
-    /*
-    cout << "Im in the loop" << endl;
-    int nodeid;
-    for(int i = 0; i<n_pts; i++){
-        nodeid = (int)(data[i].x/size_node) + (int)((data[i].y/size_node))*partitions + (int)((data[i].z/size_node))*partitions*partitions;
-        cout << node_grid[nodeid].len << endl;
-        //node_grid[nodeid].elements.push_back(data[i]);
-        node_grid[nodeid].elements[node_grid[nodeid].len]=data[i];
-        node_grid[nodeid].len++;
-    }
-    */
-    
-    cudaMemcpy(h_node_grid,d_node_grid,partitions*partitions*partitions*sizeof(Node),cudaMemcpyDeviceToHost);
-    for(int j=0; j<10; j++){
-        cout<<h_node_grid[j].len<<endl;
-        cout<<h_node_grid[j].elements[0].x << endl;
-    }
-    for(int i=0; i<h_node_grid[1].len; i++){ 
-       cout << h_node_grid[1].elements[i].x << " " << h_node_grid[1].elements[i].y << " " << h_node_grid[1].elements[i].z << endl; 
-    }
+    cout << test << endl;
 
     // Free memory
-    cudaFree(&d_node_grid);
+    cudaFree(&test)
     cudaFree(&data);
     cudaFree(&rand);
 
