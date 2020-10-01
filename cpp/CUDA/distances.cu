@@ -115,7 +115,7 @@ void XX(float *dest, float *a, int *N){
 
 // Kernel function to populate the grid of nodes
 __global__
-void create_grid(Node ***XXX, Punto *data_node, Punto *data, unsigned int n_pts)
+void create_grid(Node ***XXX, Punto *data_node, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
