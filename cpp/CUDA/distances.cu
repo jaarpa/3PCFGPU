@@ -243,8 +243,7 @@ int main(int argc, char **argv){
         }
     }
 
-    Punto *data = new Punto[n_pts]; //Crea un array de n_pts puntos
-    Punto *rand = new Punto[n_pts]; //Crea un array de N puntos    
+    Punto *data, *rand; //Crea un array de n_pts puntos
     cudaMallocManaged(&data, n_pts*sizeof(Punto));
     cudaMallocManaged(&rand, n_pts*sizeof(Punto));
     //Llama a una funcion que lee los puntos y los guarda en la memoria asignada a data y rand
@@ -252,7 +251,9 @@ int main(int argc, char **argv){
     read_file(rand_loc,rand);
 
     //Create Nodes
-    Node ***nodeD;
+    Node ***nodeD;//, ***d_nodeD;
+    cudaMallocManaged(&nodeD, partitions*partitions*partitions*sizeof(Node));
+    /*
     nodeD = new Node**[partitions];
 	for (int i=0; i<partitions; i++){
 		*(nodeD+i) = new Node*[partitions];
@@ -260,9 +261,10 @@ int main(int argc, char **argv){
 			*(*(nodeD+i)+j) = new Node[partitions];
 		}
     }
-    
+    */
+
     make_nodos(nodeD, data, partitions, size_node, n_pts);
-    cout << nodeD[0][0][0].len << endl;
+    cout<<nodeD[0][0][0].len<<endl;
 
     create_grid<<<1,256>>>(data, n_pts);
 
@@ -272,7 +274,7 @@ int main(int argc, char **argv){
     cout << data[1].x-(double)24.909824 << endl;
 
     // Free memory
-
+    cudaFree(&nodeD);
     cudaFree(&data);
     cudaFree(&rand);
 
