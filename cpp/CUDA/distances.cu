@@ -119,7 +119,7 @@ void create_grid(long int ***XXX, Punto *data_node, Punto *data, unsigned int n_
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
-       XXX[0][0][0] = (int) (data_node[1].x + data_node[1].y +data_node[1].z;)
+       XXX[0][0][0] = (int) (data_node[1].x + data_node[1].y +data_node[1].z);
     }
     
     /*
@@ -198,18 +198,20 @@ int main(int argc, char **argv){
     // Crea los histogramas
     long int ***DDD, ***DDR, ***DRR, ***RRR;
     // inicializamos los histogramas
-    DDD = new long int**[bn];
+    cudaMallocManaged(&DDD, bn*bn*bn*sizeof(long int));
+
+    //DDD = new long int**[bn];
     RRR = new long int**[bn];
     DDR = new long int**[bn];
     DRR = new long int**[bn];
 
     for (int i=0; i<bn; i++){
-        *(DDD+i) = new long int*[bn];
+        //*(DDD+i) = new long int*[bn];
         *(RRR+i) = new long int*[bn];
         *(DDR+i) = new long int*[bn];
         *(DRR+i) = new long int*[bn];
         for (int j = 0; j < bn; j++){
-            *(*(DDD+i)+j) = new long int[bn];
+            //*(*(DDD+i)+j) = new long int[bn];
             *(*(RRR+i)+j) = new long int[bn];
             *(*(DDR+i)+j) = new long int[bn];
             *(*(DRR+i)+j) = new long int[bn];
