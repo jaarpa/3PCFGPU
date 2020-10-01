@@ -117,7 +117,7 @@ void XX(float *dest, float *a, int *N){
 __global__
 void create_grid(double *test, Punto *datos, unsigned int n_pts)
 {
-    printf("%i", 123);
+    printf("%i \n", threadIdx.x);
     /*
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        printf("%i", threadIdx.x);
@@ -210,7 +210,7 @@ int main(int argc, char **argv){
 
     double *test;
     cudaMallocManaged(&test, sizeof(double));
-    create_grid<<<1,1>>>(test, data, n_pts);
+    create_grid<<<1,256>>>(test, data, n_pts);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
