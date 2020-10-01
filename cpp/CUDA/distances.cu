@@ -119,10 +119,10 @@ void create_grid(Node ***XXX, Punto *data_node, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
-       XXX[0][0][0].elements[1].x = data_node[1].x + data_node[1].y +data_node[1].z;
-       XXX[0][0][0].elements[1].y = data_node[1].x + data_node[1].y +data_node[1].z;
-       XXX[0][0][0].elements[1].z = data_node[1].x + data_node[1].y +data_node[1].z;
-       //XXX[0][0][0].len = (int) (data_node[1].x + data_node[1].y +data_node[1].z);
+       //XXX[0][0][0].elements[1].x = data_node[1].x + data_node[1].y +data_node[1].z;
+       //XXX[0][0][0].elements[1].y = data_node[1].x + data_node[1].y +data_node[1].z;
+       //XXX[0][0][0].elements[1].z = data_node[1].x + data_node[1].y +data_node[1].z;
+       XXX[0][0][0].len = (int) (data_node[1].x + data_node[1].y +data_node[1].z);
        printf("Exit the kernel");
     }
     
@@ -274,6 +274,7 @@ int main(int argc, char **argv){
 
     cout<< nodeD[0][0][0].elements[1].x << ' ' << nodeD[0][0][0].elements[1].y << ' ' << nodeD[0][0][0].elements[1].z << endl;
     cout<< (int) (data[1].x + data[1].y +data[1].z) << endl;
+    cout<< nodeD[0][0][0].len << endl;
     cout << "Entering to the kernel" << endl;
 
     //Punto *data_node;
@@ -286,6 +287,7 @@ int main(int argc, char **argv){
     cudaDeviceSynchronize();
 
     cout<< nodeD[0][0][0].elements[1].x << ' ' << nodeD[0][0][0].elements[1].y << ' ' << nodeD[0][0][0].elements[1].z << endl; //-(double)24.909824 << endl;
+    cout<< nodeD[0][0][0].len << endl;
 
     // Free memory
     //cudaFree(d_DDD);
