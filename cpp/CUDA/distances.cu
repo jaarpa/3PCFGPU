@@ -115,7 +115,7 @@ void XX(float *dest, float *a, int *N){
 
 // Kernel function to populate the grid of nodes
 __global__
-void create_grid(float *test, Punto *datos, unsigned int n_pts)
+void create_grid(double *test, Punto *datos, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
         test = datos[1].x + datos[1].x +datos[1].y;
@@ -178,10 +178,10 @@ int main(int argc, char **argv){
         }
     }
 
-    Punto *data, *rand; //, *d_data, *d_rand;
     Punto *data = new Punto[n_pts]; //Crea un array de n_pts puntos
     Punto *rand = new Punto[n_pts]; //Crea un array de N puntos
 
+    //Punto *data, *rand; //, *d_data, *d_rand;
     cudaMallocManaged(&data, n_pts*sizeof(Punto));
     cudaMallocManaged(&rand, n_pts*sizeof(Punto));
 
@@ -205,8 +205,8 @@ int main(int argc, char **argv){
     }
 
 
-    float *test;
-    cudaMallocManaged(&test, sizeof(float));
+    double *test;
+    cudaMallocManaged(&test, sizeof(double));
     create_grid<<<1,1>>>(test, data, n_pts);
 
     //Waits for the GPU to finish
