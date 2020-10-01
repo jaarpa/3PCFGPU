@@ -140,13 +140,14 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 //=================================================================== 
 void add(Punto *&array, int &lon, float _x, float _y, float _z){
 	lon++;
-	Punto *array_aux = new Punto[lon];
+    Punto *array_aux; // = new Punto[lon];
+    cudaMallocManaged(&array_aux, lon*sizeof(Punto)); 
 	for (int i=0; i<lon-1; i++){
 		array_aux[i].x = array[i].x;
 		array_aux[i].y = array[i].y;
 		array_aux[i].z = array[i].z;
 	}
-	delete[] array;
+	cudaFree(&array);
 	array = array_aux;
 	array[lon-1].x = _x;
 	array[lon-1].y = _y; 
@@ -171,8 +172,9 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 				nod[row][col][mom].nodepos.x = ((float)(row)*(size_node))+p_med;
 				nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+p_med;
 				nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node))+p_med;
-				nod[row][col][mom].len = 0;
-				nod[row][col][mom].elements = new Punto[0];
+                nod[row][col][mom].len = 0;
+                cudaMallocManaged(&nod[row][col][mom].elements, sizeof(Punto))
+				//nod[row][col][mom].elements = new Punto[0];
 			}
 		}
 	}
@@ -261,17 +263,17 @@ int main(int argc, char **argv){
 
     //Create Nodes
     Node ***nodeD;//, ***d_nodeD;
-    
+
     cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
     //nodeD = new Node**[partitions];
-    
+
     for (int i=0; i<partitions; i++){
         cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*));
-		//*(nodeD+i) = new Node*[partitions];
-		for (int j=0; j<partitions; j++){
+        //*(nodeD+i) = new Node*[partitions];
+        for (int j=0; j<partitions; j++){
             cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
-			//*(*(nodeD+i)+j) = new Node[partitions];
-		}
+            //*(*(nodeD+i)+j) = new Node[partitions];
+        }
     }
     make_nodos(nodeD, data, partitions, size_node, n_pts);
     
