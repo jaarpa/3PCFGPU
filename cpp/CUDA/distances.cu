@@ -115,11 +115,11 @@ void XX(float *dest, float *a, int *N){
 
 // Kernel function to populate the grid of nodes
 __global__
-void create_grid(double *test, Punto *datos, unsigned int n_pts)
+void create_grid(double *test, Punto *data, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
-       datos[1].x = datos[1].x + datos[1].y +datos[1].z;
+       data[1].x = data[1].x + data[1].y +data[1].z;
     }
     
     /*
@@ -132,7 +132,22 @@ void create_grid(double *test, Punto *datos, unsigned int n_pts)
     */
 }
 
-void make_nodos(Node ***nod, Punto *dat){
+//=================================================================== 
+void add(Punto *&array, int &lon, float _x, float _y, float _z){
+	lon++;
+	Punto *array_aux = new Punto[lon];
+	for (int i=0; i<lon-1; i++){
+		array_aux[i].x = array[i].x;
+		array_aux[i].y = array[i].y;
+		array_aux[i].z = array[i].z;
+	}
+	delete[] array;
+	array = array_aux;
+	array[lon-1].x = _x;
+	array[lon-1].y = _y; 
+	array[lon-1].z = _z; 
+}
+void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_node, unsigned int n_pts){
 	/*
 	Función para crear los nodos con los datos y puntos random
 	
@@ -163,21 +178,6 @@ void make_nodos(Node ***nod, Punto *dat){
         	mom = (int)(dat[i].z/size_node);
 		add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
 	}
-}
-//=================================================================== 
-void add(Punto *&array, int &lon, float _x, float _y, float _z){
-	lon++;
-	Punto *array_aux = new Punto[lon];
-	for (int i=0; i<lon-1; i++){
-		array_aux[i].x = array[i].x;
-		array_aux[i].y = array[i].y;
-		array_aux[i].z = array[i].z;
-	}
-	delete[] array;
-	array = array_aux;
-	array[lon-1].x = _x;
-	array[lon-1].y = _y; 
-	array[lon-1].z = _z; 
 }
 
 int main(int argc, char **argv){
@@ -253,7 +253,7 @@ int main(int argc, char **argv){
 
     //Create Nodes
     Node ***nodeD;
-    make_nodos(nodeD,dataD);
+    make_nodos(nodeD,data, partitions, size_node, n_pts);
     cout << nodeD[0][0][0].len << endl;
 
     create_grid<<<1,256>>>(data, n_pts);
@@ -261,7 +261,7 @@ int main(int argc, char **argv){
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    cout << datos[1].x-(double)24.909824 << endl;
+    cout << data[1].x-(double)24.909824 << endl;
 
     // Free memory
 
