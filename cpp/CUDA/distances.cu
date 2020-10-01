@@ -115,11 +115,11 @@ void XX(float *dest, float *a, int *N){
 
 // Kernel function to populate the grid of nodes
 __global__
-void create_grid(long int ***XXX, Punto *data_node, Punto *data, unsigned int n_pts)
+void create_grid(Node ***XXX, Punto *data_node, Punto *data, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
-       XXX[0][0][0] = (int) (data_node[1].x + data_node[1].y +data_node[1].z);
+       XXX[0][0][0].len = (int) (data_node[1].x + data_node[1].y +data_node[1].z);
     }
     
     /*
@@ -198,20 +198,20 @@ int main(int argc, char **argv){
     // Crea los histogramas
     long int ***DDD, ***DDR, ***DRR, ***RRR;
     // inicializamos los histogramas
-    cudaMallocManaged(&DDD, bn*bn*bn*sizeof(long int));
+    //cudaMallocManaged(&DDD, bn*bn*bn*sizeof(long int));
 
-    //DDD = new long int**[bn];
+    DDD = new long int**[bn];
     RRR = new long int**[bn];
     DDR = new long int**[bn];
     DRR = new long int**[bn];
 
     for (int i=0; i<bn; i++){
-        //*(DDD+i) = new long int*[bn];
+        *(DDD+i) = new long int*[bn];
         *(RRR+i) = new long int*[bn];
         *(DDR+i) = new long int*[bn];
         *(DRR+i) = new long int*[bn];
         for (int j = 0; j < bn; j++){
-            //*(*(DDD+i)+j) = new long int[bn];
+            *(*(DDD+i)+j) = new long int[bn];
             *(*(RRR+i)+j) = new long int[bn];
             *(*(DDR+i)+j) = new long int[bn];
             *(*(DRR+i)+j) = new long int[bn];
@@ -255,11 +255,15 @@ int main(int argc, char **argv){
     //Create Nodes
     Node ***nodeD;//, ***d_nodeD;
     
-    nodeD = new Node**[partitions];
-	for (int i=0; i<partitions; i++){
-		*(nodeD+i) = new Node*[partitions];
+    cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
+    //nodeD = new Node**[partitions];
+    
+    for (int i=0; i<partitions; i++){
+        cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*));
+		//*(nodeD+i) = new Node*[partitions];
 		for (int j=0; j<partitions; j++){
-			*(*(nodeD+i)+j) = new Node[partitions];
+            cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
+			//*(*(nodeD+i)+j) = new Node[partitions];
 		}
     }
     make_nodos(nodeD, data, partitions, size_node, n_pts);
@@ -271,20 +275,16 @@ int main(int argc, char **argv){
     Punto *data_node;
     cudaMalloc((void **) &data_node, nodeD[0][0][0].len*sizeof(Punto));
     cudaMemcpy(data_node, nodeD[0][0][0].elements, nodeD[0][0][0].len*sizeof(Punto), cudaMemcpyHostToDevice);
-    long int ***d_DDD;
-    cudaMalloc((void **) &d_DDD, bn*bn*bn*sizeof(long int));
-    cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(long int), cudaMemcpyHostToDevice);
-    create_grid<<<1,256>>>(d_DDD, data_node, data, n_pts);
-    cudaMemcpy(DDD, d_DDD, bn*bn*bn*sizeof(long int), cudaMemcpyDeviceToHost);
+    create_grid<<<1,256>>>(nodeD, data, n_pts);
     cudaFree(data_node);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    cout << DDD[0][0][0] << endl; //-(double)24.909824 << endl;
+    cout << nodeD[0][0][0].len << endl; //-(double)24.909824 << endl;
 
     // Free memory
-    cudaFree(d_DDD);
+    //cudaFree(d_DDD);
     //cudaFree(&nodeD);
     cudaFree(&data);
     cudaFree(&rand);
