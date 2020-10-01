@@ -173,7 +173,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 				nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+p_med;
 				nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node))+p_med;
                 nod[row][col][mom].len = 0;
-                cudaMallocManaged(&nod[row][col][mom].elements, sizeof(Punto))
+                cudaMallocManaged(&nod[row][col][mom].elements, sizeof(Punto));
 				//nod[row][col][mom].elements = new Punto[0];
 			}
 		}
