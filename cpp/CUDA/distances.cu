@@ -118,8 +118,8 @@ __global__
 void create_grid(double *test, Punto *datos, unsigned int n_pts)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
-       printf("%i \n", threadIdx.x);
-       *test = datos[1].x + datos[1].y +datos[1].z;
+       //printf("%i \n", threadIdx.x);
+       test = datos[1].x + datos[1].y +datos[1].z;
     }
     
     /*
@@ -208,13 +208,14 @@ int main(int argc, char **argv){
 
 
     double *test;
+    test = 0;
     cudaMallocManaged(&test, sizeof(double));
     create_grid<<<1,256>>>(test, data, n_pts);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    cout << test-9.446052 << endl;
+    cout << test-(double)24.909824 << endl;
 
     // Free memory
     cudaFree(&test);
