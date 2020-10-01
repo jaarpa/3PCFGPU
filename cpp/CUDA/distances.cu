@@ -117,13 +117,12 @@ void XX(float *dest, float *a, int *N){
 __global__
 void create_grid(double *test, Punto *datos, unsigned int n_pts)
 {
-    printf("%i \n", threadIdx.x);
-    /*
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
-       printf("%i", threadIdx.x);
-       //test = datos[1].x + datos[1].y +datos[1].z;
+       printf("%i \n", threadIdx.x);
+       *test = datos[1].x + datos[1].y +datos[1].z;
     }
     
+    /*
     for(int i=0; i<n_pts;i++){
         nodeid = (int)(datos[i].x/size_node) + (int)((datos[i].y/size_node))*partitions + (int)((datos[i].z/size_node))*partitions*partitions;
         //node_grid[nodeid].elements[node_grid[nodeid].len]=datos[i];
@@ -215,7 +214,7 @@ int main(int argc, char **argv){
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    //cout << test << endl;
+    cout << test-9.446052 << endl;
 
     // Free memory
     cudaFree(&test);
