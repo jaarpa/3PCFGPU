@@ -253,7 +253,15 @@ int main(int argc, char **argv){
 
     //Create Nodes
     Node ***nodeD;
-    make_nodos(nodeD,data, partitions, size_node, n_pts);
+    nodeD = new Node**[partitions];
+	for (i=0; i<partitions; i++){
+		*(nodeD+i) = new Node*[partitions];
+		for (j=0; j<partitions; j++){
+			*(*(nodeD+i)+j) = new Node[partitions];
+		}
+    }
+    
+    make_nodos(nodeD, data, partitions, size_node, n_pts);
     cout << nodeD[0][0][0].len << endl;
 
     create_grid<<<1,256>>>(data, n_pts);
