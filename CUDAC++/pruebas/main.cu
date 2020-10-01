@@ -52,7 +52,7 @@ int main(int argc, char *argv[]){
     auto cpu_end = Clock::now();
 
     auto gpu_start = Clock::now();
-    suma_gpu<<<num_bloques,blockDim>>>(A_gpu,B_gpu,C_gpu,N);
+    suma_gpu<<<num_bloques,dim_bloque>>>(A_gpu,B_gpu,C_gpu,N);
     cudaDeviceSynchronize();
     auto gpu_end = Clock::now();
 
