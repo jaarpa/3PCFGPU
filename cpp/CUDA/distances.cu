@@ -13,14 +13,10 @@ struct Punto{
     double x,y,z;
 };
 
-struct Node_Position{
-    int row, col, mom;
-};
-
 struct Node{
     //Punto nodepos;	// Coordenadas del nodo (posición del nodo) // Se obtiene con las coordenadas del nodo.
     int in_vicinage;    //Cantidad de nodos vecinos.
-    Node_Position *nodes_vicinage;     // Array con los master id de localizacion de los nodos vecinos.
+    int *nodes_vicinage;     // Array con los master id de localizacion de los nodos vecinos.
     int len;		// Cantidad de elementos en el nodo.
     Punto *elements;
 };
@@ -83,20 +79,19 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
     }
 }
 
-void add_neighbor(Node_Position *&array, int &lon, int _row, int _col, int _mom){
+void add_neighbor(int *&array, int &lon, int id){
+    cout << "Entered" << endl;
     lon++;
-    Node_Position *array_aux;
-    cudaMallocManaged(&array_aux, lon*sizeof(Node_Position)); 
+    cout << "Increased the length" <<endl;
+    int *array_aux;
+    cudaMallocManaged(&array_aux, lon*sizeof(int)); 
+    cout << "Allocated the new Mem" << endl;
     for (int i=0; i<lon-1; i++){
-        array_aux[i].row = array[i].row;
-        array_aux[i].col = array[i].col;
-        array_aux[i].mom = array[i].mom;
+        array_aux[i] = array[i];
     }
     cudaFree(&array);
     array = array_aux;
-    array_aux[lon-1].row = _row;
-    array_aux[lon-1].col = _col;
-    array_aux[lon-1].mom = _mom;
+    array[lon-1] = id;
 }
 
 //=================================================================== 
@@ -138,7 +133,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                 cudaMallocManaged(&nod[row][col][mom].elements, sizeof(Punto));
 
                 nod[row][col][mom].in_vicinage = 0;
-                cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(Node_Position));
+                cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(int));
                 node_id = row + col*partitions + mom*partitions*partitions;
                 for (int i=node_id; i<partitions*partitions*partitions; i++){
                     n_row = i%partitions;
@@ -146,7 +141,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     n_mom = (int) i/(partitions*partitions);
                     internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
                     if (internodal_distance<id_max){
-                        add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, n_row, n_col, n_mom);
+                        add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
                     }
                 }
             }
