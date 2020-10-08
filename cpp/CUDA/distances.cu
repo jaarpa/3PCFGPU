@@ -81,7 +81,7 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 
 void add_neighbor(int *&array, int &lon, int id){
     lon++;
-    int *array_aux; // = new Punto[lon];
+    int *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(int)); 
     for (int i=0; i<lon-1; i++){
         array_aux[i] = array[i];
@@ -136,6 +136,9 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     n_col = (int) (i%(partitions*partitions))/partitions;
                     n_mom = (int) i/(partitions*partitions);
                     internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
+                    if (internodal_distance<id_max){
+                        add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
+                    }
                 }
             }
         }
