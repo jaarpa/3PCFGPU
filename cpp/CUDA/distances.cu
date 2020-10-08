@@ -63,18 +63,66 @@ float distance(Punto p1, Punto p2){
     return sqrt(x*x + y*y + z*z);
 }
 
+__device__
+void count_3_N111(int row, int col, int mom, unsigned int ***XXX, Node ***nodeS){
+    /*
+    Funcion para contar los triangulos en un mismo Nodo.
+
+    row, col, mom => posición del Nodo. Esto define al Nodo.
+
+    */
+    int i,j,k;
+    float dx,dy,dz;
+    float d12,d13,d23;
+    float x1,y1,z1,x2,y2,z2,x3,y3,z3;
+
+    for (i=0; i<nodeS[row][col][mom].len-2; ++i){
+        x1 = nodeS[row][col][mom].elements[i].x;
+        y1 = nodeS[row][col][mom].elements[i].y;
+        z1 = nodeS[row][col][mom].elements[i].z;
+        for (j=i+1; j<nodeS[row][col][mom].len-1; ++j){
+            x2 = nodeS[row][col][mom].elements[j].x;
+            y2 = nodeS[row][col][mom].elements[j].y;
+            z2 = nodeS[row][col][mom].elements[j].z;
+            dx = x2-x1;
+            dy = y2-y1;
+            dz = z2-z1;
+            d12 = dx*dx+dy*dy+dz*dz;
+            if (d12<=dd_max){
+            for (k=j+1; k<nodeS[row][col][mom].len; ++k){ 
+                x3 = nodeS[row][col][mom].elements[k].x;
+                y3 = nodeS[row][col][mom].elements[k].y;
+                z3 = nodeS[row][col][mom].elements[k].z;
+                dx = x3-x1;
+                dy = y3-y1;
+                dz = z3-z1;
+                d13 = dx*dx+dy*dy+dz*dz;
+                if (d13<=dd_max){
+                dx = x3-x2;
+                dy = y3-y2;
+                dz = z3-z2;
+                d23 = dx*dx+dy*dy+dz*dz;
+                if (d23<=dd_max){
+                *(*(*(XXX+(int)(sqrt(d12)*ds))+(int)(sqrt(d13)*ds))+(int)(sqrt(d23)*ds))+=1;
+                }
+                }
+            }
+            }
+        }
+    }
+}
 
 // Kernel function to populate the grid of nodes
 __global__
-void XXX(Node ***tensor_node, long int ***DDD, unsigned int partitions)
+void histo_XXX(Node ***tensor_node, long int ***DDD, unsigned int partitions)
 {
-    if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
-       //printf("%i \n", threadIdx.x);
-       //XXX[0][0][0].elements[1].x = data_node[1].x + data_node[1].y +data_node[1].z;
-       //XXX[0][0][0].elements[1].y = data_node[1].x + data_node[1].y +data_node[1].z;
-       //XXX[0][0][0].elements[1].z = data_node[1].x + data_node[1].y +data_node[1].z;
-       DDD[0][0][0]=100;
-       printf("Exit the kernel \n");
+    if (blockIdx.x<partitions && threadIdx.x<partitions && threadIdx.y<partitions ){
+        unsigned int row, col, mom;
+        row = threadIdx.x;
+        col = threadIdx.y;
+        mom = blockIdx.x;
+        count_3_N111(row, col, mom, DDD, tensor_node);
+        printf("Exit the kernel \n");
     }
 }
 
@@ -225,10 +273,12 @@ int main(int argc, char **argv){
     cout << "Entering to the kernel" << endl;
     dim3 grid(16,1,1);
     dim3 block(16,16);
-    XXX<<<grid,block>>>(nodeD, DDD, partitions);
+    histo_XXX<<<grid,block>>>(nodeD, DDD, partitions);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
+
+    cout << DDD[7][7][7] << endl;
 
     // Free memory
     // Free the histogram arrays
