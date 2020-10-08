@@ -64,7 +64,7 @@ float distance(Punto p1, Punto p2){
 }
 
 __device__
-void count_3_N111(int row, int col, int mom, unsigned int ***XXX, Node ***nodeS){
+void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
     /*
     Funcion para contar los triangulos en un mismo Nodo.
 
