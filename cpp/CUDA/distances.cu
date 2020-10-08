@@ -15,7 +15,7 @@ struct Punto{
 
 struct Node_Position{
     int row, col, mom;
-}
+};
 
 struct Node{
     //Punto nodepos;	// Coordenadas del nodo (posición del nodo) // Se obtiene con las coordenadas del nodo.
