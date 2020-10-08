@@ -80,12 +80,9 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 }
 
 void add_neighbor(int *&array, int &lon, int id){
-    cout << "Entered" << endl;
     lon++;
-    cout << "Increased the length" <<endl;
     int *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(int)); 
-    cout << "Allocated the new Mem" << endl;
     for (int i=0; i<lon-1; i++){
         array_aux[i] = array[i];
     }
@@ -143,6 +140,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     if (internodal_distance<id_max){
                         add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
                     }
+                cout << "Im in node " << node_id << endl;
                 }
             }
         }
