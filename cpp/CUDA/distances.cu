@@ -117,6 +117,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
     dat: datos a dividir en nodos.
 
     */
+    int test = 0;
     int row, col, mom, node_id, id_max = pow((int) d_max/size_node + 1,2);
     int n_row, n_col, n_mom, internodal_distance; // Row, Col and Mom of the possible node in the neighborhood
 
@@ -139,12 +140,12 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     n_mom = (int) i/(partitions*partitions);
                     internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
                     if (internodal_distance<id_max){
-                        1+1
+                        test++;
                         //add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
                     }
                 }
-                
                 cout << "Im in node " << node_id << endl;
+                
             }
         }
     }
