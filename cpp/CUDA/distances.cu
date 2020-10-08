@@ -79,17 +79,16 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
     }
 }
 
-//void add_neighbor(int *&array, int &lon, int id){
-void add_neighbor(int &lon, int id){
+void add_neighbor(int *&array, int &lon, int id){
     lon++;
-    /*int *array_aux;
+    int *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(int)); 
     for (int i=0; i<lon-1; i++){
         array_aux[i] = array[i];
     }
     cudaFree(&array);
     array = array_aux;
-    array[lon-1] = id; */
+    array[lon-1] = id;
 }
 
 //=================================================================== 
@@ -131,7 +130,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                 cudaMallocManaged(&nod[row][col][mom].elements, sizeof(Punto));
 
                 nod[row][col][mom].in_vicinage = 0;
-                cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(int));
+                //cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(int));
                 node_id = row + col*partitions + mom*partitions*partitions;
                 for (int i=node_id; i<partitions*partitions*partitions; i++){
                     n_row = i%partitions;
@@ -139,8 +138,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     n_mom = (int) i/(partitions*partitions);
                     internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
                     if (internodal_distance<id_max){
-                        //add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
-                        add_neighbor(nod[row][col][mom].in_vicinage, i);
+                        add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
                     }
                 }
             }
@@ -158,26 +156,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
     }
     cout << "Finished the classification" << endl;
-
-    /*
-    // Agregar los nodos que seran vecinos. Aquí podría agregar las condiciones periodicas de frontera
-    cout << "Figuring out what nodes are neighbors" << endl;
-    int t_row,t_col,t_mom;
-    for (int i=0; i<partitions*partitions*partitions; i++){
-        row = i%partitions;
-        col = (int) (i%(partitions*partitions))/partitions;
-        mom = (int) i/(partitions*partitions);
-        for (int j=i; j<partitions*partitions*partitions; j++){
-            t_row = j%partitions;
-            t_col = (int) (j%(partitions*partitions))/partitions;
-            t_mom = (int) j/(partitions*partitions);
-            if ( (t_row-row)*(t_row-row) + (t_col-col)*(t_col-col) + (t_mom-mom)*(t_mom-mom) < id_max ){
-                add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, j);
-            }
-        }
-    }
-    cout << "Got the neighbors" << endl;
-    */
 
 }
 
