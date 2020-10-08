@@ -81,16 +81,18 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 
 void add_neighbor(int *&array, int &lon, int id){
     lon++;
-    /*
     int *array_aux;
-    cudaMallocManaged(&array_aux, lon*sizeof(int)); 
+    array_aux= new Punto[lon];
+    array_aux[lon-1] = id;
     for (int i=0; i<lon-1; i++){
         array_aux[i] = array[i];
     }
     cudaFree(&array);
-    array = array_aux;
-    */
-    array[lon-1] = id;
+    cudaMallocManaged(&array, lon*sizeof(int));
+    for (int i=0; i<lon; i++){
+        array[i] = array_aux[i];
+    }
+    delete[] array_aux;
 }
 
 //=================================================================== 
@@ -166,8 +168,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                 }
             }
             cout << "Im in node " << node_id << endl;
-        } else {
-            cout << "The node " << row << ',' << col << ',' << mom << " has zero elements" << endl;
         }
     }
     cout << nod[13][13][13].nodes_vicinage[0] << endl;
