@@ -140,8 +140,8 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     if (internodal_distance<id_max){
                         add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
                     }
-                cout << "Im in node " << node_id << endl;
                 }
+                cout << "Im in node " << node_id << endl;
             }
         }
     }
