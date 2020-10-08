@@ -286,7 +286,7 @@ int main(int argc, char **argv){
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
 
-    cout << DDD[7][7][7] << endl;
+    cout << DDD[0][0][0] << endl;
 
     // Free memory
     // Free the histogram arrays
