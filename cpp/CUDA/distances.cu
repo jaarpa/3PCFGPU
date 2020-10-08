@@ -1,4 +1,4 @@
-
+// ./o.out data.dat rand0.dat 32768 30 180
 #include<iostream>
 #include<fstream>
 #include<string.h>
@@ -75,7 +75,7 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
        //XXX[0][0][0].elements[1].z = data_node[1].x + data_node[1].y +data_node[1].z;
        DDD[0][0][0]=100;
        XXX[0][0][0].len = (int) (XXX[0][0][0].elements[1].x + XXX[0][0][0].elements[1].y +XXX[0][0][0].elements[1].z);
-       printf("Exit the kernel");
+       printf("Exit the kernel \n");
     }
 }
 
@@ -117,6 +117,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 
     */
     int row, col, mom, node_id, id_max = pow((int) d_max/size_node + 1,2);
+    int n_row, n_col, n_mom; // Row, Col and Mom of the possible node in the neighborhood
 
     // Inicializamos los nodos vacíos:
     cout << "Initialize empty nodes" << endl;
@@ -127,13 +128,19 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                 nod[row][col][mom].len = 0;
                 cudaMallocManaged(&nod[row][col][mom].elements, sizeof(Punto));
 
-                node_id = row + col*partitions + mom*partitions*partitions;
                 nod[row][col][mom].in_vicinage = 0;
                 cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(int));
+                node_id = row + col*partitions + mom*partitions*partitions;
+                for (int i=node_id; i<partitions*partitions*partitions; i++){
+                    n_row = i%partitions;
+                    n_col = (int) (i%(partitions*partitions))/partitions;
+                    n_mom = (int) i/(partitions*partitions);
+                }
             }
         }
     }
     cout << "The last node id is " << node_id << " and you set " << partitions << " partitions" << endl;
+    cout << "The last calculated n_row, n_col, n_mom is " << n_row << ' ' << n_col << ' ' << n_mom << endl;
     cout << "The nodes have 0 elements each and 0 neighbors" << endl;
 
     // Llenamos los nodos con los puntos de dat:
