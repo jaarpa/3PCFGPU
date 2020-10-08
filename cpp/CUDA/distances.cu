@@ -193,6 +193,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
     }
 
     // Agregar los nodos que seran vecinos. Aquí podría agregar las condiciones periodicas de frontera
+    /*
     int t_row,t_col,t_mom;
     for (int i=0; i<partitions*partitions*partitions; i++){
         row = i%partitions;
@@ -203,10 +204,11 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
             t_col = (int) (j%(partitions*partitions))/partitions;
             t_mom = (int) j/(partitions*partitions);
             if ( (t_row-row)*(t_row-row) + (t_col-col)*(t_col-col) + (t_mom-mom)*(t_mom-mom) < id_max ){
-                add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, j)
+                add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, j);
             }
         }
     }
+*/
 
     // Llenamos los nodos con los puntos de dat:
     for (int i=0; i<n_pts; i++){
