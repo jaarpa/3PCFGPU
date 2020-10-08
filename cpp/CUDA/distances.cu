@@ -109,7 +109,7 @@ void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
                     a = (int)(sqrt(d12)*ds);
                     b = (int)(sqrt(d13)*ds);
                     c = (int)(sqrt(d23)*ds);
-                    XXX[a][b][c] = atomicAdd(&XXX[a][b][c],1);
+                    XXX[a][b][c] = atomicAdd(&&&XXX[a][b][c],1);
                     //*(*(*(XXX+(int)(sqrt(d12)*ds))+(int)(sqrt(d13)*ds))+(int)(sqrt(d23)*ds))+=1;
                 }
                 }
