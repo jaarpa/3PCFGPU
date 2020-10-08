@@ -81,14 +81,14 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 
 void add_neighbor(int *&array, int &lon, int id){
     lon++;
-    int *array_aux;
+    /*int *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(int)); 
     for (int i=0; i<lon-1; i++){
         array_aux[i] = array[i];
     }
     cudaFree(&array);
     array = array_aux;
-    array[lon-1] = id;
+    array[lon-1] = id; */
 }
 
 //=================================================================== 
@@ -107,6 +107,7 @@ void add(Punto *&array, int &lon, float _x, float _y, float _z){
     array[lon-1].y = _y; 
     array[lon-1].z = _z; 
 }
+
 void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_node, unsigned int n_pts, float d_max){
     /*
     Función para crear los nodos con los datos y puntos random
@@ -143,9 +144,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
             }
         }
     }
-    cout << "The last node id is " << node_id << " and you set " << partitions << " partitions" << endl;
-    cout << "The last calculated n_row, n_col, n_mom is " << n_row << ' ' << n_col << ' ' << n_mom << endl;
-    cout << "The last internodal distance is " << internodal_distance << endl;
     cout << "The nodes have 0 elements each and 0 neighbors" << endl;
 
     // Llenamos los nodos con los puntos de dat:
