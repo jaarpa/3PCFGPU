@@ -1,4 +1,4 @@
-// ./o.out data.dat rand0.dat 32768 30 180
+// nvcc distances.cu -o o.out && ./o.out data.dat rand0.dat 32768 30 180
 #include<iostream>
 #include<fstream>
 #include<string.h>
@@ -135,7 +135,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     n_row = i%partitions;
                     n_col = (int) (i%(partitions*partitions))/partitions;
                     n_mom = (int) i/(partitions*partitions);
-                    internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom)
+                    internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
                 }
             }
         }
