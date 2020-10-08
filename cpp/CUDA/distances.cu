@@ -74,7 +74,6 @@ void XXX(Node ***tensor_node, long int ***DDD, unsigned int partitions)
        //XXX[0][0][0].elements[1].y = data_node[1].x + data_node[1].y +data_node[1].z;
        //XXX[0][0][0].elements[1].z = data_node[1].x + data_node[1].y +data_node[1].z;
        DDD[0][0][0]=100;
-       XXX[0][0][0].len = (int) (XXX[0][0][0].elements[1].x + XXX[0][0][0].elements[1].y +XXX[0][0][0].elements[1].z);
        printf("Exit the kernel \n");
     }
 }
