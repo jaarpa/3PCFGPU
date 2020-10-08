@@ -112,6 +112,7 @@ void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
             }
         }
     }
+    printf("Exiting subkernel \n");
 }
 
 // Kernel function to populate the grid of nodes
