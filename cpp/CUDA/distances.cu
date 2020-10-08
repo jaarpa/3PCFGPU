@@ -16,8 +16,10 @@ struct Punto{
 };
 
 struct Node{
-    Punto nodepos;	// Coordenadas del nodo (posición del nodo)
-    int len=0;		// Cantidad de elementos en el nodo.
+    //Punto nodepos;	// Coordenadas del nodo (posición del nodo) // Se obtiene con las coordenadas del nodo.
+    int in_vicinage;    //Cantidad de nodos vecinos.
+    int *nodes_vicinage;     // Array con los master id de localizacion de los nodos vecinos.
+    int len;		// Cantidad de elementos en el nodo.
     Punto *elements;
 };
 
@@ -137,54 +139,82 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
     */
 }
 
+void add_neighbor(int *&array, int &lon, int id){
+    lon++;
+    int *array_aux; // = new Punto[lon];
+    cudaMallocManaged(&array_aux, lon*sizeof(int)); 
+    for (int i=0; i<lon-1; i++){
+        array_aux[i] = array[i];
+    }
+    cudaFree(&array);
+    array = array_aux;
+    array[lon-1] = id;
+}
+
 //=================================================================== 
 void add(Punto *&array, int &lon, float _x, float _y, float _z){
-	lon++;
+    lon++;
     Punto *array_aux; // = new Punto[lon];
     cudaMallocManaged(&array_aux, lon*sizeof(Punto)); 
-	for (int i=0; i<lon-1; i++){
-		array_aux[i].x = array[i].x;
-		array_aux[i].y = array[i].y;
-		array_aux[i].z = array[i].z;
-	}
-	cudaFree(&array);
-	array = array_aux;
-	array[lon-1].x = _x;
-	array[lon-1].y = _y; 
-	array[lon-1].z = _z; 
+    for (int i=0; i<lon-1; i++){
+        array_aux[i].x = array[i].x;
+        array_aux[i].y = array[i].y;
+        array_aux[i].z = array[i].z;
+    }
+    cudaFree(&array);
+    array = array_aux;
+    array[lon-1].x = _x;
+    array[lon-1].y = _y; 
+    array[lon-1].z = _z; 
 }
-void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_node, unsigned int n_pts){
-	/*
-	Función para crear los nodos con los datos y puntos random
-	
-	Argumentos
-	nod: arreglo donde se crean los nodos.
-	dat: datos a dividir en nodos.
-	
-	*/
-	int i, row, col, mom;
-	float p_med = size_node/2;
-	
-	// Inicializamos los nodos vacíos:
-	for (row=0; row<partitions; row++){
-		for (col=0; col<partitions; col++){
-			for (mom=0; mom<partitions; mom++){
-				nod[row][col][mom].nodepos.x = ((float)(row)*(size_node))+p_med;
-				nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+p_med;
-				nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node))+p_med;
+void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_node, unsigned int n_pts, float d_max){
+    /*
+    Función para crear los nodos con los datos y puntos random
+
+    Argumentos
+    nod: arreglo donde se crean los nodos.
+    dat: datos a dividir en nodos.
+
+    */
+    int row, col, mom, id_max = pow((int) d_max/size_node + 1,2);
+
+    // Inicializamos los nodos vacíos:
+    for (row=0; row<partitions; row++){
+        for (col=0; col<partitions; col++){
+            for (mom=0; mom<partitions; mom++){
+
                 nod[row][col][mom].len = 0;
                 cudaMallocManaged(&nod[row][col][mom].elements, sizeof(Punto));
-				//nod[row][col][mom].elements = new Punto[0];
-			}
-		}
-	}
-	// Llenamos los nodos con los puntos de dat:
-	for (i=0; i<n_pts; i++){
-		row = (int)(dat[i].x/size_node);
-        	col = (int)(dat[i].y/size_node);
-        	mom = (int)(dat[i].z/size_node);
-		add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
-	}
+                nod[row][col][mom].in_vicinage = 0;
+                cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(int));
+                //nod[row][col][mom].elements = new Punto[0];
+            }
+        }
+    }
+
+    // Agregar los nodos que seran vecinos. Aquí podría agregar las condiciones periodicas de frontera
+    int t_row,t_col,t_mom;
+    for (int i=0; i<partitions*partitions*partitions; i++){
+        row = i%partitions;
+        col = (int) (i%(partitions*partitions))/partitions;
+        mom = (int) i/(partitions*partitions);
+        for (int j=i; j<partitions*partitions*partitions; j++){
+            t_row = j%partitions;
+            t_col = (int) (j%(partitions*partitions))/partitions;
+            t_mom = (int) j/(partitions*partitions);
+            if ( (t_row-row)*(t_row-row) + (t_col-col)*(t_col-col) + (t_mom-mom)*(t_mom-mom) < id_max ){
+                add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, j)
+            }
+        }
+    }
+
+    // Llenamos los nodos con los puntos de dat:
+    for (int i=0; i<n_pts; i++){
+        row = (int)(dat[i].x/size_node);
+        col = (int)(dat[i].y/size_node);
+        mom = (int)(dat[i].z/size_node);
+        add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
+    }
 }
 
 int main(int argc, char **argv){
@@ -203,38 +233,20 @@ int main(int argc, char **argv){
     double dbin = d_max/(double)bn;
     
     // Crea los histogramas
-    long int ***DDD, ***DDR, ***DRR, ***RRR;
+    long int ***DDD;
     // inicializamos los histogramas
-    
     cudaMallocManaged(&DDD, bn*sizeof(long int**));
-    //DDD = new long int**[bn];
-    RRR = new long int**[bn];
-    DDR = new long int**[bn];
-    DRR = new long int**[bn];
-
     for (int i=0; i<bn; i++){
         cudaMallocManaged(&*(DDD+i), bn*sizeof(long int*));
-        //*(DDD+i) = new long int*[bn];
-        *(RRR+i) = new long int*[bn];
-        *(DDR+i) = new long int*[bn];
-        *(DRR+i) = new long int*[bn];
         for (int j = 0; j < bn; j++){
             cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(long int));
-            //*(*(DDD+i)+j) = new long int[bn];
-            *(*(RRR+i)+j) = new long int[bn];
-            *(*(DDR+i)+j) = new long int[bn];
-            *(*(DRR+i)+j) = new long int[bn];
         }
     }
-    
     //Inicializa en 0
     for (int i=0; i<bn; i++){
         for (int j=0; j<bn; j++){
             for (int k = 0; k < bn; k++){
                 DDD[i][j][k]= 0;
-                DDR[i][j][k]= 0;   
-                DRR[i][j][k]= 0;
-                RRR[i][j][k]= 0;
             }
         }
     }
@@ -262,20 +274,15 @@ int main(int argc, char **argv){
     read_file(rand_loc,rand);
 
     //Create Nodes
-    Node ***nodeD;//, ***d_nodeD;
-
+    Node ***nodeD;
     cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
-    //nodeD = new Node**[partitions];
-
     for (int i=0; i<partitions; i++){
         cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*));
-        //*(nodeD+i) = new Node*[partitions];
         for (int j=0; j<partitions; j++){
             cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
-            //*(*(nodeD+i)+j) = new Node[partitions];
         }
     }
-    make_nodos(nodeD, data, partitions, size_node, n_pts);
+    make_nodos(nodeD, data, partitions, size_node, n_pts, d_max);
     
     cout<< DDD[0][0][0] << endl;
     cout<< nodeD[0][0][0].elements[1].x << ' ' << nodeD[0][0][0].elements[1].y << ' ' << nodeD[0][0][0].elements[1].z << endl;
@@ -283,11 +290,7 @@ int main(int argc, char **argv){
     cout<< nodeD[0][0][0].len << endl;
     cout << "Entering to the kernel" << endl;
 
-    //Punto *data_node;
-    //cudaMalloc((void **) &data_node, nodeD[0][0][0].len*sizeof(Punto));
-    //cudaMemcpy(data_node, nodeD[0][0][0].elements, nodeD[0][0][0].len*sizeof(Punto), cudaMemcpyHostToDevice);
     create_grid<<<1,256>>>(nodeD, data, DDD, n_pts);
-    //cudaFree(data_node);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
@@ -297,8 +300,23 @@ int main(int argc, char **argv){
     cout<< DDD[0][0][0] << endl;
 
     // Free memory
-    //cudaFree(d_DDD);
-    //cudaFree(&nodeD);
+    // Free the histogram arrays
+    for (int i=0; i<bn; i++){
+        for (int j = 0; j < bn; j++){
+            cudaFree(&*(*(DDD+i)+j));
+        }
+        cudaFree(&*(DDD+i));
+    }
+    cudaFree(&DDD);
+    //Free the nodes and their inner arrays.
+    for (int i=0; i<partitions; i++){
+        for (int j=0; j<partitions; j++){
+            cudaFree(&*(*(nodeD+i)+j));
+        }
+        cudaFree(&*(nodeD+i));
+    }
+    cudaFree(&nodeD);
+    //Free data and random arrays
     cudaFree(&data);
     cudaFree(&rand);
 
