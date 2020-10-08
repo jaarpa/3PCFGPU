@@ -82,7 +82,7 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 void add_neighbor(int *&array, int &lon, int id){
     lon++;
     int *array_aux;
-    array_aux= new Punto[lon];
+    array_aux= new int[lon];
     array_aux[lon-1] = id;
     for (int i=0; i<lon-1; i++){
         array_aux[i] = array[i];
