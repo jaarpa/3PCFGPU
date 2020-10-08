@@ -85,7 +85,7 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 
 void add_neighbor(Node_Position *&array, int &lon, int _row, int _col, int _mom){
     lon++;
-    int *array_aux;
+    Node_Position *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(Node_Position)); 
     for (int i=0; i<lon-1; i++){
         array_aux[i].row = array[i].row;
