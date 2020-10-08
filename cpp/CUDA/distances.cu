@@ -145,6 +145,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
             }
         }
     }
+    cout << "The node 1,2,3 has " << nod[1][2][3].in_vicinage << " neighbor nodes" << endl;
     cout << "The nodes have 0 elements each and 0 neighbors" << endl;
 
     // Llenamos los nodos con los puntos de dat:
