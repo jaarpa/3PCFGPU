@@ -166,6 +166,8 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                 }
             }
             cout << "Im in node " << node_id << endl;
+        } else {
+            cout << "The node " << row << ',' << col << ',' << mom << " has zero elements" << endl;
         }
     }
     cout << nod[13][13][13].nodes_vicinage[0] << endl;
