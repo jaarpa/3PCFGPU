@@ -154,7 +154,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
         row = node_id%partitions;
         col = (int) (node_id%(partitions*partitions))/partitions;
         mom = (int) node_id/(partitions*partitions);
-        
+
         if (nod[row][col][mom].len!=0){
             for (int i=node_id; i<partitions*partitions*partitions; i++){
                 n_row = i%partitions;
@@ -168,6 +168,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
             cout << "Im in node " << node_id << endl;
         }
     }
+    cout << nod[13][13][13].nodes_vicinage[0] << endl;
 }
 
 int main(int argc, char **argv){
