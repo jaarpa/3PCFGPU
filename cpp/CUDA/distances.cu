@@ -138,7 +138,8 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                     n_mom = (int) i/(partitions*partitions);
                     internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
                     if (internodal_distance<id_max){
-                        add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
+                        //add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
+                        nod[row][col][mom].in_vicinage++;
                     }
                 }
             }
