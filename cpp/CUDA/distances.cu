@@ -72,6 +72,8 @@ void count_3_N111(int row, int col, int mom, unsigned int ***XXX, Node ***nodeS)
 
     */
     int i,j,k;
+    float dd_max = 180;
+    float ds = 30.0f/180.0f;
     float dx,dy,dz;
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
@@ -114,14 +116,14 @@ void count_3_N111(int row, int col, int mom, unsigned int ***XXX, Node ***nodeS)
 
 // Kernel function to populate the grid of nodes
 __global__
-void histo_XXX(Node ***tensor_node, long int ***DDD, unsigned int partitions)
+void histo_XXX(Node ***tensor_node, long int ***XXX, unsigned int partitions)
 {
     if (blockIdx.x<partitions && threadIdx.x<partitions && threadIdx.y<partitions ){
         unsigned int row, col, mom;
         row = threadIdx.x;
         col = threadIdx.y;
         mom = blockIdx.x;
-        count_3_N111(row, col, mom, DDD, tensor_node);
+        count_3_N111(row, col, mom, XXX, tensor_node);
         printf("Exit the kernel \n");
     }
 }
