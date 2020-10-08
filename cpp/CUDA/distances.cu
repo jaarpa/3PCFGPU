@@ -72,6 +72,7 @@ void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
 
     */
     int i,j,k;
+    int a,b,c;
     float dd_max = 180;
     float ds = 30.0f/180.0f;
     float dx,dy,dz;
@@ -105,7 +106,11 @@ void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
                 dz = z3-z2;
                 d23 = dx*dx+dy*dy+dz*dz;
                 if (d23<=dd_max){
-                *(*(*(XXX+(int)(sqrt(d12)*ds))+(int)(sqrt(d13)*ds))+(int)(sqrt(d23)*ds))+=1;
+                    a = (int)(sqrt(d12)*ds);
+                    b = (int)(sqrt(d13)*ds);
+                    c = (int)(sqrt(d23)*ds);
+                    atomicAdd(XXX[a,][b][c],1);
+                    //*(*(*(XXX+(int)(sqrt(d12)*ds))+(int)(sqrt(d13)*ds))+(int)(sqrt(d23)*ds))+=1;
                 }
                 }
             }
