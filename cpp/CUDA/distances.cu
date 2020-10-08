@@ -64,7 +64,7 @@ float distance(Punto p1, Punto p2){
 }
 
 __device__
-void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
+void count_3_N111(int row, int col, int mom, int ***XXX, Node ***nodeS){
     /*
     Funcion para contar los triangulos en un mismo Nodo.
 
@@ -109,7 +109,7 @@ void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
                     a = (int)(sqrt(d12)*ds);
                     b = (int)(sqrt(d13)*ds);
                     c = (int)(sqrt(d23)*ds);
-                    atomicAdd(XXX[a][b][c],1);
+                    atomicAdd(&XXX[a][b][c],1);
                     //*(*(*(XXX+(int)(sqrt(d12)*ds))+(int)(sqrt(d13)*ds))+(int)(sqrt(d23)*ds))+=1;
                 }
                 }
@@ -122,7 +122,7 @@ void count_3_N111(int row, int col, int mom, long int ***XXX, Node ***nodeS){
 
 // Kernel function to populate the grid of nodes
 __global__
-void histo_XXX(Node ***tensor_node, long int ***XXX, unsigned int partitions)
+void histo_XXX(Node ***tensor_node, int ***XXX, unsigned int partitions)
 {
     if (blockIdx.x<partitions && threadIdx.x<partitions && threadIdx.y<partitions ){
         unsigned int row, col, mom;
@@ -219,13 +219,13 @@ int main(int argc, char **argv){
     
     // Crea los histogramas
     //cout << "Histograms initialization" << endl;
-    long int ***DDD;
+    int ***DDD;
     // inicializamos los histogramas
-    cudaMallocManaged(&DDD, bn*sizeof(long int**));
+    cudaMallocManaged(&DDD, bn*sizeof(int**));
     for (int i=0; i<bn; i++){
-        cudaMallocManaged(&*(DDD+i), bn*sizeof(long int*));
+        cudaMallocManaged(&*(DDD+i), bn*sizeof(int*));
         for (int j = 0; j < bn; j++){
-            cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(long int));
+            cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(int));
         }
     }
     //Inicializa en 0
