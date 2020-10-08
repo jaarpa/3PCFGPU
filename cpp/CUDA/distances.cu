@@ -81,6 +81,7 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 
 void add_neighbor(int *&array, int &lon, int id){
     lon++;
+    /*
     int *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(int)); 
     for (int i=0; i<lon-1; i++){
@@ -88,6 +89,7 @@ void add_neighbor(int *&array, int &lon, int id){
     }
     cudaFree(&array);
     array = array_aux;
+    */
     array[lon-1] = id;
 }
 
@@ -147,21 +149,25 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
     }
     cout << "Finished the classification" << endl;
 
-    /*
     cout << "Finding neighbors" << endl;
-    for (int i=node_id; i<partitions*partitions*partitions; i++){
-        n_row = i%partitions;
-        n_col = (int) (i%(partitions*partitions))/partitions;
-        n_mom = (int) i/(partitions*partitions);
-        internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
-        if (internodal_distance<id_max){
-            add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
+    for (node_id=0; node_id<partitions*partitions*partitions;node_id++){
+        row = node_id%partitions;
+        col = (int) (node_id%(partitions*partitions))/partitions;
+        mom = (int) node_id/(partitions*partitions);
+        
+        if (nod[row][col][mom].len!=0){
+            for (int i=node_id; i<partitions*partitions*partitions; i++){
+                n_row = i%partitions;
+                n_col = (int) (i%(partitions*partitions))/partitions;
+                n_mom = (int) i/(partitions*partitions);
+                internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
+                if (internodal_distance<id_max){
+                    add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
+                }
+            }
+            cout << "Im in node " << node_id << endl;
         }
     }
-    cout << "Im in node " << node_id << endl;
-    */
-
-
 }
 
 int main(int argc, char **argv){
