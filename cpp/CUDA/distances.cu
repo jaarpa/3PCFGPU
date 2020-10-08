@@ -132,6 +132,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                 nod[row][col][mom].in_vicinage = 0;
                 cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(int));
                 node_id = row + col*partitions + mom*partitions*partitions;
+                /*
                 for (int i=node_id; i<partitions*partitions*partitions; i++){
                     n_row = i%partitions;
                     n_col = (int) (i%(partitions*partitions))/partitions;
@@ -141,6 +142,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
                         add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
                     }
                 }
+                */
                 cout << "Im in node " << node_id << endl;
             }
         }
