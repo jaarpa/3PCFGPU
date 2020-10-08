@@ -132,23 +132,9 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 
                 nod[row][col][mom].in_vicinage = 0;
                 cudaMallocManaged(&nod[row][col][mom].nodes_vicinage, sizeof(int));
-                node_id = row + col*partitions + mom*partitions*partitions;
-                
-                for (int i=node_id; i<partitions*partitions*partitions; i++){
-                    n_row = i%partitions;
-                    n_col = (int) (i%(partitions*partitions))/partitions;
-                    n_mom = (int) i/(partitions*partitions);
-                    internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
-                    if (internodal_distance<id_max){
-                        add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
-                    }
-                }
-                cout << "Im in node " << node_id << endl;
-                
             }
         }
     }
-    cout << "The node 1,2,3 has " << nod[1][2][3].in_vicinage << " neighbor nodes" << endl;
     cout << "The nodes have 0 elements each and 0 neighbors" << endl;
 
     // Llenamos los nodos con los puntos de dat:
@@ -160,6 +146,21 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
     }
     cout << "Finished the classification" << endl;
+
+    /*
+    cout << "Finding neighbors" << endl;
+    for (int i=node_id; i<partitions*partitions*partitions; i++){
+        n_row = i%partitions;
+        n_col = (int) (i%(partitions*partitions))/partitions;
+        n_mom = (int) i/(partitions*partitions);
+        internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
+        if (internodal_distance<id_max){
+            add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
+        }
+    }
+    cout << "Im in node " << node_id << endl;
+    */
+
 
 }
 
