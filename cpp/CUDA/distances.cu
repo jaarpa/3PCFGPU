@@ -15,8 +15,8 @@ struct Punto{
 
 struct Node{
     //Punto nodepos;	// Coordenadas del nodo (posición del nodo) // Se obtiene con las coordenadas del nodo.
-    int in_vicinage;    //Cantidad de nodos vecinos.
-    int *nodes_vicinage;     // Array con los master id de localizacion de los nodos vecinos.
+    //int in_vicinage;    //Cantidad de nodos vecinos.
+    //int *nodes_vicinage;     // Array con los master id de localizacion de los nodos vecinos.
     int len;		// Cantidad de elementos en el nodo.
     Punto *elements;
 };
@@ -66,7 +66,7 @@ float distance(Punto p1, Punto p2){
 
 // Kernel function to populate the grid of nodes
 __global__
-void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_pts)
+void XXX(Node ***tensor_node, long int ***DDD, unsigned int partitions)
 {
     if (blockIdx.x==0 && blockIdx.y==0 && blockIdx.y==0 && threadIdx.x==0 && threadIdx.y==0 && threadIdx.z==0 ){
        //printf("%i \n", threadIdx.x);
@@ -81,18 +81,16 @@ void create_grid(Node ***XXX, Punto *data_node, long int ***DDD, unsigned int n_
 
 void add_neighbor(int *&array, int &lon, int id){
     lon++;
+    /*
     int *array_aux;
-    array_aux= new int[lon];
-    array_aux[lon-1] = id;
+    cudaMallocManaged(&array_aux, lon*sizeof(int)); 
     for (int i=0; i<lon-1; i++){
         array_aux[i] = array[i];
     }
     cudaFree(&array);
-    cudaMallocManaged(&array, lon*sizeof(int));
-    for (int i=0; i<lon; i++){
-        array[i] = array_aux[i];
-    }
-    delete[] array_aux;
+    array = array_aux;
+    */
+    array[lon-1] = id;
 }
 
 //=================================================================== 
@@ -150,27 +148,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
     }
     cout << "Finished the classification" << endl;
-
-    cout << "Finding neighbors" << endl;
-    for (node_id=0; node_id<partitions*partitions*partitions;node_id++){
-        row = node_id%partitions;
-        col = (int) (node_id%(partitions*partitions))/partitions;
-        mom = (int) node_id/(partitions*partitions);
-
-        if (nod[row][col][mom].len!=0){
-            for (int i=node_id; i<partitions*partitions*partitions; i++){
-                n_row = i%partitions;
-                n_col = (int) (i%(partitions*partitions))/partitions;
-                n_mom = (int) i/(partitions*partitions);
-                internodal_distance = (n_row-row)*(n_row-row) + (n_col-col)*(n_col-col) + (n_mom-mom)*(n_mom-mom);
-                if (internodal_distance<id_max){
-                    add_neighbor(nod[row][col][mom].nodes_vicinage, nod[row][col][mom].in_vicinage, i);
-                }
-            }
-            cout << "Im in node " << node_id << endl;
-        }
-    }
-    cout << nod[13][13][13].nodes_vicinage[0] << endl;
 }
 
 int main(int argc, char **argv){
@@ -189,7 +166,7 @@ int main(int argc, char **argv){
     double dbin = d_max/(double)bn;
     
     // Crea los histogramas
-    cout << "Histograms initialization" << endl;
+    //cout << "Histograms initialization" << endl;
     long int ***DDD;
     // inicializamos los histogramas
     cudaMallocManaged(&DDD, bn*sizeof(long int**));
@@ -207,9 +184,9 @@ int main(int argc, char **argv){
             }
         }
     }
-    cout << "Finished histograms initialization" << endl;
+    //cout << "Finished histograms initialization" << endl;
 
-    cout << "Starting to read the data files" << endl;
+    //cout << "Starting to read the data files" << endl;
     Punto *data, *rand; //Crea un array de n_pts puntos
     cudaMallocManaged(&data, n_pts*sizeof(Punto));
     cudaMallocManaged(&rand, n_pts*sizeof(Punto));
@@ -219,7 +196,7 @@ int main(int argc, char **argv){
     cout << "Successfully readed the data" << endl;
 
     //Create Nodes
-    cout << "Started nodes initialization" << endl;
+    //cout << "Started nodes initialization" << endl;
     Node ***nodeD;
     cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
     for (int i=0; i<partitions; i++){
@@ -228,12 +205,12 @@ int main(int argc, char **argv){
             cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
         }
     }
-    cout << "Finished nodes initialization" << endl;
-    cout << "Started the data classification into the nodes." << endl;
+    //cout << "Finished nodes initialization" << endl;
+    //cout << "Started the data classification into the nodes." << endl;
     make_nodos(nodeD, data, partitions, size_node, n_pts, d_max);
-    cout << "Finished the data classification" << endl;
+    cout << "Finished the data classification in node" << endl;
 
-    cout << "Calculating the nuber of blocks and threads for the kernel" << endl;
+    //cout << "Calculating the nuber of blocks and threads for the kernel for XXX" << endl;
     //Sets GPU arrange of threads
     int threads=1, blocks=n_even, threads_test, blocks_test;
     float score=pow(blocks,2)+pow((blocks*threads)-n_even,2), score_test;
@@ -248,8 +225,11 @@ int main(int argc, char **argv){
             score=score_test;
         }
     }
+    
     cout << "Entering to the kernel" << endl;
-    create_grid<<<1,256>>>(nodeD, data, DDD, n_pts);
+    dim3 grid(16,1,1);
+    dim3 block(16,16);
+    XXX<<<grid,block>>>(nodeD, DDD, partitions);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
