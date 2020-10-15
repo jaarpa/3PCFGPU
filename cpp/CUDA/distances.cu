@@ -97,7 +97,7 @@ void count_3_N111(Punto *elements, int len, float dmax2, float ds, unsigned int 
             d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
 
             if (d12<=dmax2){
-                d12 = sqrt(d12)
+                d12 = sqrt(d12);
                 for (int k=j; k<len; j++){
                     x3 = elements[k].x;
                     y3 = elements[k].y;
