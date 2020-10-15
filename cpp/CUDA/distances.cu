@@ -284,6 +284,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
 
         //Para entre nodos
         /*
+        yrdy
         unsigned int u, v, w, a ,b, c;
         float dis_nod, dis_nod2, dis_nod3;
         float inernode_max = dmax2/(size_node*size_node);
