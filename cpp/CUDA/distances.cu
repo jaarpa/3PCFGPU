@@ -186,9 +186,8 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
     dat: datos a dividir en nodos.
 
     */
-    int test = 0;
-    int row, col, mom, node_id, id_max = pow((int) dmax/size_node + 1,2);
-    int n_row, n_col, n_mom, internodal_distance; // Row, Col and Mom of the possible node in the neighborhood
+    int row, col, mom, id_max = pow((int) dmax/size_node + 1,2);
+    //int n_row, n_col, n_mom, internodal_distance; // Row, Col and Mom of the possible node in the neighborhood
 
     // Inicializamos los nodos vacíos:
     cout << "Initialize empty nodes" << endl;
