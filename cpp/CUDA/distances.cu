@@ -283,14 +283,12 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
 
         //Para entre nodos
-        int i, j, k, u, v, w, a ,b, c;
-        float dis, dis_nod, dis_nod2, dis_nod3;
+        /*
+        unsigned int u, v, w, a ,b, c;
+        float dis_nod, dis_nod2, dis_nod3;
         float inernode_max = dmax2/(size_node*size_node);
         float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
-        float x, y, z;
-        float dx, dy, dz, dx_nod, dy_nod, dz_nod, dx_nod2, dy_nod2, dz_nod2, dx_nod3, dy_nod3, dz_nod3;
-        bool con_x, con_y, con_z;
-
+        float dx_nod, dy_nod, dz_nod, dx_nod2, dy_nod2, dz_nod2, dx_nod3, dy_nod3, dz_nod3;
         for (w=mom+1;  w<partitions; ++w){
             z2N = w;
             dz_nod = z2N-z1N;
@@ -550,6 +548,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         if (row == 5 && col == 5 && mom == 5){
             printf("Exit the kernel \n");
         }
+        */
     }
 }
 
@@ -621,7 +620,8 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 }
 
 int main(int argc, char **argv){
-        
+    variable_que_no_definii - asadsdafasd
+
     string data_loc = argv[1];
     string rand_loc = argv[2];
     string mypathto_files = "../../fake_DATA/DATOS/";
@@ -632,9 +632,8 @@ int main(int argc, char **argv){
     unsigned int n_pts = stoi(argv[3]), bn=stoi(argv[4]);
     unsigned int n_even = n_pts+(n_pts%2!=0);
     float dmax=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
-    float dmax2 = dmax*dmax, ds = ((float)(bn))/dmax;
+    float dmax2 = dmax*dmax, ds = ((float)(bn))/dmax
     unsigned int partitions = (int)(ceil(size_box/size_node));
-    double dbin = dmax/(double)bn;
     
     // Crea los histogramas
     //cout << "Histograms initialization" << endl;
