@@ -77,24 +77,24 @@ void count_3_N111(Punto elements, unsigned int len, unsigned int ***XXX, float d
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
 
-    for (i=0; i<nodeS[row][col][mom].len-2; ++i){
-        x1 = nodeS[row][col][mom].elements[i].x;
-        y1 = nodeS[row][col][mom].elements[i].y;
-        z1 = nodeS[row][col][mom].elements[i].z;
-        for (j=i+1; j<nodeS[row][col][mom].len-1; ++j){
-            x2 = nodeS[row][col][mom].elements[j].x;
-            y2 = nodeS[row][col][mom].elements[j].y;
-            z2 = nodeS[row][col][mom].elements[j].z;
+    for (i=0; i<len-2; ++i){
+        x1 = elements[i].x;
+        y1 = elements[i].y;
+        z1 = elements[i].z;
+        for (j=i+1; j<len-1; ++j){
+            x2 = elements[j].x;
+            y2 = elements[j].y;
+            z2 = elements[j].z;
             dx = x2-x1;
             dy = y2-y1;
             dz = z2-z1;
             d12 = dx*dx+dy*dy+dz*dz;
             if (d12<=dmax2){
                 d12 = sqrt(d12)
-                for (k=j+1; k<nodeS[row][col][mom].len; ++k){ 
-                    x3 = nodeS[row][col][mom].elements[k].x;
-                    y3 = nodeS[row][col][mom].elements[k].y;
-                    z3 = nodeS[row][col][mom].elements[k].z;
+                for (k=j+1; k<len; ++k){ 
+                    x3 = elements[k].x;
+                    y3 = elements[k].y;
+                    z3 = elements[k].z;
                     dx = x3-x1;
                     dy = y3-y1;
                     dz = z3-z1;
@@ -121,7 +121,7 @@ void count_3_N111(Punto elements, unsigned int len, unsigned int ***XXX, float d
 
 // Kernel function to populate the grid of nodes
 __global__
-void histo_XXX(Node ***tensor_node, int ***XXX, unsigned int partitions, float dmax2, float ds)
+void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions, float dmax2, float ds)
 {
     if (blockIdx.x<partitions && threadIdx.x<partitions && threadIdx.y<partitions ){
         unsigned int row, col, mom;
@@ -222,13 +222,13 @@ int main(int argc, char **argv){
     
     // Crea los histogramas
     //cout << "Histograms initialization" << endl;
-    int ***DDD;
+    unsigned int ***DDD;
     // inicializamos los histogramas
-    cudaMallocManaged(&DDD, bn*sizeof(int**));
+    cudaMallocManaged(&DDD, bn*sizeof(unsigned int**));
     for (int i=0; i<bn; i++){
-        cudaMallocManaged(&*(DDD+i), bn*sizeof(int*));
+        cudaMallocManaged(&*(DDD+i), bn*sizeof(unsigned int*));
         for (int j = 0; j < bn; j++){
-            cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(int));
+            cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(unsigned int));
         }
     }
     //Inicializa en 0
