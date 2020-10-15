@@ -138,7 +138,9 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             dim3 block_N111(1024,1,1);
             
         }
-        count_3_N111<<<grid_N111,block_N111>>>(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len, dmax2, ds, XXX);
+        count_3_N111<<<1,1024>>>(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len, dmax2, ds, XXX);
+        
+        __syncthreads();
 
         printf("Exit the kernel \n");
     }
