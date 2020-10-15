@@ -45,7 +45,7 @@ void read_file(string file_loc, Punto *data){
 }
 
 void save_histogram(string name, int bns, unsigned int ***histo){
-    int i, j, k, d=0;
+    int i, j, k;
     unsigned int **reshape = new unsigned int*[bns];
     for (i=0; i<bns; i++){
         *(reshape+i) = new unsigned int[bns*bns];
@@ -83,7 +83,6 @@ void count_3_N111(Punto *elements, int len, float dmax2, float ds, unsigned int 
     int i = threadIdx.x + blockIdx.x*blockDim.x;
     if (i<len){
         float x1,y1,z1,x2,y2,z2,x3,y3,z3;
-        ds = ((float)(bn))/d_max;
         float d12,d13,d23;
 
         x1 = elements[i].x;
@@ -134,7 +133,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             dim3 block_N111(1024,1,1);
         } else {
             unsigned int N111_blocks;
-            N111_blocks = (int)(ceil(tensor_node[row][col][mom].len/1024));
+            N111_blocks = (int)(tensor_node[row][col][mom].len/1024 + 1);
             dim3 grid_N111(N111_blocks,1,1);
             dim3 block_N111(1024,1,1);
             
