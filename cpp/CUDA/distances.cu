@@ -2,8 +2,9 @@
 #include<iostream>
 #include<fstream>
 #include<string.h>
-#include <stdio.h>
-#include <math.h>
+#include<stdio.h>
+#include<math.h>
+#include <ctime>
 
 using namespace std;
 
@@ -592,7 +593,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
     dat: datos a dividir en nodos.
 
     */
-    int test = 0;
     int row, col, mom;
     //int node_id, n_row, n_col, n_mom, internodal_distance, id_max = pow((int) dmax/size_node + 1,2); // Row, Col and Mom of the possible node in the neighborhood
 
@@ -698,12 +698,16 @@ int main(int argc, char **argv){
     }
     
     cout << "Entering to the kernel" << endl;
+    clock_t c_start = clock();
     dim3 grid(16,1,1);
     dim3 block(16,16);
     histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, ds, size_node);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
+    clock_t c_end = clock();
+    float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
+    printf("\nTiempo en CPU usado = %.4f seg.\n", time_elapsed_s );
 
     cout << DDD[0][0][0] << endl;
 
