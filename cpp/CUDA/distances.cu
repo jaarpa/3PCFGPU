@@ -90,7 +90,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             dz = z2-z1;
             d12 = dx*dx+dy*dy+dz*dz;
             if (d12<=dmax2){
-                d12 = sqrt(d12)
+                d12 = sqrt(d12);
                 for (k=j+1; k<len; ++k){ 
                     x3 = elements[k].x;
                     y3 = elements[k].y;
@@ -100,13 +100,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                     dz = z3-z1;
                     d13 = dx*dx+dy*dy+dz*dz;
                     if (d13<=dmax2){
-                        d13 = sqrt(d13)
+                        d13 = sqrt(d13);
                         dx = x3-x2;
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
                         if (d23<=dmax2){
-                            d23 = sqrt(d23)
+                            d23 = sqrt(d23);
                             a = (int)(d12*ds);
                             b = (int)(d13*ds);
                             c = (int)(d23*ds);
