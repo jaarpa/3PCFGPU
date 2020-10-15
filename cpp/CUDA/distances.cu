@@ -4,7 +4,7 @@
 #include<string.h>
 #include<stdio.h>
 #include<math.h>
-#include <ctime>
+#include<time.h>
 
 using namespace std;
 
@@ -698,16 +698,18 @@ int main(int argc, char **argv){
     }
     
     cout << "Entering to the kernel" << endl;
-    clock_t c_start = clock();
+    clock_t begin = clock();
+
     dim3 grid(16,1,1);
     dim3 block(16,16);
     histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, ds, size_node);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
-    clock_t c_end = clock();
-    float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
-    printf("\nTiempo en CPU usado = %.4f seg.\n", time_elapsed_s );
+
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
 
     cout << DDD[0][0][0] << endl;
 
