@@ -44,92 +44,103 @@ void read_file(string file_loc, Punto *data){
     //cout << "Succesfully readed " << file_loc << endl;
 }
 
-void guardar_Histograma(string nombre,int dim, long int *histograma){
-    ofstream archivo;
-    archivo.open(nombre.c_str(),ios::out | ios::binary);
-    if (archivo.fail()){
+void save_histogram(string name, int bns, unsigned int ***histo){
+    int i, j, k, d=0;
+    unsigned int **reshape = new unsigned int*[bns];
+    for (i=0; i<bns; i++){
+        *(reshape+i) = new unsigned int[bns*bns];
+        }
+    for (i=0; i<bns; i++){
+    for (j=0; j<bns; j++){
+    for (k=0; k<bns; k++){
+        reshape[i][bns*j+k] = histo[i][j][k];
+    }
+    }
+    }
+    ofstream file;
+    file.open(name.c_str(),ios::out | ios::binary);
+    if (file.fail()){
         cout << "Error al guardar el archivo " << endl;
         exit(1);
     }
-    for (int i = 0; i < dim; i++)
-    {
-        archivo << histograma[i] << endl;
+    for (i=0; i<bns; i++){
+        for (j=0; j<bns*bns; j++){
+            file << reshape[i][j] << " "; 
+        }
+        file << endl;
     }
-    archivo.close();
-}
-
-float distance(Punto p1, Punto p2){
-    float x = p1.x-p2.x, y=p1.y-p2.y, z=p1.z-p2.z;
-    return sqrt(x*x + y*y + z*z);
+    file.close();
 }
 
 __device__
-void count_3_N111(int row, int col, int mom, int ***XXX, Node ***nodeS){
+void count_3_N111(Punto *elements, int len, float dmax2, float ds, unsigned int ***XXX){
     /*
     Funcion para contar los triangulos en un mismo Nodo.
 
     row, col, mom => posición del Nodo. Esto define al Nodo.
 
     */
-    int i,j,k;
-    int a,b,c;
-    float dd_max = 180;
-    float ds = 30.0f/180.0f;
-    float dx,dy,dz;
-    float d12,d13,d23;
-    float x1,y1,z1,x2,y2,z2,x3,y3,z3;
+    int i = threadIdx.x + blockIdx.x*blockDim.x;
+    if (i<len){
+        float x1,y1,z1,x2,y2,z2,x3,y3,z3;
+        ds = ((float)(bn))/d_max;
+        float d12,d13,d23;
 
-    for (i=0; i<nodeS[row][col][mom].len-2; ++i){
-        x1 = nodeS[row][col][mom].elements[i].x;
-        y1 = nodeS[row][col][mom].elements[i].y;
-        z1 = nodeS[row][col][mom].elements[i].z;
-        for (j=i+1; j<nodeS[row][col][mom].len-1; ++j){
-            x2 = nodeS[row][col][mom].elements[j].x;
-            y2 = nodeS[row][col][mom].elements[j].y;
-            z2 = nodeS[row][col][mom].elements[j].z;
-            dx = x2-x1;
-            dy = y2-y1;
-            dz = z2-z1;
-            d12 = dx*dx+dy*dy+dz*dz;
-            if (d12<=dd_max){
-            for (k=j+1; k<nodeS[row][col][mom].len; ++k){ 
-                x3 = nodeS[row][col][mom].elements[k].x;
-                y3 = nodeS[row][col][mom].elements[k].y;
-                z3 = nodeS[row][col][mom].elements[k].z;
-                dx = x3-x1;
-                dy = y3-y1;
-                dz = z3-z1;
-                d13 = dx*dx+dy*dy+dz*dz;
-                if (d13<=dd_max){
-                dx = x3-x2;
-                dy = y3-y2;
-                dz = z3-z2;
-                d23 = dx*dx+dy*dy+dz*dz;
-                if (d23<=dd_max){
-                    a = (int)(sqrt(d12)*ds);
-                    b = (int)(sqrt(d13)*ds);
-                    c = (int)(sqrt(d23)*ds);
-                    atomicAdd(&XXX[a][b][c],1);
-                    //*(*(*(XXX+(int)(sqrt(d12)*ds))+(int)(sqrt(d13)*ds))+(int)(sqrt(d23)*ds))+=1;
+        x1 = elements[i].x;
+        y1 = elements[i].y;
+        z1 = elements[i].z;
+
+        for (int j=i; j<len; j++){
+            x2 = elements[j].x;
+            y2 = elements[j].y;
+            z2 = elements[j].z;
+            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+
+            if (d12<=dmax2){
+                d12 = sqrt(d12)
+                for (int k=j; k<len; j++){
+                    x3 = elements[k].x;
+                    y3 = elements[k].y;
+                    z3 = elements[k].z;
+                    d23 = (x2-x3)*(x2-x3) + (y2-y3)*(y2-y3) + (z2-z3)*(z2-z3);
+                    if (d23<=dmax2){
+                        d23 = sqrt(d23);
+                        d13 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
+                        if (d13<=dmax2){
+                            d13 = sqrt(d13);
+                            unsigned int a = (unsigned int)(d12*ds);
+                            unsigned int b = (unsigned int)(d13*ds);
+                            unsigned int c = (unsigned int)(d23*ds);
+                            atomicAdd(&XXX[a][b][c],1);
+                        }
+                    }
                 }
-                }
-            }
             }
         }
     }
-    printf("%i, %i, %i \n", a,b,c);
 }
 
 // Kernel function to populate the grid of nodes
 __global__
-void histo_XXX(Node ***tensor_node, int ***XXX, unsigned int partitions)
+void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions, float dmax2, float ds)
 {
     if (blockIdx.x<partitions && threadIdx.x<partitions && threadIdx.y<partitions ){
         unsigned int row, col, mom;
         row = threadIdx.x;
         col = threadIdx.y;
         mom = blockIdx.x;
-        count_3_N111(row, col, mom, XXX, tensor_node);
+        if (tensor_node[row][col][mom].len<=1024){
+            dim3 grid_N111(1,1,1);
+            dim3 block_N111(1024,1,1);
+        } else {
+            unsigned int N111_blocks;
+            N111_blocks = (int)(ceil(tensor_node[row][col][mom].len/1024));
+            dim3 grid_N111(N111_blocks,1,1);
+            dim3 block_N111(1024,1,1);
+            
+        }
+        count_3_N111<<<grid_N111,block_N111>>>(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len, dmax2, ds, XXX);
+
         printf("Exit the kernel \n");
     }
 }
@@ -165,7 +176,7 @@ void add(Punto *&array, int &lon, float _x, float _y, float _z){
     array[lon-1].z = _z; 
 }
 
-void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_node, unsigned int n_pts, float d_max){
+void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_node, unsigned int n_pts, float dmax){
     /*
     Función para crear los nodos con los datos y puntos random
 
@@ -175,7 +186,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 
     */
     int test = 0;
-    int row, col, mom, node_id, id_max = pow((int) d_max/size_node + 1,2);
+    int row, col, mom, node_id, id_max = pow((int) dmax/size_node + 1,2);
     int n_row, n_col, n_mom, internodal_distance; // Row, Col and Mom of the possible node in the neighborhood
 
     // Inicializamos los nodos vacíos:
@@ -213,19 +224,20 @@ int main(int argc, char **argv){
     
     unsigned int n_pts = stoi(argv[3]), bn=stoi(argv[4]);
     unsigned int n_even = n_pts+(n_pts%2!=0);
-    float d_max=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
+    float dmax=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
+    float ds = ((float)(bn))/d_max, dmax2=dmax*dmax;
     unsigned int partitions = (int)(ceil(size_box/size_node));
-    double dbin = d_max/(double)bn;
+    double dbin = dmax/(double)bn;
     
     // Crea los histogramas
     //cout << "Histograms initialization" << endl;
-    int ***DDD;
+    unsigned int ***DDD;
     // inicializamos los histogramas
-    cudaMallocManaged(&DDD, bn*sizeof(int**));
+    cudaMallocManaged(&DDD, bn*sizeof(unsigned int**));
     for (int i=0; i<bn; i++){
-        cudaMallocManaged(&*(DDD+i), bn*sizeof(int*));
+        cudaMallocManaged(&*(DDD+i), bn*sizeof(unsigned int*));
         for (int j = 0; j < bn; j++){
-            cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(int));
+            cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(unsigned int));
         }
     }
     //Inicializa en 0
@@ -259,7 +271,7 @@ int main(int argc, char **argv){
     }
     //cout << "Finished nodes initialization" << endl;
     //cout << "Started the data classification into the nodes." << endl;
-    make_nodos(nodeD, data, partitions, size_node, n_pts, d_max);
+    make_nodos(nodeD, data, partitions, size_node, n_pts, dmax);
     cout << "Finished the data classification in node" << endl;
 
     //cout << "Calculating the nuber of blocks and threads for the kernel for XXX" << endl;
@@ -281,7 +293,7 @@ int main(int argc, char **argv){
     cout << "Entering to the kernel" << endl;
     dim3 grid(16,1,1);
     dim3 block(16,16);
-    histo_XXX<<<grid,block>>>(nodeD, DDD, partitions);
+    histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, ds);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
