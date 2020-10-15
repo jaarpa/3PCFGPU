@@ -549,9 +549,9 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
     }
 }
 
+/*
 void add_neighbor(int *&array, int &lon, int id){
     lon++;
-    /*
     int *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(int)); 
     for (int i=0; i<lon-1; i++){
@@ -559,9 +559,9 @@ void add_neighbor(int *&array, int &lon, int id){
     }
     cudaFree(&array);
     array = array_aux;
-    */
     array[lon-1] = id;
 }
+*/
 
 //=================================================================== 
 void add(Punto *&array, int &lon, float _x, float _y, float _z){
