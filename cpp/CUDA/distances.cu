@@ -450,7 +450,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
                     }
                 }
             }	
-        }		
+        }
 
         //=======================
         // Nodo 2 movil en ZYX:
@@ -494,33 +494,11 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
                                 }
                             }
                         }
-                    //=======================
-                    // Nodo 3 movil en ZY:
-                    //=======================
-                    for (b=v+1; b<partitions; ++b){
-                        y3N = b;
-                        dy_nod2 = y3N-y1N;
-                        for (c=0;  c<partitions; ++c){
-                            z3N = c;
-                            dz_nod2 = z3N-z1N;
-                            dis_nod2 = dx_nod2*dx_nod2 + dy_nod2*dy_nod2 + dz_nod2*dz_nod2;
-                            if (dis_nod2 <= inernode_max){
-                                dy_nod3 = y3N-y2N;
-                                dz_nod3 = z3N-z2N;
-                                dis_nod3 = dy_nod3*dy_nod3 + dz_nod3*dz_nod3;
-                                if (dis_nod3 <= inernode_max){
-                                    count_3_N123(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[u][v][w].elements, tensor_node[u][v][w].len, tensor_node[a][b][c].elements, tensor_node[a][b][c].len, XXX, dmax2, ds, size_node);
-                                }
-                            }
-                        }
-                    }
-                    //=======================
-                    // Nodo 3 movil en ZYX:
-                    //=======================		
-                    for (a=u+1; a<partitions; ++a){
-                        x3N = a;
-                        dx_nod2 = x3N-x1N;
-                        for (b=0; b<partitions; ++b){
+                            
+                        //=======================
+                        // Nodo 3 movil en ZY:
+                        //=======================
+                        for (b=v+1; b<partitions; ++b){
                             y3N = b;
                             dy_nod2 = y3N-y1N;
                             for (c=0;  c<partitions; ++c){
@@ -528,12 +506,37 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
                                 dz_nod2 = z3N-z1N;
                                 dis_nod2 = dx_nod2*dx_nod2 + dy_nod2*dy_nod2 + dz_nod2*dz_nod2;
                                 if (dis_nod2 <= inernode_max){
-                                    dx_nod3 = x3N-x2N;
                                     dy_nod3 = y3N-y2N;
                                     dz_nod3 = z3N-z2N;
-                                    dis_nod3 = dx_nod3*dx_nod3 + dy_nod3*dy_nod3 + dz_nod3*dz_nod3;
+                                    dis_nod3 = dy_nod3*dy_nod3 + dz_nod3*dz_nod3;
                                     if (dis_nod3 <= inernode_max){
                                         count_3_N123(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[u][v][w].elements, tensor_node[u][v][w].len, tensor_node[a][b][c].elements, tensor_node[a][b][c].len, XXX, dmax2, ds, size_node);
+                                    }
+                                }
+                            }
+                        }
+
+                        //=======================
+                        // Nodo 3 movil en ZYX:
+                        //=======================		
+                        for (a=u+1; a<partitions; ++a){
+                            x3N = a;
+                            dx_nod2 = x3N-x1N;
+                            for (b=0; b<partitions; ++b){
+                                y3N = b;
+                                dy_nod2 = y3N-y1N;
+                                for (c=0;  c<partitions; ++c){
+                                    z3N = c;
+                                    dz_nod2 = z3N-z1N;
+                                    dis_nod2 = dx_nod2*dx_nod2 + dy_nod2*dy_nod2 + dz_nod2*dz_nod2;
+                                    if (dis_nod2 <= inernode_max){
+                                        dx_nod3 = x3N-x2N;
+                                        dy_nod3 = y3N-y2N;
+                                        dz_nod3 = z3N-z2N;
+                                        dis_nod3 = dx_nod3*dx_nod3 + dy_nod3*dy_nod3 + dz_nod3*dz_nod3;
+                                        if (dis_nod3 <= inernode_max){
+                                            count_3_N123(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[u][v][w].elements, tensor_node[u][v][w].len, tensor_node[a][b][c].elements, tensor_node[a][b][c].len, XXX, dmax2, ds, size_node);
+                                        }
                                     }
                                 }
                             }
