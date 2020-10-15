@@ -149,7 +149,7 @@ void count_3_N112(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
             dy = y2-y1;
             dz = z2-z1;
             d12 = dx*dx+dy*dy+dz*dz;
-            if (d12<=dd_max){
+            if (d12<=dmax2){
                 d12=sqrt(d12);
                 for (k=j+1; k<len1; ++k){
                     // 3er punto en N1
@@ -160,13 +160,13 @@ void count_3_N112(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
                     dy = y3-y1;
                     dz = z3-z1;
                     d13 = dx*dx+dy*dy+dz*dz;
-                    if (d13<=dd_max){
+                    if (d13<=dmax2){
                         d13 = sqrt(d13);
                         dx = x3-x2;
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
-                        if (d23<=dd_max){
+                        if (d23<=dmax2){
                             d23 = sqrt(d23);
                             a = (int)(d12*ds);
                             b = (int)(d13*ds);
@@ -184,13 +184,13 @@ void count_3_N112(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
                     dy = y3-y1;
                     dz = z3-z1;
                     d13 = dx*dx+dy*dy+dz*dz;
-                    if (d13<=dd_max){
+                    if (d13<=dmax2){
                         d13 = sqrt(d13);
                         dx = x3-x2;
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
-                        if (d23<=dd_max){
+                        if (d23<=dmax2){
                             d23 = sqrt(d23);
                             a = (int)(d12*ds);
                             b = (int)(d13*ds);
@@ -236,7 +236,7 @@ void count_3_N123(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
             dy = y3-y1;
             dz = z3-z1;
             d13 = dx*dx+dy*dy+dz*dz;
-            if (d13<=dd_max){
+            if (d13<=dmax2){
                 d13 = sqrt(d13);
                 for (k=0; k<len2; ++k){
                     // 3er punto en N2
@@ -247,13 +247,13 @@ void count_3_N123(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
                     dy = y3-y2;
                     dz = z3-z2;
                     d23 = dx*dx+dy*dy+dz*dz;
-                    if (d23<=dd_max){
+                    if (d23<=dmax2){
                         d23 = sqrt(d23);
                         dx = x2-x1;
                         dy = y2-y1;
                         dz = z2-z1;
                         d12 = dx*dx+dy*dy+dz*dz;
-                        if (d12<=dd_max){
+                        if (d12<=dmax2){
                             d12 = sqrt(d12);
                             a = (int)(d12*ds);
                             b = (int)(d13*ds);
@@ -281,7 +281,14 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         //Contar triangulos dentro del mismo nodo
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
 
-        //Para entre nodos 
+        //Para entre nodos
+        int i, j, k, u, v, w, a ,b, c;
+        float dis, dis_nod, dis_nod2, dis_nod3;
+        float x1N, y1N, z1N, x2N, y2N, z2N, x3N, y3N, z3N;
+        float x, y, z;
+        float dx, dy, dz, dx_nod, dy_nod, dz_nod, dx_nod2, dy_nod2, dz_nod2, dx_nod3, dy_nod3, dz_nod3;
+        bool con_x, con_y, con_z;
+        
         for (w=mom+1;  w<partitions; ++w){	
             z2N = nodeX[u][v][w].nodepos.z;
             dz_nod = z2N-z1N;
