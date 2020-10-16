@@ -620,8 +620,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 }
 
 int main(int argc, char **argv){
-    variable_que_no_definii - asadsdafasd
-
+    
     string data_loc = argv[1];
     string rand_loc = argv[2];
     string mypathto_files = "../../fake_DATA/DATOS/";
