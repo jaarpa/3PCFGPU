@@ -283,12 +283,18 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
 
         //Para entre nodos
-        /*
+        
         unsigned int u, v, w, a ,b, c;
         float dis_nod, dis_nod2, dis_nod3;
         float inernode_max = dmax2/(size_node*size_node);
         float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
         float dx_nod, dy_nod, dz_nod, dx_nod2, dy_nod2, dz_nod2, dx_nod3, dy_nod3, dz_nod3;
+
+        u = row;
+        v = col;
+        //=======================
+        // Nodo 2 movil en Z:
+        //=======================
         for (w=mom+1;  w<partitions; ++w){
             z2N = w;
             dz_nod = z2N-z1N;
@@ -363,6 +369,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             }
         }
 
+        /*
         //=======================
         // Nodo 2 movil en ZY:
         //=======================
