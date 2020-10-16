@@ -118,6 +118,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             }
         }
     }
+    printf("Exit the child kernel \n");
 }
 
 __device__
