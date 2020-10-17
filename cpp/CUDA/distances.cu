@@ -316,11 +316,11 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             // Nodo 3 movil en Z:
             //=======================
             //for (c=w+1;  c<partitions; ++c){
-            for (dis31=1; (dis31*dis31)<=inernode_max2 && (w+dis31)<=partitions; dis31++){
+            for (dis_nod31=1; (dis_nod31*dis_nod31)<=inernode_max2 && (w+dis_nod31)<=partitions; dis_nod31++){
                 //z3N = c; 
                 //dz_nod2 = z3N-z1N;
                 //dis_nod2 = dz_nod2*dz_nod2;
-                c=w+dis31;
+                c=w+dis_nod31;
                 count_3_N123(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[row][col][w].elements, tensor_node[row][col][w].len, tensor_node[row][col][c].elements, tensor_node[row][col][c].len, XXX, dmax2, ds, size_node);
             }
 
