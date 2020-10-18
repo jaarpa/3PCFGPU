@@ -344,7 +344,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
                         //dis_nod3 = dy_nod3*dy_nod3 + dz_nod3*dz_nod3;
                         
                         //dis_nod23 = (b-v)*(b-v) + (c-w)*(c-w);
-                        dis_nod23 = dy_nod31*dy_nod31 + (c-w)*(c-w) // La dy es la misma entre 3 y 1 que 32 porque el nodo 2 solo se mueve en z (por ahora)
+                        dis_nod23 = dy_nod31*dy_nod31 + (c-w)*(c-w); // La dy es la misma entre 3 y 1 que 32 porque el nodo 2 solo se mueve en z (por ahora)
                         if (dis_nod23 <= inernode_max2){
                             count_3_N123(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[row][col][w].elements, tensor_node[row][col][w].len, tensor_node[row][b][c].elements, tensor_node[row][b][c].len, XXX, dmax2, ds, size_node);
                         }
