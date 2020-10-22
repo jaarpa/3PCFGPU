@@ -666,6 +666,7 @@ __global__
 void test_kernel(unsigned int ***DDD, float size_node){
     if (blockIdx.x==0 && threadIdx.x == 0){
     DDD[1][2][3] = (unsigned int)(size_node);
+    printf("Exit the kernel \n");
     }
 }
 
