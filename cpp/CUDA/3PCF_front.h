@@ -595,6 +595,8 @@ void NODE3P::make_nodos(Node ***nod, Point3D *dat){
 	}
 
 
+    std::cout << "Number of partitions " << partitions << std::endl;
+    std::cout << "Check nodes i,2,3" << std::endl;
     std::cout << partitions << std::endl;
     for (i=0; i < partitions; i++){
         if (nod[i][2][3].len > 0){

@@ -132,13 +132,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
                             c = (unsigned int)(d23*ds);
+                            atomicAdd(&XXX[a][b][c],1);
                         }
                     }
                 }
             }
         }
     }
-    atomicAdd(&XXX[a][b][c],1);
 }
 
 __device__
@@ -741,25 +741,25 @@ int main(int argc, char **argv){
     dim3 grid((unsigned int)(ceil((float)(partitions*partitions*partitions)/(float)(1024))),1,1);
     dim3 block(1024,1,1);
 
-    cout << "Entering to the kernel" << endl;
-    clock_t begin = clock();
+    cout << "Number of partitions " << partitions << endl;
+    cout << "Check nodes i,2,3" << endl;
 
-    cout << partitions << endl;
     for (int i=0; i < partitions; i++){
         if (nodeD[i][2][3].len > 0){
             cout << i << ", " << nodeD[i][2][3].len << ", " << nodeD[i][2][3].elements[nodeD[1][2][3].len-1].x << endl;
         }
     }
 
-    //histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
-    add_2<<<grid, block>>>(nodeD[1][2][3].len, nodeD[1][2][3].elements);
+    cout << "Entering to the kernel" << endl;
+    clock_t begin = clock();
+
+    histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
+    //add_2<<<grid, block>>>(nodeD[1][2][3].len, nodeD[1][2][3].elements);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
     //Check here for errors
-
-    cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
     cout << "The error code is " << error << endl;
     if(error != 0)
