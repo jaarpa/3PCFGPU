@@ -565,6 +565,9 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         if (row == 5 && col == 5 && mom == 5){
             printf("Exit the kernel \n");
         }
+
+        XXX[10][12][1] = (int)(tensor_node[1][2][3].elements[1].x + tensor_node[3][2][1].elements[0].x);
+
     }
 }
 
@@ -744,7 +747,11 @@ int main(int argc, char **argv){
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
 
-    symmetrize(DDD, bn);
+    //symmetrize(DDD, bn);
+    cout << tensor_node[1][2][3].elements[1].x << endl;
+    cout << tensor_node[3][2][1].elements[0].x << endl;
+    cout << XXX[10][12][1] << endl;
+    
     cout << DDD[0][0][0] << endl;
 
     save_histogram("DDD.res", bn, DDD);
