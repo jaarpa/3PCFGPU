@@ -634,6 +634,17 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
         }
     }
 
+            
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    cout << error << endl;
+    if(error != 0)
+    {
+      // print the CUDA error message and exit
+      printf("CUDA error: %s\n", cudaGetErrorString(error));
+      exit(-1);
+    }
+
     // Llenamos los nodos con los puntos de dat:
     for (int i=0; i<n_pts; i++){
         row = (int)(dat[i].x/size_node);
@@ -731,9 +742,6 @@ int main(int argc, char **argv){
     //cout << "Finished nodes initialization" << endl;
     //cout << "Started the data classification into the nodes." << endl;
     make_nodos(nodeD, data, partitions, size_node, n_pts);
-    
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
 
     cout << "Finished the data classification in nodes" << endl;
 
@@ -753,14 +761,8 @@ int main(int argc, char **argv){
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
-    // check for errorx
-    cout << error << endl;
-    if(error != 0)
-    {
-    // print the CUDA error message and exit
-    printf("CUDA error: %s\n", cudaGetErrorString(error));
-    exit(-1);
-    }
+
+    //Check here for errors
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
