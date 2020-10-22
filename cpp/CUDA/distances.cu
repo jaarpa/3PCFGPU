@@ -74,7 +74,7 @@ void save_histogram(string name, int bns, unsigned int ***histo){
 }
 
 __device__
-void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float dmax2, float ds){
+void count_3_N111(Punto *elements, unsigned int len, unsigned int ***s_XXX, float dmax2, float ds){
     /*
     Funcion para contar los triangulos en un mismo Nodo.
 
@@ -82,12 +82,8 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
 
     */
 
-    atomicAdd(&XXX[1][2][3],1);
-
-    /*
     unsigned int i,j,k;
     unsigned int a,b,c;
-    
     float dx,dy,dz;
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
@@ -125,14 +121,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                             a = (unsigned int)(d12*ds);
                             b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
-                            atomicAdd(&XXX[a][b][c],1);
+                            atomicAdd(&s_XXX[a][b][c],1);
                         }
                     }
                 }
             }
         }
     }
-    */
 }
 
 __device__
@@ -294,11 +289,30 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
     col = (unsigned int) ((idx%(partitions*partitions))/partitions);
     row = idx%partitions;
 
+        
+    __shared__ unsigned int s_XXX[30][30][30];
+    for (i=0; i<30; i++){
+        for (j=0; j<30; j++){
+            for (k=0; k<30; k++){
+                s_XXX[i][j][k]=0
+            }
+        }
+    }
+
     if (row<partitions && col<partitions && mom<partitions){
 
         //Contar triangulos dentro del mismo nodo
-        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
+        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, s_XXX, dmax2, ds);
 
+
+        for (i=0; i<30; i++){
+            for (j=0; j<30; j++){
+                for (k=0; k<30; k++){
+                    atomicAdd(&XXX[a][b][c],s_XXX[a][b][c]);
+                }
+            }
+        }
+        
         //Para entre nodos
         
         //unsigned int u, v, w, a ,b, c; //Indices del nodo 2 (u, v, w) y del nodo 3 (a, b, c)
