@@ -750,7 +750,7 @@ int main(int argc, char **argv){
     for (int i=0; i<bn; i++){
         for (int j=0; j<bn; j++){
             for (int k = 0; k < bn; k++){
-                DDD[i][j][k] = DDD_A[i][j][k] + DDD_B[i][j][k] + DDD_C[i][j][k] + DDD_D[i][j][k]= 0;
+                DDD[i][j][k] = DDD_A[i][j][k] + DDD_B[i][j][k] + DDD_C[i][j][k] + DDD_D[i][j][k];
             }
         }
     }
@@ -782,8 +782,8 @@ int main(int argc, char **argv){
     cudaFree(&DDD_C);
     cudaFree(&DDD_D);
 
-    for (i = 0; i < dim; i++){
-        for (j = 0; j < dim; j++){
+    for (int i = 0; i < bn; i++){
+        for (int j = 0; j < bn; j++){
             delete[] *(*(DDD + i) + j);
         }
         delete[] *(DDD + i);
