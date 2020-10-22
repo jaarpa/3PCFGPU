@@ -133,7 +133,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                             d23 = sqrt(d23);
                             c = (unsigned int)(d23*ds);
                             //if (c>=partitions || b>= partitions || a >= partitions){
-                                printf("%i", c);
+                            printf("0");
                             //}
                         }
                     }
