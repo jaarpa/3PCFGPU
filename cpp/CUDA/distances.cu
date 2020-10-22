@@ -368,6 +368,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
             }
         }
 
+        
         /*
         //=======================
         // Nodo 2 movil en ZY:
