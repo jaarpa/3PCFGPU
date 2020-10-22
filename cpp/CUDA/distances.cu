@@ -121,6 +121,9 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                             a = (unsigned int)(d12*ds);
                             b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
+                            if (a>28 || b > 28 || c > 28){
+                                printf("Bad a, b, c DDD index");
+                            }
                             //atomicAdd(&XXX[a][b][c],1);
                         }
                     }
