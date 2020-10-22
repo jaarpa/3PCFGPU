@@ -759,7 +759,7 @@ int main(int argc, char **argv){
 
     cout << "value in DDD[1,2,3] is " << DDD[1][2][3] << endl;
 
-    save_histogram("DDD.res", bn, DDD);
+    save_histogram("DDD_GPU.dat", bn, DDD);
     cout << "\nGuarde histograma DDD..." << endl;
     
     // Free memory
