@@ -9,6 +9,27 @@
 
 using namespace std;
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+#include <assert.h>
+#define cdpErrchk(ans) { cdpAssert((ans), __FILE__, __LINE__); }
+__device__ void cdpAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess)
+   {
+      printf("GPU kernel assert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) assert(0);
+   }
+}
+
 //Structura que define un punto 3D
 //Accesa a cada componente con var.x, var.y, var.z
 struct Punto{
@@ -725,12 +746,9 @@ int main(int argc, char **argv){
     histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
 
     //Waits for the GPU to finish
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
-    if (error != cudaSuccess){
-        printf("CUDA error: %s \n", cudaGetErrorString(error));
-        exit(-1);
-    }
+    //cudaDeviceSynchronize();
+    gpuErrchk( cudaPeekAtLastError() );
+    gpuErrchk( cudaDeviceSynchronize() );
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
