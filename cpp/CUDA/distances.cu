@@ -83,15 +83,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
 
     */
 
-    /*
-    //To check if I can access to the points in elements (I can)
-    for (int i=0; i<len; i++){
-        printf("%f,%f,%f \n",elements[i].x,elements[i].y, elements[i].z);
-    }
-
-    atomicAdd(&XXX[1][2][3],1);
-    */
-
     int i,j,k;
     int a,b,c;
     float dx,dy,dz;
@@ -151,7 +142,7 @@ void count_3_N112(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
 
     */
     int i,j,k;
-    unsigned int a,b,c;
+    int a,b,c;
     float dx,dy,dz;
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
@@ -307,14 +298,13 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         
         //Para entre nodos
         
-        //unsigned int u, v, w, a ,b, c; //Indices del nodo 2 (u, v, w) y del nodo 3 (a, b, c)
-        //unsigned int dis_nod12, dis_nod23, dis_nod31;
-        //unsigned int internode_max = (int)(dmax/size_node);
-        //unsigned int internode_max2 = (int)(dmax2/(size_node*size_node));
-        // //float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
-        //unsigned int dx_nod12, dy_nod12, dz_nod12, dx_nod23, dy_nod23, dz_nod23, dx_nod31, dy_nod31, dz_nod31;
+        int u, v, w, a ,b, c; //Indices del nodo 2 (u, v, w) y del nodo 3 (a, b, c)
+        unsigned int dis_nod12, dis_nod23, dis_nod31;
+        unsigned int internode_max = (int)(dmax/size_node);
+        unsigned int internode_max2 = (int)(dmax2/(size_node*size_node));
+        //float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
+        unsigned int dx_nod12, dy_nod12, dz_nod12, dx_nod23, dy_nod23, dz_nod23, dx_nod31, dy_nod31, dz_nod31;
 
-        /*
         //=======================
         // Nodo 2 movil en Z:
         //=======================
@@ -374,7 +364,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             }
         }
 
-        
+        /*
         //=======================
         // Nodo 2 movil en ZY:
         //=======================
