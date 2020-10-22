@@ -605,7 +605,8 @@ void add(Punto *&array, int &lon, float _x, float _y, float _z){
         array_aux[i].z = array[i].z;
     }
 
-                
+    cudaFree(&array);
+    
     cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
     cout << "The error code is " << error << endl;
@@ -616,7 +617,6 @@ void add(Punto *&array, int &lon, float _x, float _y, float _z){
       exit(-1);
     }
 
-    cudaFree(&array);
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y; 
