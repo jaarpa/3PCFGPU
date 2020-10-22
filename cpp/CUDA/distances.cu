@@ -122,7 +122,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                             a = (unsigned int)(d12*ds);
                             b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
-                            if (t){
+                            if (t==1){
                                 printf("Got to the end \n");
                             }
                             //atomicAdd(&XXX[1][2][3],1);
@@ -293,10 +293,12 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         col = threadIdx.y;
         mom = blockIdx.x;
         
-        bool t = false;
+        int t = 0;
 
         if (row == 5 && col == 5 && mom == 5){
-            bool t = true;
+            t = 1;
+        } else {
+            t = 0;
         }
 
         //Contar triangulos dentro del mismo nodo
