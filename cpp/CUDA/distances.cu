@@ -289,29 +289,11 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
     col = (unsigned int) ((idx%(partitions*partitions))/partitions);
     row = idx%partitions;
 
-        
-    __shared__ unsigned int s_XXX[30][30][30];
-    for (int i=0; i<30; i++){
-        for (int j=0; j<30; j++){
-            for (int k=0; k<30; k++){
-                s_XXX[i][j][k]=0;
-            }
-        }
-    }
-
     if (row<partitions && col<partitions && mom<partitions){
 
         //Contar triangulos dentro del mismo nodo
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  s_XXX, dmax2, ds);
 
-
-        for (int i=0; i<30; i++){
-            for (int j=0; j<30; j++){
-                for (int k=0; k<30; k++){
-                    atomicAdd(&XXX[i][j][k],s_XXX[i][j][k]);
-                }
-            }
-        }
         
         //Para entre nodos
         
