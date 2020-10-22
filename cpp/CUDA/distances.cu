@@ -294,9 +294,9 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         mom = blockIdx.x;
         
         if (row == 5 && col == 5 && mom == 5){
-            bool t = 1;
+            bool t = true;
         } else {
-            bool t = 0;
+            bool t = false;
         }
 
         //Contar triangulos dentro del mismo nodo
