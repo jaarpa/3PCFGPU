@@ -634,6 +634,14 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
         }
     }
 
+    // Llenamos los nodos con los puntos de dat:
+    for (int i=0; i<n_pts; i++){
+        row = (int)(dat[i].x/size_node);
+        col = (int)(dat[i].y/size_node);
+        mom = (int)(dat[i].z/size_node);
+        add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
+    }
+
             
     cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
@@ -645,13 +653,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
       exit(-1);
     }
 
-    // Llenamos los nodos con los puntos de dat:
-    for (int i=0; i<n_pts; i++){
-        row = (int)(dat[i].x/size_node);
-        col = (int)(dat[i].y/size_node);
-        mom = (int)(dat[i].z/size_node);
-        add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
-    }
 }
 
 //=================================================================== 
