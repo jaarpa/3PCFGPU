@@ -28,8 +28,8 @@ int main(void)
   // Run kernel on 1M elements on the GPU
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
-    dim3 grid(blockSize,1,1);
-    dim3 block(numBlocks,1,1);
+    dim3 grid(numBlocks,1,1);
+    dim3 block(blockSize,1,1);
     add<<<grid, block>>>(N, x, y);
 
   // Wait for GPU to finish before accessing on host
