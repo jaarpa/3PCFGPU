@@ -86,8 +86,9 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     //To check if I can access to the points in elements (I can)
     for (int i=0; i<len; i++){
         printf("%f,%f,%f \n",elements[i].x,elements[i].y, elements[i].z);
-        //atomicAdd(&XXX[i%29][i%29][i%29],1);
     }
+
+    atomicAdd(&XXX[1][2][3],1);
 
     /*
     unsigned int i,j,k;
@@ -773,7 +774,7 @@ int main(int argc, char **argv){
 
     //symmetrize(DDD, bn);
 
-    cout << "value in DDD[1,1,1] is " << DDD[1][1][1] << endl;
+    cout << "value in DDD[1,2,3] is " << DDD[1][2][3] << endl;
 
     save_histogram("DDD.res", bn, DDD);
     cout << "\nGuarde histograma DDD..." << endl;
