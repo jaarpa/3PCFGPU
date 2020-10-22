@@ -290,7 +290,6 @@ void NODE3P::make_histoXXX(unsigned int ***XXX, Node ***nodeX){
 		}	
 	}			
 		
-	/*
 	//=======================
 	// Nodo 2 movil en ZYX:
 	//=======================
@@ -382,8 +381,6 @@ void NODE3P::make_histoXXX(unsigned int ***XXX, Node ***nodeX){
 			}	
 		}
 	}
-	*/
-
 	}
 	}
 	}
