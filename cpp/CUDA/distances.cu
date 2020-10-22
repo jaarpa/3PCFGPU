@@ -739,6 +739,7 @@ int main(int argc, char **argv){
     
     cout << partitions << endl;
 
+    cudaError_t error = cudaGetLastError();
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
@@ -747,8 +748,7 @@ int main(int argc, char **argv){
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
-    // check for error
-    cudaError_t error = cudaGetLastError();
+    // check for errorx
     cout << error << endl;
     if(error != 0)
     {
