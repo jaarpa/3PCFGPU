@@ -675,7 +675,7 @@ void symmetrize(unsigned int ***XXX, unsigned int bn){
 }
 
 __global__
-void add(int len, Punto *x)
+void add_2(int len, Punto *x)
 {
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = blockDim.x * gridDim.x;
