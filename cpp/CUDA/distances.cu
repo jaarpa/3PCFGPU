@@ -663,7 +663,7 @@ void symmetrize(unsigned int ***XXX, unsigned int bn){
 }
 
 __global__ 
-void test_kernel(Node ***nodes, unsigned int ***DDD, unsigned int partitions, float dmax2, float dmax, float ds, float size_node){
+void test_kernel(unsigned int ***DDD, unsigned int partitions, float dmax2, float dmax, float ds, float size_node){
     if (blockIdx.x==0 && threadIdx.x == 0){
     DDD[1][2][3] = (unsigned int)(nodes[1][2][3].len + partitions - (dmax2/dmax)*ds + size_node);
     }
@@ -740,7 +740,7 @@ int main(int argc, char **argv){
     clock_t begin = clock();
 
     //histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
-    test_kernel<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
+    test_kernel<<<grid,block>>>(DDD, partitions, dmax2, dmax, ds, size_node);
 
     //Waits for the GPU to finish
     //cudaDeviceSynchronize();
