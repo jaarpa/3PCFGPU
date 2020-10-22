@@ -93,7 +93,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     */
 
     unsigned int i,j,k;
-    unsigned int a=1,b=2,c=3;
+    int a=1,b=2,c=3;
     float dx,dy,dz;
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
