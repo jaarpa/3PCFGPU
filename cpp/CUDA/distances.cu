@@ -308,7 +308,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         for (int i=0; i<30; i++){
             for (int j=0; j<30; j++){
                 for (int k=0; k<30; k++){
-                    atomicAdd(&XXX[a][b][c],s_XXX[a][b][c]);
+                    atomicAdd(&XXX[i][j][k],s_XXX[i][j][k]);
                 }
             }
         }
