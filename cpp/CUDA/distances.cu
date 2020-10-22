@@ -1,4 +1,4 @@
-// nvcc distances.cu -o o.out && ./par.out data.dat rand0.dat 32768 30 180
+// nvcc distances.cu -o par.out && ./par.out data.dat rand0.dat 32768 30 180
 #include<iostream>
 #include<fstream>
 #include<string.h>
@@ -300,8 +300,8 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         
         unsigned int u, v, w, a ,b, c; //Indices del nodo 2 (u, v, w) y del nodo 3 (a, b, c)
         unsigned int dis_nod12, dis_nod23, dis_nod31;
-        unsigned int internode_max = (int)(dmax/size_node);
-        unsigned int internode_max2 = (int)(dmax2/(size_node*size_node));
+        //unsigned int internode_max = (int)(dmax/size_node);
+        //unsigned int internode_max2 = (int)(dmax2/(size_node*size_node));
         //float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
         unsigned int dx_nod12, dy_nod12, dz_nod12, dx_nod23, dy_nod23, dz_nod23, dx_nod31, dy_nod31, dz_nod31;
 
@@ -737,6 +737,9 @@ int main(int argc, char **argv){
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
+    cout << partitions << endl;
+    cout << DDD[0][0][0] << endl;
+    
     dim3 grid(16,1,1);
     dim3 block(16,16);
     histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
