@@ -738,7 +738,8 @@ int main(int argc, char **argv){
     dim3 block(1024,1,1);
     
     cout << partitions << endl;
-
+    
+    cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
