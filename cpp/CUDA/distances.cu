@@ -758,7 +758,7 @@ int main(int argc, char **argv){
     clock_t begin = clock();
 
     //histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
-    add<<<grid, block>>>(nodeD[1][2][3].len, nodeD[1][2][3].elements);
+    add_2<<<grid, block>>>(nodeD[1][2][3].len, nodeD[1][2][3].elements);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
