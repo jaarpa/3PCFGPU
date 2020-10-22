@@ -294,7 +294,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
     col = (unsigned int) ((idx%(partitions*partitions))/partitions);
     row = idx%partitions;
 
-    if (row<partitions && col<partitions && mom<partitions){
+    //if (row<partitions && col<partitions && mom<partitions){
 
         //Contar triangulos dentro del mismo nodo
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
@@ -570,7 +570,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             printf("Exit the kernel \n");
         }
 
-    }
+    //}
 }
 
 /*
@@ -715,7 +715,8 @@ int main(int argc, char **argv){
     cout << "Finished the data classification in nodes" << endl;
 
     //cout << "Calculating the nuber of blocks and threads for the kernel for XXX" << endl;
-    //Sets GPU arrange of threads    
+    //Sets GPU arrange of threads
+    cout << ceil((partitions*partitions*partitions)/1024) << " blocks with 1025 threads" endl; 
     dim3 grid(ceil((partitions*partitions*partitions)/1024),1,1);
     dim3 block(1024,1,1);
     
