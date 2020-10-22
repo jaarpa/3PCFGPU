@@ -101,9 +101,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             dy = y2-y1;
             dz = z2-z1;
             d12 = dx*dx+dy*dy+dz*dz;
-            if (t==1){
-                printf("Got to the end \n");
-            }
             if (d12<=dmax2){
                 d12 = sqrt(d12);
                 for (k=j+1; k<len; ++k){ 
