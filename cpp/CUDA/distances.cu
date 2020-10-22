@@ -46,7 +46,7 @@ void read_file(string file_loc, Punto *data){
     //cout << "Succesfully readed " << file_loc << endl;
 }
 
-void save_histogram(string name, int bns, unsigned int ***histo){
+void save_histogram(string name, int bns, long int ***histo){
     int i, j, k;
     unsigned int **reshape = new unsigned int*[bns];
     for (i=0; i<bns; i++){
@@ -599,7 +599,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 }
 
 //=================================================================== 
-void symmetrize(unsigned int ***XXX, unsigned int bn){
+void symmetrize(long int ***XXX, unsigned int bn){
     int i,j,k;
     float elem;
     for (i=0; i<bn; i++){
