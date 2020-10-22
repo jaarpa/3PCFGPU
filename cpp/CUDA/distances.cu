@@ -697,6 +697,11 @@ int main(int argc, char **argv){
             cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(unsigned int));
         }
     }
+
+        
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+
     //Inicializa en 0 //Esto se podría paralelizar en GPU
     for (int i=0; i<bn; i++){
         for (int j=0; j<bn; j++){
@@ -738,9 +743,7 @@ int main(int argc, char **argv){
     dim3 block(1024,1,1);
     
     cout << partitions << endl;
-    
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
+
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
