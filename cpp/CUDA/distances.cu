@@ -777,6 +777,8 @@ int main(int argc, char **argv){
 
     //symmetrize(DDD, bn);
 
+    cout << "value in DDD[1,1,1] is " << DDD[1][1][1] << endl;
+
     save_histogram("DDD.res", bn, DDD);
     cout << "\nGuarde histograma DDD..." << endl;
     
