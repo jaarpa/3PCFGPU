@@ -19,17 +19,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
-#include <assert.h>
-#define cdpErrchk(ans) { cdpAssert((ans), __FILE__, __LINE__); }
-__device__ void cdpAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-   if (code != cudaSuccess)
-   {
-      printf("GPU kernel assert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) assert(0);
-   }
-}
-
 //Structura que define un punto 3D
 //Accesa a cada componente con var.x, var.y, var.z
 struct Punto{
