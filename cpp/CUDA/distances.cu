@@ -138,7 +138,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             }
         }
     }
-    atomicAdd(&XXX[a][1][1],1);
+    atomicAdd(&XXX[1][1][1],1);
 }
 
 __device__
