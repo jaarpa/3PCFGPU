@@ -45,18 +45,32 @@ void read_file(string file_loc, Punto *data){
     //cout << "Succesfully readed " << file_loc << endl;
 }
 
-void guardar_Histograma(string nombre,int dim, long int *histograma){
-    ofstream archivo;
-    archivo.open(nombre.c_str(),ios::out | ios::binary);
-    if (archivo.fail()){
+void save_histogram(string name, int bns, unsigned int ***histo){
+    int i, j, k, d=0;
+    unsigned int **reshape = new unsigned int*[bns];
+    for (i=0; i<bns; i++){
+        *(reshape+i) = new unsigned int[bns*bns];
+        }
+    for (i=0; i<bns; i++){
+    for (j=0; j<bns; j++){
+    for (k=0; k<bns; k++){
+        reshape[i][bns*j+k] = histo[i][j][k];
+    }
+    }
+    }
+    ofstream file;
+    file.open(name.c_str(),ios::out | ios::binary);
+    if (file.fail()){
         cout << "Error al guardar el archivo " << endl;
         exit(1);
     }
-    for (int i = 0; i < dim; i++)
-    {
-        archivo << histograma[i] << endl;
+    for (i=0; i<bns; i++){
+        for (j=0; j<bns*bns; j++){
+            file << reshape[i][j] << " "; 
+        }
+        file << endl;
     }
-    archivo.close();
+    file.close();
 }
 
 float distance(Punto p1, Punto p2){
@@ -733,6 +747,9 @@ int main(int argc, char **argv){
     symmetrize(DDD, bn);
     cout << DDD[0][0][0] << endl;
 
+    save_histogram("DDD.res", bn, DDD);
+    cout << "\nGuarde histograma DDD..." << endl;
+    
     // Free memory
     // Free the histogram arrays
     cout << "Free the histograms allocated memory" << endl;
