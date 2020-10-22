@@ -119,7 +119,6 @@ void NODE3P::make_histoXXX(unsigned int ***XXX, Node ***nodeX){
 	//==================================================
 	count_3_N111(row, col, mom, XXX, nodeX);
 
-	/*
 	//==================================================
 	// Triángulos entre puntos del diferente nodo:
 	//==================================================
@@ -204,7 +203,7 @@ void NODE3P::make_histoXXX(unsigned int ***XXX, Node ***nodeX){
 		}
 	}
 	
-	
+	/*
 	//=======================
 	// Nodo 2 movil en ZY:
 	//=======================
