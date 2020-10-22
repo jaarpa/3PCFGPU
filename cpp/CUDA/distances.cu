@@ -637,7 +637,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
             
     cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
-    cout << error << endl;
+    cout << "The error code is " << error << endl;
     if(error != 0)
     {
       // print the CUDA error message and exit
