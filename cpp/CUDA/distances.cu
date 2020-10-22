@@ -83,13 +83,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
 
     */
 
-    /*
     //To check if I can access to the points in elements (I can)
     for (int i=0; i<len; i++){
         printf("%f,%f,%f \n",elements[i].x,elements[i].y, elements[i].z);
+        atomicAdd(&XXX[i%29][i%29][i%29],1);
     }
-    */
 
+    /*
     unsigned int i,j,k;
     unsigned int a=1,b=1,c=1;
     float dx,dy,dz;
@@ -100,7 +100,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
         x1 = elements[i].x;
         y1 = elements[i].y;
         z1 = elements[i].z;
-        atomicAdd(&XXX[1][1][1],1);
         for (j=i+1; j<len-1; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
@@ -137,6 +136,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             }
         }
     }
+    */
 }
 
 __device__
