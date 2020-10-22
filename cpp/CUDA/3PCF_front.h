@@ -397,6 +397,7 @@ void NODE3P::make_histoXXX(unsigned int ***XXX, Node ***nodeX){
 	//================================
 	
 	symmetrize(XXX);
+	std::cout << DDD[0][0][0] << std::endl;
 }
 //=================================================================== 
 void NODE3P::make_histo_RRR(float ***XXY, float ***XXX, Node ***nodeX){

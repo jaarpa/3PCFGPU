@@ -1,4 +1,4 @@
-// nvcc distances.cu -o o.out && ./o.out data.dat rand0.dat 32768 30 180
+// nvcc distances.cu -o o.out && ./par.out data.dat rand0.dat 32768 30 180
 #include<iostream>
 #include<fstream>
 #include<string.h>
@@ -46,7 +46,7 @@ void read_file(string file_loc, Punto *data){
 }
 
 void save_histogram(string name, int bns, unsigned int ***histo){
-    int i, j, k, d=0;
+    int i, j, k;
     unsigned int **reshape = new unsigned int*[bns];
     for (i=0; i<bns; i++){
         *(reshape+i) = new unsigned int[bns*bns];
