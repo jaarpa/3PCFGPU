@@ -137,7 +137,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                 }
             }
         }
-        */
     }
 }
 
