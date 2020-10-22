@@ -28,10 +28,10 @@ int main(void)
 
   // Wait for GPU to finish before accessing on host
   cudaDeviceSynchronize();
-  
+
     // check for error
     cudaError_t error = cudaGetLastError();
-    cout << error << endl;
+    std::cout << error << std::endl;
     if(error != 0)
     {
     // print the CUDA error message and exit
