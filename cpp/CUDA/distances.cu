@@ -368,14 +368,12 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
             }
         }
 
-        
-        /*
         //=======================
         // Nodo 2 movil en ZY:
         //=======================
-        for (dy_nod12=1; dy_nod12<=internode_max && (col+dy_nod12)<partitions; dy_nod12++){
-            v = col+dy_nod12;
-            for (w = (internode_max<mom)*(mom-internode_max); w<=mom+internode_max && w<partitions; w++){
+        for (v=col+1; v<partitions; v++){
+            dy_nod12=v-col;
+            for (w = 0; w<partitions; w++){
                 dz_nod12 = w-mom;
                 dis_nod12 = dy_nod12*dy_nod12+dz_nod12*dz_nod12;
                 if (dis_nod12 <= internode_max2){
@@ -385,28 +383,27 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
                     //==============================================
                     count_3_N112(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[row][v][w].elements, tensor_node[row][v][w].len, XXX_C, dmax2, ds, size_node);
 
-
                     //==============================================
                     // 1 punto en N1, 1 punto en N2 y un punto en N3
                     //==============================================
                     //=======================
                     // Nodo 3 movil en Z:
                     //=======================
-                    for (dz_nod23=1; dz_nod23<=internode_max && (w+dz_nod23)<partitions; dz_nod23++){
-                        c = w+dz_nod23;
-                        //dis_nod23 = dz_nod23*dz_nod23 < internode_max2
-                        dis_nod31 = dy_nod12*dy_nod12 + (c-mom)*(c-mom);
-                        if (dis_nod31 <= internode_max2){
+                    for (c=w+1; c<partitions; c++){
+                        dz_nod23=c-w;
+                        dz_nod31=c-mom;
+                        dis_nod31 = dy_nod12*dy_nod12 + dz_nod31*dz_nod31;
+                        if (dis_nod31 <= internode_max2 && dz_nod23<partitions){
                             count_3_N123(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[row][v][w].elements, tensor_node[row][v][w].len, tensor_node[row][v][c].elements, tensor_node[row][v][c].len, XXX_C, dmax2, ds, size_node);
                         }
                     }
 
                     //=======================
                     // Nodo 3 movil en ZY:
-                    //=======================	
-                    for (dy_nod31=dy_nod12+1; dy_nod31<=internode_max && (v+dy_nod31)<partitions; dy_nod31++){
-                        b=col+dy_nod31;
-                        for (c=(internode_max<mom)*(mom-internode_max); c<=mom+internode_max && c<partitions; c++){
+                    //=======================
+                    for (b=v+1; b<partitions; b++){
+                        dy_nod31=b-col;
+                        for (c=0; c<partitions; c++){
                             dz_nod31=c-mom;
                             dis_nod31 = dy_nod31*dy_nod31 + dz_nod31*dz_nod31;
                             if (dis_nod31 <= internode_max2){
@@ -421,12 +418,12 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
                     //=======================
                     // Nodo 3 movil en ZYX:
                     //=======================
-                    for (dx_nod31 = 1; dx_nod31<=internode_max && (row+dx_nod31)<partitions; dx_nod31++){
+                    for (a=row+1; a<partitions; a++){
                         //dx_nod31=dx_nod23<internode_max && dx_nod12=0
-                        a = row+dx_nod31;
-                        for (b=(internode_max<col)*(col-internode_max); b<=col+internode_max && b<partitions; b++){
+                        dx_nod31=a-row;
+                        for (b=0; b<partitions; b++){
                             dy_nod31 = b-col;
-                            for (c=(internode_max<mom)*(mom-internode_max); c<=mom+internode_max && c<partitions; c++){
+                            for (c=0; c<partitions; c++){
                                 dz_nod31 = c-mom;
                                 dis_nod31 = dx_nod31*dx_nod31 + dy_nod31*dy_nod31 + dz_nod31*dz_nod31;
                                 if (dis_nod31 <= internode_max2){
@@ -442,6 +439,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
             }	
         }
 
+        /*
         //=======================
         // Nodo 2 movil en ZYX:
         //=======================
