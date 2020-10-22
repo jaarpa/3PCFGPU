@@ -93,15 +93,17 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     */
 
     unsigned int i,j,k;
-    unsigned int a,b,c;
+    unsigned int a=1,b=2,c=3;
     float dx,dy,dz;
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
 
-    for (i=0; i<len-2; ++i){
+    for (i=0; i<len; ++i){
         x1 = elements[i].x;
         y1 = elements[i].y;
         z1 = elements[i].z;
+        atomicAdd(&XXX[a][b][c],1);
+        /*
         for (j=i+1; j<len-1; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
@@ -137,6 +139,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                 }
             }
         }
+        */
     }
 }
 
