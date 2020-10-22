@@ -132,13 +132,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
                             c = (unsigned int)(d23*ds);
-                            atomicAdd(&XXX[a][b][c],1);
                         }
                     }
                 }
             }
         }
     }
+    atomicAdd(&XXX[a][1][1],1);
 }
 
 __device__
@@ -750,9 +750,6 @@ int main(int argc, char **argv){
         }
     }
 
-    cudaDeviceSynchronize();  
-    cudaError_t error = cudaGetLastError();
-
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
@@ -763,7 +760,9 @@ int main(int argc, char **argv){
     cudaDeviceSynchronize();  
 
     //Check here for errors
- 
+
+    cudaDeviceSynchronize();  
+    cudaError_t error = cudaGetLastError(); 
     cout << "The error code is " << error << endl;
     if(error != 0)
     {
