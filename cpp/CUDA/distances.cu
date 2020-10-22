@@ -84,7 +84,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
 
     
 
-    if (sqrt(elements[0])<=10){
+    if (sqrt(elements[0].x)<=10){
     atomicAdd(&XXX[1][2][3],1);
     }
 
