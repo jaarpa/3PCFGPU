@@ -712,8 +712,8 @@ int main(int argc, char **argv){
 
     //cout << "Calculating the nuber of blocks and threads for the kernel for XXX" << endl;
     //Sets GPU arrange of threads    
-    dim3 grid(ceil(partitions**3/1024),1,1);
-    dim3 block(1024,8,8);
+    dim3 grid(ceil((partitions*partitions*partitions)/1024),1,1);
+    dim3 block(1024,1,1);
     
     cout << partitions << endl;
 
