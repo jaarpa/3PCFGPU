@@ -119,10 +119,12 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                         d23 = dx*dx+dy*dy+dz*dz;
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
+                            /*
                             a = (unsigned int)(d12*ds);
                             b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
                             atomicAdd(&XXX[a][b][c],1);
+                            */
                         }
                     }
                 }
