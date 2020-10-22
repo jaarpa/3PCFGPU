@@ -662,12 +662,14 @@ void symmetrize(unsigned int ***XXX, unsigned int bn){
     }
 }
 
-__global__ 
-void test_kernel(float size_node){
-    if (blockIdx.x==0 && threadIdx.x == 0){
-    size_node = 0;
-    printf("Exit the kernel \n");
-    }
+__global__
+void add(int len, Punto *x)
+{
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = 0; i < len; i++){
+      x[i].x=len;
+  }
 }
 
 int main(int argc, char **argv){
@@ -741,7 +743,7 @@ int main(int argc, char **argv){
     clock_t begin = clock();
 
     //histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
-    test_kernel<<<grid,block>>>(size_node);
+    add<<<grid, block>>>(nodeD[1][2][3].len, nodeD[1][2][3].elements);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
@@ -760,11 +762,6 @@ int main(int argc, char **argv){
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
 
     //symmetrize(DDD, bn);
-    cout << nodeD[1][2][3].elements[1].x << endl;
-    cout << nodeD[1][2][3].elements[0].x << endl;
-    cout << DDD[1][2][3] << endl;
-
-    cout << DDD[0][0][0] << endl;
 
     save_histogram("DDD.res", bn, DDD);
     cout << "\nGuarde histograma DDD..." << endl;
