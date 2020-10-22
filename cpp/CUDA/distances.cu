@@ -74,13 +74,19 @@ void save_histogram(string name, int bns, unsigned int ***histo){
 }
 
 __device__
-void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float dmax2, float ds){
+void count_3_N111(unsigned int row, unsigned int col, unsigned int mom, Punto *elements, unsigned int len, unsigned int ***XXX, float dmax2, float ds){
     /*
     Funcion para contar los triangulos en un mismo Nodo.
 
     row, col, mom => posición del Nodo. Esto define al Nodo.
 
     */
+
+    if (row == 1 && col == 2 && mom == 3){
+        XXX[row][col][mom] = (int)(elements[1].x + elements[0].x);
+    }
+
+    /*
     int i,j,k;
     int a,b,c;
     float dx,dy,dz;
@@ -127,6 +133,8 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             }
         }
     }
+
+    */
 }
 
 __device__
@@ -289,7 +297,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         mom = blockIdx.x;
 
         //Contar triangulos dentro del mismo nodo
-        //count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
+        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
 
         //Para entre nodos
         
@@ -562,8 +570,6 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             printf("Exit the kernel \n");
         }
 
-        XXX[10][12][1] = (int)(tensor_node[1][2][3].elements[1].x + tensor_node[3][2][1].elements[0].x);
-
     }
 }
 
@@ -733,7 +739,7 @@ int main(int argc, char **argv){
     clock_t begin = clock();
 
     cout << partitions << endl;
-    cout << DDD[0][0][0] << endl;
+    cout << DDD[1][2][3] << endl;
     
     dim3 grid(16,1,1);
     dim3 block(16,16);
@@ -748,8 +754,8 @@ int main(int argc, char **argv){
 
     //symmetrize(DDD, bn);
     cout << nodeD[1][2][3].elements[1].x << endl;
-    cout << nodeD[3][2][1].elements[0].x << endl;
-    cout << DDD[10][12][1] << endl;
+    cout << nodeD[1][2][3].elements[0].x << endl;
+    cout << DDD[1][2][3] << endl;
 
     cout << DDD[0][0][0] << endl;
 
