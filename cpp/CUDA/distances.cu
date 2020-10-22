@@ -736,6 +736,9 @@ int main(int argc, char **argv){
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
+    cout << partitions << endl;
+    cout << DDD[0][0][0] << endl;
+    
     dim3 grid(16,1,1);
     dim3 block(16,16);
     histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
