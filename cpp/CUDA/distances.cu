@@ -750,6 +750,9 @@ int main(int argc, char **argv){
         }
     }
 
+    cudaDeviceSynchronize();  
+    cudaError_t error = cudaGetLastError();
+
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
@@ -760,7 +763,7 @@ int main(int argc, char **argv){
     cudaDeviceSynchronize();  
 
     //Check here for errors
-    cudaError_t error = cudaGetLastError();
+ 
     cout << "The error code is " << error << endl;
     if(error != 0)
     {
