@@ -271,7 +271,7 @@ void count_3_N123(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
 // Kernel function to populate the grid of nodes
 __global__
 void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions, float dmax2, float dmax, float ds, float size_node){
-    
+
     if (blockIdx.x<partitions && threadIdx.x<partitions && threadIdx.y<partitions ){
         // Esto es para el nodo pivote.
         unsigned int row, col, mom;
@@ -621,6 +621,25 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
     cout << "Finished the classification" << endl;
 }
 
+//=================================================================== 
+void symmetrize(unsigned int ***XXX, unsigned int bn){
+    int i,j,k;
+    float elem;
+    for (i=0; i<bn; i++){
+    for (j=i; j<bn; j++){
+    for (k=j; k<bn; k++){
+        elem = XXX[i][j][k] + XXX[k][i][j] + XXX[j][k][i] + XXX[j][i][k] + XXX[k][j][i] + XXX[i][k][j];
+        XXX[i][j][k] = elem;
+        XXX[k][i][j] = elem;
+        XXX[j][k][i] = elem;
+        XXX[j][i][k] = elem;
+        XXX[k][j][i] = elem;
+        XXX[i][k][j] = elem;
+    }   
+    }
+    }
+}
+
 int main(int argc, char **argv){
 
     string data_loc = argv[1];
@@ -711,6 +730,7 @@ int main(int argc, char **argv){
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
 
+    symmetrize(DDD, bn);
     cout << DDD[0][0][0] << endl;
 
     // Free memory
