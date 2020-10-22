@@ -9,20 +9,10 @@
 
 using namespace std;
 
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-   if (code != cudaSuccess) 
-   {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
-   }
-}
-
 //Structura que define un punto 3D
 //Accesa a cada componente con var.x, var.y, var.z
 struct Punto{
-    double x,y,z;
+    float x,y,z;
 };
 
 struct Node{
@@ -93,6 +83,11 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
 
     */
 
+    for (int i=0; i<len; i++){
+        printf("%f,%f,%f \n",elements[i].x,elements[i].y, elements[i].z);
+    }
+
+    /*
     unsigned int i,j,k;
     unsigned int a=1,b=1,c=1;
     float dx,dy,dz;
@@ -132,15 +127,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
                             c = (unsigned int)(d23*ds);
-                            //if (c>=partitions || b>= partitions || a >= partitions){
-                            printf("0");
-                            //}
                         }
                     }
                 }
             }
         }
     }
+    */
     atomicAdd(&XXX[1][1][1],1);
 }
 
