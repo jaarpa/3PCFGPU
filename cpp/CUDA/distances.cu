@@ -1,4 +1,4 @@
-// nvcc distances.cu -o par.out && ./par.out data.dat rand0.dat 32768 30 180
+// nvcc distances.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
 #include<iostream>
 #include<fstream>
 #include<string.h>
@@ -82,8 +82,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
 
     */
 
-    atomicAdd(&XXX[1][2][3],1);
-
     unsigned int i,j,k;
     unsigned int a,b,c;
     
@@ -95,6 +93,8 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
         x1 = elements[i].x;
         y1 = elements[i].y;
         z1 = elements[i].z;
+        atomicAdd(&XXX[1][2][3],1);
+        
         for (j=i+1; j<len-1; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
