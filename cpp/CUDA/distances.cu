@@ -93,7 +93,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     */
 
     int i,j,k;
-    int a=1,b=2,c=3;
+    int a,b,c;
     float dx,dy,dz;
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
@@ -772,7 +772,7 @@ int main(int argc, char **argv){
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
 
-    //symmetrize(DDD, bn);
+    symmetrize(DDD, bn);
 
     cout << "value in DDD[1,2,3] is " << DDD[1][2][3] << endl;
 
