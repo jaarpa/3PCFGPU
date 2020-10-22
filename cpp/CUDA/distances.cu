@@ -89,11 +89,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
 
-
-    if (t==1){
-        printf("Got to the end \n");
-    }
-
     for (i=0; i<len-2; ++i){
         x1 = elements[i].x;
         y1 = elements[i].y;
@@ -106,6 +101,9 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             dy = y2-y1;
             dz = z2-z1;
             d12 = dx*dx+dy*dy+dz*dz;
+            if (t==1){
+                printf("Got to the end \n");
+            }
             if (d12<=dmax2){
                 d12 = sqrt(d12);
                 for (k=j+1; k<len; ++k){ 
