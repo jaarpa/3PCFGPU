@@ -717,11 +717,6 @@ int main(int argc, char **argv){
     read_file(rand_loc,rand);
     cout << "Successfully readed the data" << endl;
 
-
-        
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
-    
     //Create Nodes
     cout << "Started nodes initialization" << endl;
     Node ***nodeD;
@@ -732,6 +727,11 @@ int main(int argc, char **argv){
             cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
         }
     }
+
+        
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+
     //cout << "Finished nodes initialization" << endl;
     //cout << "Started the data classification into the nodes." << endl;
     make_nodos(nodeD, data, partitions, size_node, n_pts);
