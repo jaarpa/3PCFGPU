@@ -117,6 +117,10 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
+
+                        if (t==1){
+                            printf("Got to the end \n");
+                        }
                         /*
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
