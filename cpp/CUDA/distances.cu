@@ -747,7 +747,7 @@ int main(int argc, char **argv){
     cudaDeviceSynchronize();  
     // check for error
     cudaError_t error = cudaGetLastError();
-    if(error != cudaSuccess)
+    if(error != 0)
     {
     // print the CUDA error message and exit
     printf("CUDA error: %s\n", cudaGetErrorString(error));
