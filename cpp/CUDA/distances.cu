@@ -325,7 +325,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
                 for (c=w+1;  c<partitions; c++){
                     dis_nod31=c-mom;
                     dis_nod23=c-w;
-                    if (dis_nod23<=internode_max && dis_nod31<=internodal_distance){
+                    if (dis_nod23<=internode_max && dis_nod31<=internode_max){
                         count_3_N123(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  tensor_node[row][col][w].elements, tensor_node[row][col][w].len, tensor_node[row][col][c].elements, tensor_node[row][col][c].len, XXX_B, dmax2, ds, size_node);
                     }
                 }
@@ -581,7 +581,7 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
 
     */
     int row, col, mom;
-    //int node_id, n_row, n_col, n_mom, internodal_distance, id_max = pow((int) dmax/size_node + 1,2); // Row, Col and Mom of the possible node in the neighborhood
+    //int node_id, n_row, n_col, n_mom, internode_max, id_max = pow((int) dmax/size_node + 1,2); // Row, Col and Mom of the possible node in the neighborhood
 
     // Inicializamos los nodos vacíos:
     for (row=0; row<partitions; row++){
