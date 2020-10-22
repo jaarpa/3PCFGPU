@@ -749,8 +749,8 @@ int main(int argc, char **argv){
 
     //symmetrize(DDD, bn);
     cout << nodeD[1][2][3].elements[1].x << endl;
-    cout << tensornodeD_node[3][2][1].elements[0].x << endl;
-    cout << XXX[10][12][1] << endl;
+    cout << nodeD[3][2][1].elements[0].x << endl;
+    cout << DDD[10][12][1] << endl;
 
     cout << DDD[0][0][0] << endl;
 
