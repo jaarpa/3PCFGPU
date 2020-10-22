@@ -604,6 +604,18 @@ void add(Punto *&array, int &lon, float _x, float _y, float _z){
         array_aux[i].y = array[i].y;
         array_aux[i].z = array[i].z;
     }
+
+                
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    cout << "The error code is " << error << endl;
+    if(error != 0)
+    {
+      // print the CUDA error message and exit
+      printf("CUDA error: %s\n", cudaGetErrorString(error));
+      exit(-1);
+    }
+
     cudaFree(&array);
     array = array_aux;
     array[lon-1].x = _x;
@@ -641,18 +653,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
         mom = (int)(dat[i].z/size_node);
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
     }
-
-            
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
-    cout << "The error code is " << error << endl;
-    if(error != 0)
-    {
-      // print the CUDA error message and exit
-      printf("CUDA error: %s\n", cudaGetErrorString(error));
-      exit(-1);
-    }
-
 }
 
 //=================================================================== 
