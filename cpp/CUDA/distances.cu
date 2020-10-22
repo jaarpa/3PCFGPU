@@ -746,7 +746,8 @@ int main(int argc, char **argv){
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
-    for (int i; i < partitions; i++){
+
+    for (int i=0; i < partitions; i++){
         cout << nodeD[i][2][3].len << endl;
         cout << nodeD[i][2][3].elements[nodeD[1][2][3].len-1].x << endl;
     }
