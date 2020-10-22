@@ -103,7 +103,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             d12 = dx*dx+dy*dy+dz*dz;
             if (d12<=dmax2){
                 d12 = sqrt(d12);
-                /*
                 for (k=j+1; k<len; ++k){ 
                     x3 = elements[k].x;
                     y3 = elements[k].y;
@@ -112,6 +111,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                     dy = y3-y1;
                     dz = z3-z1;
                     d13 = dx*dx+dy*dy+dz*dz;
+                    /*
                     if (d13<=dmax2){
                         d13 = sqrt(d13);
                         dx = x3-x2;
@@ -126,8 +126,8 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                             atomicAdd(&XXX[a][b][c],1);
                         }
                     }
+                    */
                 }
-                */
             }
         }
     }
