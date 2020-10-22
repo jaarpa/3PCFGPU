@@ -743,9 +743,15 @@ int main(int argc, char **argv){
     test_kernel<<<grid,block>>>(DDD, partitions, dmax2, dmax, ds, size_node);
 
     //Waits for the GPU to finish
-    //cudaDeviceSynchronize();
-    gpuErrchk( cudaGetLastError() );
-    gpuErrchk( cudaDeviceSynchronize() );
+    cudaDeviceSynchronize();  
+    // check for error
+    cudaError_t error = cudaGetLastError();
+    if(error != cudaSuccess)
+    {
+    // print the CUDA error message and exit
+    printf("CUDA error: %s\n", cudaGetErrorString(error));
+    exit(-1);
+    }
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
