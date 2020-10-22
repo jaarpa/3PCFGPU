@@ -698,10 +698,6 @@ int main(int argc, char **argv){
         }
     }
 
-        
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
-
     //Inicializa en 0 //Esto se podría paralelizar en GPU
     for (int i=0; i<bn; i++){
         for (int j=0; j<bn; j++){
@@ -721,6 +717,11 @@ int main(int argc, char **argv){
     read_file(rand_loc,rand);
     cout << "Successfully readed the data" << endl;
 
+
+        
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    
     //Create Nodes
     cout << "Started nodes initialization" << endl;
     Node ***nodeD;
