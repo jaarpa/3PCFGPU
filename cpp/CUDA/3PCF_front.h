@@ -595,10 +595,10 @@ void NODE3P::make_nodos(Node ***nod, Point3D *dat){
 	}
 
 
-    cout << partitions << endl;
+    std::cout << partitions << std::endl;
     for (i=0; i < partitions; i++){
         if (nod[i][2][3].len > 0){
-            cout << i << ", " << nod[i][2][3].len << ", " << nod[i][2][3].elements[nod[1][2][3].len-1].x << endl;
+            std::cout << i << ", " << nod[i][2][3].len << ", " << nod[i][2][3].elements[nod[1][2][3].len-1].x << std::endl;
         }
     }
 
