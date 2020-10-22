@@ -750,7 +750,7 @@ int main(int argc, char **argv){
     for (int i=0; i<bn; i++){
         for (int j=0; j<bn; j++){
             for (int k = 0; k < bn; k++){
-                *(*(*(DDD+i)+j)+k)= DDD_A[i][j][k] + DDD_B[i][j][k] + DDD_C[i][j][k] + DDD_D[i][j][k]= 0;
+                DDD[i][j][k] = DDD_A[i][j][k] + DDD_B[i][j][k] + DDD_C[i][j][k] + DDD_D[i][j][k]= 0;
             }
         }
     }
@@ -767,11 +767,29 @@ int main(int argc, char **argv){
     cout << "Free the histograms allocated memory" << endl;
     for (int i=0; i<bn; i++){
         for (int j = 0; j < bn; j++){
-            cudaFree(&*(*(DDD+i)+j));
+            cudaFree(&*(*(DDD_A+i)+j));
+            cudaFree(&*(*(DDD_B+i)+j));
+            cudaFree(&*(*(DDD_C+i)+j));
+            cudaFree(&*(*(DDD_D+i)+j));
         }
-        cudaFree(&*(DDD+i));
+        cudaFree(&*(DDD_A+i));
+        cudaFree(&*(DDD_B+i));
+        cudaFree(&*(DDD_C+i));
+        cudaFree(&*(DDD_D+i));
     }
-    cudaFree(&DDD);
+    cudaFree(&DDD_A);
+    cudaFree(&DDD_B);
+    cudaFree(&DDD_C);
+    cudaFree(&DDD_D);
+
+    for (i = 0; i < dim; i++){
+        for (j = 0; j < dim; j++){
+            delete[] *(*(DDD + i) + j);
+        }
+        delete[] *(DDD + i);
+        }
+    delete[] DDD;
+
     //Free the nodes and their inner arrays.
     cout << "Free the nodes allocated memory" << endl;
     for (int i=0; i<partitions; i++){
