@@ -74,7 +74,7 @@ void save_histogram(string name, int bns, unsigned int ***histo){
 }
 
 __device__
-void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float dmax2, float ds){
+void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float dmax2, float ds, bool t){
     /*
     Funcion para contar los triangulos en un mismo Nodo.
 
@@ -122,7 +122,9 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                             a = (unsigned int)(d12*ds);
                             b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
-                            printf("Get to the end \n");
+                            if (t){
+                                printf("Got to the end \n");
+                            }
                             //atomicAdd(&XXX[1][2][3],1);
                         }
                     }
@@ -290,9 +292,15 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         row = threadIdx.x;
         col = threadIdx.y;
         mom = blockIdx.x;
+        
+        if (row == 5 && col == 5 && mom == 5){
+            bool t = 1;
+        } else {
+            bool t = 0;
+        }
 
         //Contar triangulos dentro del mismo nodo
-        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
+        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds, t);
 
         //Para entre nodos
         
