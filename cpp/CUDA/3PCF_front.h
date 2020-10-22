@@ -124,6 +124,8 @@ void NODE3P::make_histoXXX(unsigned int ***XXX, Node ***nodeX){
 	//==================================================
 	u = row;
 	v = col;
+		
+	/*
 	//=======================
 	// Nodo 2 movil en Z:
 	//=======================
@@ -202,8 +204,7 @@ void NODE3P::make_histoXXX(unsigned int ***XXX, Node ***nodeX){
 		}
 		}
 	}
-	
-	/*
+
 	//=======================
 	// Nodo 2 movil en ZY:
 	//=======================

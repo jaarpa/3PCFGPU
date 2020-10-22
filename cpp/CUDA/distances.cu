@@ -297,7 +297,8 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
 
         
         //Para entre nodos
-        
+
+        /*        
         int u, v, w, a ,b, c; //Indices del nodo 2 (u, v, w) y del nodo 3 (a, b, c)
         unsigned int dis_nod12, dis_nod23, dis_nod31;
         unsigned int internode_max = (int)(dmax/size_node);
@@ -364,7 +365,6 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B
             }
         }
 
-        /*
         //=======================
         // Nodo 2 movil en ZY:
         //=======================
