@@ -593,6 +593,15 @@ void NODE3P::make_nodos(Node ***nod, Point3D *dat){
         	mom = (int)(dat[i].z/size_node);
 		add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
 	}
+
+
+    cout << partitions << endl;
+    for (i=0; i < partitions; i++){
+        if (nod[i][2][3].len > 0){
+            cout << i << ", " << nod[i][2][3].len << ", " << nod[i][2][3].elements[nod[1][2][3].len-1].x << endl;
+        }
+    }
+
 }
 //=================================================================== 
 void NODE3P::add(Point3D *&array, int &lon, float _x, float _y, float _z){
