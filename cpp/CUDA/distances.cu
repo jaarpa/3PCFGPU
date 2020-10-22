@@ -73,11 +73,6 @@ void save_histogram(string name, int bns, unsigned int ***histo){
     file.close();
 }
 
-float distance(Punto p1, Punto p2){
-    float x = p1.x-p2.x, y=p1.y-p2.y, z=p1.z-p2.z;
-    return sqrt(x*x + y*y + z*z);
-}
-
 __device__
 void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float dmax2, float ds){
     /*
@@ -294,7 +289,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         mom = blockIdx.x;
 
         //Contar triangulos dentro del mismo nodo
-        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
+        //count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
 
         //Para entre nodos
         
