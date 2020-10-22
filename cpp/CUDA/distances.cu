@@ -683,7 +683,7 @@ int main(int argc, char **argv){
     rand_loc.insert(0,mypathto_files);
     
     unsigned int n_pts = stoi(argv[3]), bn=stoi(argv[4]);
-    float dmax=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
+    float dmax=stof(argv[5]), size_box = 250.0, size_node = 2.17 * 250/pow(n_pts, (double)1/3);
     float dmax2 = dmax*dmax, ds = ((float)(bn))/dmax;
     unsigned int partitions = (int)(ceil(size_box/size_node)); //How many divisions per box dimension
     
