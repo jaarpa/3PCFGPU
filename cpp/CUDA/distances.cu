@@ -11,7 +11,7 @@ using namespace std;
 //Structura que define un punto 3D
 //Accesa a cada componente con var.x, var.y, var.z
 struct Punto{
-    float x,y,z;
+    double x,y,z;
 };
 
 struct Node{
@@ -82,6 +82,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
 
     */
 
+    
+
+    if (sqrt(elements[0])<=10){
+    atomicAdd(&XXX[1][2][3],1);
+    }
+
+    /*
     unsigned int i,j,k;
     unsigned int a,b,c;
     
@@ -129,6 +136,8 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             }
         }
     }
+
+    */
 }
 
 __device__
