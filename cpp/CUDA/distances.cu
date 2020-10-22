@@ -84,7 +84,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     */
 
     unsigned int i,j,k;
-    unsigned int a,b,c;
+    unsigned int a=1,b=1,c=1;
     float dx,dy,dz;
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
@@ -103,6 +103,7 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
             d12 = dx*dx+dy*dy+dz*dz;
             if (d12<=dmax2){
                 d12 = sqrt(d12);
+                a = (unsigned int)(d12*ds);
                 for (k=j+1; k<len; ++k){ 
                     x3 = elements[k].x;
                     y3 = elements[k].y;
@@ -113,14 +114,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                     d13 = dx*dx+dy*dy+dz*dz;
                     if (d13<=dmax2){
                         d13 = sqrt(d13);
+                        b = (unsigned int)(d13*ds);
                         dx = x3-x2;
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
-                            a = (unsigned int)(d12*ds);
-                            b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
                         }
                     }
