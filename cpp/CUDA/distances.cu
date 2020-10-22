@@ -163,6 +163,7 @@ void count_3_N112(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
             d12 = dx*dx+dy*dy+dz*dz;
             if (d12<=dmax2){
                 d12=sqrt(d12);
+                a = (int)(d12*ds);
                 for (k=j+1; k<len1; ++k){
                     // 3er punto en N1
                     x3 = elements1[k].x;
@@ -174,14 +175,13 @@ void count_3_N112(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
                     d13 = dx*dx+dy*dy+dz*dz;
                     if (d13<=dmax2){
                         d13 = sqrt(d13);
+                        b = (int)(d13*ds);
                         dx = x3-x2;
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
-                            a = (int)(d12*ds);
-                            b = (int)(d13*ds);
                             c = (int)(d23*ds);
                             atomicAdd(&XXX[a][b][c],1);
                         }
@@ -198,14 +198,13 @@ void count_3_N112(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
                     d13 = dx*dx+dy*dy+dz*dz;
                     if (d13<=dmax2){
                         d13 = sqrt(d13);
+                        b = (int)(d13*ds);
                         dx = x3-x2;
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
-                            a = (int)(d12*ds);
-                            b = (int)(d13*ds);
                             c = (int)(d23*ds);
                             atomicAdd(&XXX[a][b][c],1);
                         }
