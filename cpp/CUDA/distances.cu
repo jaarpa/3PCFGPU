@@ -665,7 +665,7 @@ void symmetrize(unsigned int ***XXX, unsigned int bn){
 __global__ 
 void test_kernel(unsigned int ***DDD, float size_node){
     if (blockIdx.x==0 && threadIdx.x == 0){
-    DDD[1][2][3] = (unsigned int)(partitions - (dmax2/dmax)*ds + size_node);
+    DDD[1][2][3] = (unsigned int)(size_node);
     }
 }
 
