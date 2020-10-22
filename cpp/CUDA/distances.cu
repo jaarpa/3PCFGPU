@@ -740,16 +740,15 @@ int main(int argc, char **argv){
     cout << (unsigned int)(ceil((float)(partitions*partitions*partitions)/(float)(1024))) << " blocks with 1024 threads" << endl; 
     dim3 grid((unsigned int)(ceil((float)(partitions*partitions*partitions)/(float)(1024))),1,1);
     dim3 block(1024,1,1);
-    
-    cout << partitions << endl;
 
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
     cout << partitions << endl;
     for (int i=0; i < partitions; i++){
-        cout << nodeD[i][2][3].len << endl;
-        cout << nodeD[i][2][3].elements[nodeD[1][2][3].len-1].x << endl;
+        if (nodeD[i][2][3].len > 0){
+            cout << i << ", " << nodeD[i][2][3].len << ", " << nodeD[i][2][3].elements[nodeD[1][2][3].len-1].x << endl;
+        }
     }
 
     //histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
