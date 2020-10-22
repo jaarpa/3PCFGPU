@@ -662,12 +662,12 @@ void symmetrize(unsigned int ***XXX, unsigned int bn){
     }
 }
 
-__global__ 
-void (int *ptr)
+__global__
+void test(int n, float *x, float *y)
 {
     if (blockIdx.x==0 && threadIdx.x == 0){
-    *ptr = 7;
-    printf("Exit the kernel \n");
+        for (int i = 0; i < n; i++)
+        y[i] = x[i] + y[i];
     }
 }
 
@@ -742,7 +742,17 @@ int main(int argc, char **argv){
     clock_t begin = clock();
 
     //histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
-    test_kernel<<<grid,block>>>(0);
+    int N = 1<<20;
+    float *x, *y;
+    // Allocate Unified Memory – accessible from CPU or GPU
+    cudaMallocManaged(&x, N*sizeof(float));
+    cudaMallocManaged(&y, N*sizeof(float));
+    // initialize x and y arrays on the host
+    for (int i = 0; i < N; i++) {
+        x[i] = 1.0f;
+        y[i] = 2.0f;
+    }
+    test<<<grid,block>>>(N, x, y);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
