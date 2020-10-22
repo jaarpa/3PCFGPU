@@ -291,9 +291,9 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
 
         
     __shared__ unsigned int s_XXX[30][30][30];
-    for (i=0; i<30; i++){
-        for (j=0; j<30; j++){
-            for (k=0; k<30; k++){
+    for (int i=0; i<30; i++){
+        for (int j=0; j<30; j++){
+            for (int k=0; k<30; k++){
                 s_XXX[i][j][k]=0
             }
         }
@@ -305,9 +305,9 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, s_XXX, dmax2, ds);
 
 
-        for (i=0; i<30; i++){
-            for (j=0; j<30; j++){
-                for (k=0; k<30; k++){
+        for (int i=0; i<30; i++){
+            for (int j=0; j<30; j++){
+                for (int k=0; k<30; k++){
                     atomicAdd(&XXX[a][b][c],s_XXX[a][b][c]);
                 }
             }
