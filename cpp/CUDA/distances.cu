@@ -302,7 +302,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
     if (row<partitions && col<partitions && mom<partitions){
 
         //Contar triangulos dentro del mismo nodo
-        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, s_XXX, dmax2, ds);
+        count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  s_XXX, dmax2, ds);
 
 
         for (int i=0; i<30; i++){
