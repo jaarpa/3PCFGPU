@@ -73,7 +73,7 @@ void save_histogram(string name, int bns, unsigned int ***histo){
     file.close();
 }
 
-__device__
+__global__
 void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float dmax2, float ds, int t){
     /*
     Funcion para contar los triangulos en un mismo Nodo.
