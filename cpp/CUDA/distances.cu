@@ -744,7 +744,7 @@ int main(int argc, char **argv){
 
     //Waits for the GPU to finish
     //cudaDeviceSynchronize();
-    gpuErrchk( cudaPeekAtLastError() );
+    gpuErrchk( cudaGetLastError() );
     gpuErrchk( cudaDeviceSynchronize() );
 
     clock_t end = clock();
