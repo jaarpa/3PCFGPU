@@ -81,8 +81,9 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     row, col, mom => posición del Nodo. Esto define al Nodo.
 
     */
-
+    if (sqrt(4)<=2){
     atomicAdd(&XXX[1][2][3],1);
+    }
 
     /*
     unsigned int i,j,k;
