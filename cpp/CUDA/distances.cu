@@ -651,7 +651,7 @@ int main(int argc, char **argv){
     cudaMallocManaged(&DDD_B, bn*sizeof(unsigned int**));
     cudaMallocManaged(&DDD_C, bn*sizeof(unsigned int**));
     cudaMallocManaged(&DDD_D, bn*sizeof(unsigned int**));
-    DDD = new unsigned int**[bn];
+    DDD = new long int**[bn];
     for (int i=0; i<bn; i++){
         cudaMallocManaged(&*(DDD_A+i), bn*sizeof(unsigned int*));
         cudaMallocManaged(&*(DDD_B+i), bn*sizeof(unsigned int*));
@@ -664,7 +664,7 @@ int main(int argc, char **argv){
             cudaMallocManaged(&*(*(DDD_B+i)+j), bn*sizeof(unsigned int));
             cudaMallocManaged(&*(*(DDD_C+i)+j), bn*sizeof(unsigned int));
             cudaMallocManaged(&*(*(DDD_D+i)+j), bn*sizeof(unsigned int));
-            *(*(*(DDD+i)+j)+k)= 0.0;
+            *(*(DDD+i)+j) = new long int[bn];
         }
     }
 
@@ -676,7 +676,7 @@ int main(int argc, char **argv){
                 DDD_B[i][j][k]= 0;
                 DDD_C[i][j][k]= 0;
                 DDD_D[i][j][k]= 0;
-                DDD[i][j][k]= 0;
+                *(*(*(DDD+i)+j)+k)= 0.0;
             }
         }
     }
