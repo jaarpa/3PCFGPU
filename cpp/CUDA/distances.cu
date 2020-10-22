@@ -606,17 +606,6 @@ void add(Punto *&array, int &lon, float _x, float _y, float _z){
     }
 
     cudaFree(array);
-
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
-    cout << "The error code is " << error << endl;
-    if(error != 0)
-    {
-      // print the CUDA error message and exit
-      printf("CUDA error: %s\n", cudaGetErrorString(error));
-      exit(-1);
-    }
-
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y; 
@@ -757,6 +746,9 @@ int main(int argc, char **argv){
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
+    cout << nodeD[1][2][3].len << endl;
+    cout << nodeD[1][2][3].elements[nodeD[1][2][3].len-1].x;
+    
     //histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
     add_2<<<grid, block>>>(nodeD[1][2][3].len, nodeD[1][2][3].elements);
 
@@ -764,6 +756,16 @@ int main(int argc, char **argv){
     cudaDeviceSynchronize();  
 
     //Check here for errors
+
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    cout << "The error code is " << error << endl;
+    if(error != 0)
+    {
+      // print the CUDA error message and exit
+      printf("CUDA error: %s\n", cudaGetErrorString(error));
+      exit(-1);
+    }
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
