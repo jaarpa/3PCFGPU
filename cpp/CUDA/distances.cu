@@ -93,8 +93,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
         x1 = elements[i].x;
         y1 = elements[i].y;
         z1 = elements[i].z;
-        atomicAdd(&XXX[1][2][3],1);
-        
         for (j=i+1; j<len-1; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
@@ -119,16 +117,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                         dy = y3-y2;
                         dz = z3-z2;
                         d23 = dx*dx+dy*dy+dz*dz;
-
-                        /*
                         if (d23<=dmax2){
                             d23 = sqrt(d23);
                             a = (unsigned int)(d12*ds);
                             b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
-                            //atomicAdd(&XXX[1][2][3],1);
+                            atomicAdd(&XXX[a][b][c],1);
                         }
-                        */
                     }
                 }
             }
@@ -288,24 +283,26 @@ void count_3_N123(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
 __global__
 void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions, float dmax2, float dmax, float ds, float size_node){
 
-    if (blockIdx.x<partitions && threadIdx.x<partitions && threadIdx.y<partitions ){
-        // Esto es para el nodo pivote.
-        unsigned int row, col, mom;
-        row = threadIdx.x;
-        col = threadIdx.y;
-        mom = blockIdx.x;
+    // Esto es para el nodo pivote.
+    unsigned int row, col, mom, idx;
+    idx = blockIdx.x * blockDim.x + threadIdx.x;
+    mom = (unsigned int) (idx/(partitions*partitions));
+    col = (unsigned int) ((idx%(partitions*partitions))/partitions);
+    row = idx%partitions;
+
+    if (row<partitions && col<partitions && mom<partitions){
 
         //Contar triangulos dentro del mismo nodo
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
 
         //Para entre nodos
         
-        unsigned int u, v, w, a ,b, c; //Indices del nodo 2 (u, v, w) y del nodo 3 (a, b, c)
-        unsigned int dis_nod12, dis_nod23, dis_nod31;
+        //unsigned int u, v, w, a ,b, c; //Indices del nodo 2 (u, v, w) y del nodo 3 (a, b, c)
+        //unsigned int dis_nod12, dis_nod23, dis_nod31;
         //unsigned int internode_max = (int)(dmax/size_node);
         //unsigned int internode_max2 = (int)(dmax2/(size_node*size_node));
-        //float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
-        unsigned int dx_nod12, dy_nod12, dz_nod12, dx_nod23, dy_nod23, dz_nod23, dx_nod31, dy_nod31, dz_nod31;
+        // //float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
+        //unsigned int dx_nod12, dy_nod12, dz_nod12, dx_nod23, dy_nod23, dz_nod23, dx_nod31, dy_nod31, dz_nod31;
 
         /*
         //=======================
@@ -616,7 +613,6 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
     //int node_id, n_row, n_col, n_mom, internodal_distance, id_max = pow((int) dmax/size_node + 1,2); // Row, Col and Mom of the possible node in the neighborhood
 
     // Inicializamos los nodos vacíos:
-    cout << "Initialize empty nodes" << endl;
     for (row=0; row<partitions; row++){
         for (col=0; col<partitions; col++){
             for (mom=0; mom<partitions; mom++){
@@ -626,17 +622,14 @@ void make_nodos(Node ***nod, Punto *dat, unsigned int partitions, float size_nod
             }
         }
     }
-    cout << "The nodes have 0 elements each and 0 neighbors" << endl;
 
     // Llenamos los nodos con los puntos de dat:
-    cout << "Started the classification" << endl;
     for (int i=0; i<n_pts; i++){
         row = (int)(dat[i].x/size_node);
         col = (int)(dat[i].y/size_node);
         mom = (int)(dat[i].z/size_node);
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z);
     }
-    cout << "Finished the classification" << endl;
 }
 
 //=================================================================== 
@@ -668,10 +661,9 @@ int main(int argc, char **argv){
     rand_loc.insert(0,mypathto_files);
     
     unsigned int n_pts = stoi(argv[3]), bn=stoi(argv[4]);
-    unsigned int n_even = n_pts+(n_pts%2!=0);
     float dmax=stof(argv[5]), size_box = 250.0, size_node = 2.17*size_box/bn;
     float dmax2 = dmax*dmax, ds = ((float)(bn))/dmax;
-    unsigned int partitions = (int)(ceil(size_box/size_node));
+    unsigned int partitions = (int)(ceil(size_box/size_node)); //How many divisions per box dimension
     
     // Crea los histogramas
     //cout << "Histograms initialization" << endl;
@@ -684,7 +676,7 @@ int main(int argc, char **argv){
             cudaMallocManaged(&*(*(DDD+i)+j), bn*sizeof(unsigned int));
         }
     }
-    //Inicializa en 0
+    //Inicializa en 0 //Esto se podría paralelizar en GPU
     for (int i=0; i<bn; i++){
         for (int j=0; j<bn; j++){
             for (int k = 0; k < bn; k++){
@@ -704,7 +696,7 @@ int main(int argc, char **argv){
     cout << "Successfully readed the data" << endl;
 
     //Create Nodes
-    //cout << "Started nodes initialization" << endl;
+    cout << "Started nodes initialization" << endl;
     Node ***nodeD;
     cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
     for (int i=0; i<partitions; i++){
@@ -716,32 +708,18 @@ int main(int argc, char **argv){
     //cout << "Finished nodes initialization" << endl;
     //cout << "Started the data classification into the nodes." << endl;
     make_nodos(nodeD, data, partitions, size_node, n_pts);
-    cout << "Finished the data classification in node" << endl;
+    cout << "Finished the data classification in nodes" << endl;
 
     //cout << "Calculating the nuber of blocks and threads for the kernel for XXX" << endl;
-    //Sets GPU arrange of threads
-    int threads=1, blocks=n_even, threads_test, blocks_test;
-    float score=pow(blocks,2)+pow((blocks*threads)-n_even,2), score_test;
-    for (int i=1; i<6; i++){
-        threads_test = pow(2,i);
-        blocks_test = (int)(n_even/threads_test)+1;
-        score_test = pow(blocks_test,2)+pow((blocks_test*threads_test)-n_even,2);
-        
-        if (score_test<score){
-            threads=threads_test;
-            blocks=blocks_test;
-            score=score_test;
-        }
-    }
+    //Sets GPU arrange of threads    
+    dim3 grid(ceil(partitions**3/1024),1,1);
+    dim3 block(1024,8,8);
     
+    cout << partitions << endl;
+
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
-    cout << partitions << endl;
-    cout << DDD[1][2][3] << endl;
-    
-    dim3 grid(16,1,1);
-    dim3 block(16,16);
     histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
 
     //Waits for the GPU to finish
