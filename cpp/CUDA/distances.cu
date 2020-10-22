@@ -3,6 +3,7 @@
 #include<fstream>
 #include<string.h>
 #include<stdio.h>
+#include<stdlib.h>
 #include<math.h>
 #include<time.h>
 
@@ -88,15 +89,6 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
     float d12,d13,d23;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3;
 
-    unsigned int s_XXX[30][30][30];
-    for (i=0;i<30;i++){
-        for (j=0;j<30;j++){
-            for (k=0; k<30; k++){
-                s_XXX[i][j][k]=0;
-            }
-        }
-    }
-
     for (i=0; i<len-2; ++i){
         x1 = elements[i].x;
         y1 = elements[i].y;
@@ -130,22 +122,13 @@ void count_3_N111(Punto *elements, unsigned int len, unsigned int ***XXX, float 
                             a = (unsigned int)(d12*ds);
                             b = (unsigned int)(d13*ds);
                             c = (unsigned int)(d23*ds);
-                            atomicAdd(&s_XXX[a][b][c],1);
+                            atomicAdd(&XXX[a][b][c],1);
                         }
                     }
                 }
             }
         }
     }
-
-    for (i=0;i<30;i++){
-        for (j=0;j<30;j++){
-            for (k=0; k<30; k++){
-                atomicAdd(&XXX[i][j][k], s_XXX[i][j][k]);
-            }
-        }
-    }
-
 }
 
 __device__
@@ -743,6 +726,11 @@ int main(int argc, char **argv){
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess){
+        printf("CUDA error: %s \n", cudaGetErrorString(error));
+        exit(-1);
+    }
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
