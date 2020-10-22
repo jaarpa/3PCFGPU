@@ -532,11 +532,6 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             }
         }
         */
-
-        if (row == 5 && col == 5 && mom == 5){
-            printf("Exit the kernel \n");
-        }
-
     }
 }
 
