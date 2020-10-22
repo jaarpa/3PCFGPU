@@ -294,7 +294,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
     col = (unsigned int) ((idx%(partitions*partitions))/partitions);
     row = idx%partitions;
 
-    //if (row<partitions && col<partitions && mom<partitions){
+    if (row<partitions && col<partitions && mom<partitions){
 
         //Contar triangulos dentro del mismo nodo
         count_3_N111(tensor_node[row][col][mom].elements, tensor_node[row][col][mom].len,  XXX, dmax2, ds);
@@ -570,7 +570,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             printf("Exit the kernel \n");
         }
 
-    //}
+    }
 }
 
 /*
