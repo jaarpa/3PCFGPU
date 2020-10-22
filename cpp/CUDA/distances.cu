@@ -305,6 +305,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
         //float x1N=row, y1N=col, z1N=mom, x2N, y2N, z2N, x3N, y3N, z3N;
         unsigned int dx_nod12, dy_nod12, dz_nod12, dx_nod23, dy_nod23, dz_nod23, dx_nod31, dy_nod31, dz_nod31;
 
+        /*
         //=======================
         // Nodo 2 movil en Z:
         //=======================
@@ -364,7 +365,7 @@ void histo_XXX(Node ***tensor_node, unsigned int ***XXX, unsigned int partitions
             }
         }
 
-        /*
+        
         //=======================
         // Nodo 2 movil en ZY:
         //=======================
@@ -736,9 +737,6 @@ int main(int argc, char **argv){
     cout << "Entering to the kernel" << endl;
     clock_t begin = clock();
 
-    cout << partitions << endl;
-    cout << DDD[0][0][0] << endl;
-    
     dim3 grid(16,1,1);
     dim3 block(16,16);
     histo_XXX<<<grid,block>>>(nodeD, DDD, partitions, dmax2, dmax, ds, size_node);
