@@ -274,7 +274,7 @@ void count_3_N123(Punto *elements1, unsigned int len1, Punto *elements2, unsigne
                             a = (int)(d12*ds);
                             b = (int)(d13*ds);
                             c = (int)(d23*ds);
-                            atomicAdd(&XXX[a][b][c],1);
+                            //atomicAdd(&XXX[a][b][c],1);
                         }
                     }
                 }
