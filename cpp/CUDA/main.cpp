@@ -53,6 +53,8 @@ int main(int argc, char **argv){
 	nameRRR += ".dat";
 	nameDDR += ".dat";
 	nameDRR += ".dat";
+
+	nameDDD="DDD_CPU.dat";
 	
 	// inicializamos los histogramas
 	DDD = new unsigned int**[bn];
