@@ -728,13 +728,13 @@ int main(int argc, char **argv){
         }
     }
 
-        
-    cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
-
     //cout << "Finished nodes initialization" << endl;
     //cout << "Started the data classification into the nodes." << endl;
     make_nodos(nodeD, data, partitions, size_node, n_pts);
+    
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+
     cout << "Finished the data classification in nodes" << endl;
 
     //cout << "Calculating the nuber of blocks and threads for the kernel for XXX" << endl;
