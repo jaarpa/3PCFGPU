@@ -138,9 +138,9 @@ int main(int argc, char **argv){
     dim3 block(1024,1,1);
 
     clock_t begin = clock();
-    make_histoXX<<<grid,block>>>(DD, dataD, np, bn, dmax);
-    make_histoXX<<<grid,block>>>(RR, dataR, np, bn, dmax);
-    make_histoXY<<<grid,block>>>(DR, dataD, dataR, np, bn, dmax);
+    make_histoXX<<<grid,block>>>(DD, dataD, np, ds, dd_max);
+    make_histoXX<<<grid,block>>>(RR, dataR, np, ds, dd_max);
+    make_histoXY<<<grid,block>>>(DR, dataD, dataR, np, ds, dd_max);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
