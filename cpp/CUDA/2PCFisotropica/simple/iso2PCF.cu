@@ -59,7 +59,7 @@ void save_histogram(string name, int bns, unsigned int *histo){
 }
 
 // Métodos para hacer histogramas.
-__global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, float ds, float dd_max){
+__global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, Point3D *data, int n_pts, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts-1){
         //printf("%f \n",  blockDim.x);
@@ -70,18 +70,21 @@ __global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, float d
             dy = data[idx].y-data[j].y;
             dz = data[idx].z-data[j].z;
             dis = dx*dx + dy*dy + dz*dz;
-            //printf("%f \n", dis);
-            //printf("%f \n", sqrt(dis));
-            //printf("%f \n", sqrt(dis)*ds);
 
             if(dis <= dd_max){
                 pos = (int)(sqrt(dis)*ds);
-                atomicAdd(&XX[pos],2);
+                if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                    pos = (int)(sqrt(dis)*ds);
+                    atomicAdd(&XX_A[pos],2);
+                } else {
+                    pos = (int)(sqrt(dis)*ds);
+                    atomicAdd(&XX_B[pos],2);
+                }
             }
         }
     }
 }
-__global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, int n_pts, float ds, float dd_max){
+__global__ void make_histoXY(unsigned int *XY_A, unsigned int *XY_B, Point3D *dataD, Point3D *dataR, int n_pts, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts-1){
         int pos;
@@ -92,8 +95,13 @@ __global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, i
             dz = dataD[idx].z-dataR[j].z;
             dis = dx*dx + dy*dy + dz*dz;
             if(dis <= dd_max){
-                pos = (int)(sqrt(dis)*ds);
-                atomicAdd(&XY[pos],1);
+                if (idx%2==0){
+                    pos = (int)(sqrt(dis)*ds);
+                    atomicAdd(&XY_A[pos],1);
+                } else {
+                    pos = (int)(sqrt(dis)*ds);
+                    atomicAdd(&XY_B[pos],1);
+                }
             }
         }
     }
@@ -107,7 +115,7 @@ int main(int argc, char **argv){
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
 
-    unsigned int *DD, *RR, *DR;
+    unsigned int *DD, *RR, *DR, *DD_A, *RR_A, *DR_A, *DD_B *RR_B, *DR_B;
     Point3D *dataD;
     Point3D *dataR;
     cudaMallocManaged(&dataD, np*sizeof(Point3D));// Asignamos meoria a esta variable
@@ -115,24 +123,28 @@ int main(int argc, char **argv){
 
     // Nombre de los archivos 
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
-    /*
-    nameDD.append(argv[3]);
-    nameRR.append(argv[3]);
-    nameDR.append(argv[3]);
-    nameDD += ".dat";
-    nameRR += ".dat";
-    nameDR += ".dat";
-    */
 
     // Creamos los histogramas
-    cudaMallocManaged(&DD, bn*sizeof(unsigned int));
-    cudaMallocManaged(&RR, bn*sizeof(unsigned int));
-    cudaMallocManaged(&DR, bn*sizeof(unsigned int));
+    DD = new unsigned int[bn];
+    RR = new unsigned int[bn];
+    DR = new unsigned int[bn];
+    cudaMallocManaged(&DD_A, bn*sizeof(unsigned int));
+    cudaMallocManaged(&RR_A, bn*sizeof(unsigned int));
+    cudaMallocManaged(&DR_A, bn*sizeof(unsigned int));
+    cudaMallocManaged(&DD_B, bn*sizeof(unsigned int));
+    cudaMallocManaged(&RR_B, bn*sizeof(unsigned int));
+    cudaMallocManaged(&DR_B, bn*sizeof(unsigned int));
     
     for (int i = 0; i < bn; i++){
-        *(DD+i) = 0.0; // vector[i]
-        *(RR+i) = 0.0;
-        *(DR+i) = 0.0;
+        *(DD+i) = 0;
+        *(RR+i) = 0;
+        *(DR+i) = 0;
+        *(DD_A+i) = 0;
+        *(RR_A+i) = 0;
+        *(DR_A+i) = 0;
+        *(DD_B+i) = 0;
+        *(RR_B+i) = 0;
+        *(DR_B+i) = 0;
     }
 	
 	// Abrimos y trabajamos los datos en los histogramas
@@ -145,9 +157,9 @@ int main(int argc, char **argv){
 
     clock_t begin = clock();
     cout << ds << endl;
-    make_histoXX<<<grid,block>>>(DD, dataD, np, ds, dd_max);
-    make_histoXX<<<grid,block>>>(RR, dataR, np, ds, dd_max);
-    make_histoXY<<<grid,block>>>(DR, dataD, dataR, np, ds, dd_max);
+    make_histoXX<<<grid,block>>>(DD_A, DD_B, dataD, np, ds, dd_max);
+    make_histoXX<<<grid,block>>>(RR_A, RR_B, dataR, np, ds, dd_max);
+    make_histoXY<<<grid,block>>>(DR_A, DR_B, dataD, dataR, np, ds, dd_max);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
@@ -166,6 +178,11 @@ int main(int argc, char **argv){
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
     
+    for (int i = 0; i < bn; i++){
+        DD[i] = DD_A[i]+ DD_B[i];
+        RR[i] = RR_A[i]+ RR_B[i];
+        DR[i] = DR_A[i]+ DR_B[i];
+
 	cout << "Termine de hacer todos los histogramas" << endl;
 	// Mostramos los histogramas 
     cout << "\nHistograma DD:" << endl;
