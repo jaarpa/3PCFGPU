@@ -82,9 +82,9 @@ __global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, i
         int pos;
         float dis, dx, dy, dz;
         for(int j = 0; j < n_pts; j++){
-            dx = dataD[i].x-dataR[j].x;
-            dy = dataD[i].y-dataR[j].y;
-            dz = dataD[i].z-dataR[j].z;
+            dx = dataD[idx].x-dataR[j].x;
+            dy = dataD[idx].y-dataR[j].y;
+            dz = dataD[idx].z-dataR[j].z;
             dis = dx*dx + dy*dy + dz*dz;
             if(dis <= dd_max){
                 pos = (int)(sqrt(dis)*ds);
@@ -98,7 +98,7 @@ int main(int argc, char **argv){
 	
     int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
-    float ds = (float)(bin)/d_max, dd_max=dmax*dmax;
+    float ds = (float)(bn)/dmax, dd_max=dmax*dmax;
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
 
