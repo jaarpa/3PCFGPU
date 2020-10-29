@@ -63,9 +63,14 @@ int main(int argc, char **argv){
 	cout << "Termine de hacer todos los histogramas" << endl;
 	// Mostramos los histogramas 
 	cout << "\nHistograma DD:" << endl;
+	int sum = 0;
 	for (int k = 0; k<bn; k++){
 		printf("%d \t",DD[k]);
+		sum += DD[k];
 	}
+	cout << "TOtal: " << endl;
+    cout << sum << endl;
+
 	cout << "\nHistograma RR:" << endl;
 	for (int k = 0; k<bn; k++){
 		printf("%d \t",RR[k]);
