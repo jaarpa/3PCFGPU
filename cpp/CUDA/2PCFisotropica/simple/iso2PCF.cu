@@ -58,7 +58,7 @@ void save_histogram(string name, int bns, unsigned int *histo){
 }
 
 // Métodos para hacer histogramas.
-__global__ void make_histoXX(unsigned int *XX, Point3D *data;, int n_pts, , int bin, float d_max){
+__global__ void make_histoXX(unsigned int *XX, Point3D *data;, int n_pts, int bin, float d_max){
     int pos; // Posición de apuntador.
     float dis, ds = (float)(bin)/d_max, dd_max = d_max*d_max, dx, dy, dz;
     for(int i = 0; i < n_pts-1; i++){
@@ -74,7 +74,7 @@ __global__ void make_histoXX(unsigned int *XX, Point3D *data;, int n_pts, , int 
         }
     }
 }
-__global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, int n_pts, , int bin, float d_max){
+__global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, int n_pts, int bin, float d_max){
     int pos;
     float dis, ds = (float)(bin)/d_max, dd_max = d_max*d_max, dx, dy, dz;
     for (int i = 0; i < n_pts; i++){
