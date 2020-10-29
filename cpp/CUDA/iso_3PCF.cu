@@ -1,4 +1,4 @@
-// nvcc distances.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
+// nvcc distances.cu -o par.out && ./par.out data.dat rand0.dat 32768 30 180
 #include<iostream>
 #include<fstream>
 #include<string.h>
@@ -603,16 +603,6 @@ void symmetrize(long int ***XXX, unsigned int bn){
     }   
     }
     }
-}
-
-__global__
-void add_2(int len, Punto *x)
-{
-  int index = blockIdx.x * blockDim.x + threadIdx.x;
-  int stride = blockDim.x * gridDim.x;
-  for (int i = 0; i < len; i++){
-      x[i].x=len;
-  }
 }
 
 int main(int argc, char **argv){
