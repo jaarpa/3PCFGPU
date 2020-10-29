@@ -182,7 +182,8 @@ int main(int argc, char **argv){
         DD[i] = DD_A[i]+ DD_B[i];
         RR[i] = RR_A[i]+ RR_B[i];
         DR[i] = DR_A[i]+ DR_B[i];
-
+    }
+    
 	cout << "Termine de hacer todos los histogramas" << endl;
 	// Mostramos los histogramas 
     cout << "\nHistograma DD:" << endl;
