@@ -18,6 +18,11 @@ struct Point3D{
 void open_files(string name_file, int pts, Point3D *datos){
     /* Función para abrir nuestros archivos de datos */
     ifstream file;
+
+    string mypathto_files = "../../../../fake_DATA/DATOS/";
+    //This creates the full path to where I have my data files
+    name_file.insert(0,mypathto_files);
+    
     file.open(name_file.c_str(), ios::in | ios::binary); //le indico al programa que se trata de un archivo binario con ios::binary
     if (file.fail()){
         cout << "Error al cargar el archivo " << endl;
