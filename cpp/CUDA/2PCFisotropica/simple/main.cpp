@@ -16,10 +16,10 @@ Point3D *dataR;
 
 int main(int argc, char **argv){
 	
-	//int n_pts = stoi(argv[3]), bn = stoi(argv[4]);
-	//float d_max = stof(argv[5]);
-	int np = 32768, bn = 10;
-	float dmax = 180.0;
+	int np = stoi(argv[3]), bn = stoi(argv[4]);
+	float dmax = stof(argv[5]);
+	//int np = 32768, bn = 10;
+	//float dmax = 180.0;
 	dataD = new Point3D[np]; // Asignamos meoria a esta variable
 	dataR = new Point3D[np];
 	
@@ -99,6 +99,11 @@ int main(int argc, char **argv){
 
 void open_files(string name_file, int pts, Point3D *datos){
 	/* Función para abrir nuestros archivos de datos */
+
+    string mypathto_files = "../../../../fake_DATA/DATOS/";
+    //This creates the full path to where I have my data files
+    name_file.insert(0,mypathto_files);
+	
 	ifstream file;
 	file.open(name_file.c_str(), ios::in | ios::binary); //le indico al programa que se trata de un archivo binario con ios::binary
 	if (file.fail()){

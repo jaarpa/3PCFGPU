@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream> //manejo de archivos
 #include <string.h>
-#include <chrono>
+#include<time.h>
 
 using namespace std;
 
@@ -88,8 +88,8 @@ __global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, i
 
 int main(int argc, char **argv){
 	
-    int n_pts = stoi(argv[3]), bn = stoi(argv[4]);
-    float d_max = stof(argv[5]);
+    int np = stoi(argv[3]), bn = stoi(argv[4]);
+    float dmax = stof(argv[5]);
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
 
@@ -125,14 +125,29 @@ int main(int argc, char **argv){
 	open_files(argv[1], np, dataD);
     open_files(argv[2], np, dataR); // guardo los datos en los Struct
     
+    clock_t begin = clock();
+    
     auto start = std::chrono::system_clock::now();
     make_histoXX<<<1,1>>>(DD, dataD, np, bn, dmax);
     make_histoXX<<<1,1>>>(RR, dataR, np, bn, dmax);
-    make_histoXX<<<1,1>>>(DR, dataD, dataR, np, bn, dmax);
-	
-	auto end = std::chrono::system_clock::now();
-	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>((end - start)); //mostramos los segundos que corre el programa
-    printf("Time = %lld ms\n", static_cast<long long int>(elapsed.count()));
+    make_histoXY<<<1,1>>>(DR, dataD, dataR, np, bn, dmax);
+
+    //Waits for the GPU to finish
+    cudaDeviceSynchronize();  
+
+    //Check here for errors
+    cudaError_t error = cudaGetLastError(); 
+    cout << "The error code is " << error << endl;
+    if(error != 0)
+    {
+      // print the CUDA error message and exit
+      printf("CUDA error: %s\n", cudaGetErrorString(error));
+      exit(-1);
+    }
+
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
     
 	cout << "Termine de hacer todos los histogramas" << endl;
 	// Mostramos los histogramas 
