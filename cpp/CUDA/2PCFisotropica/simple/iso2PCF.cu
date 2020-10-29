@@ -53,10 +53,9 @@ void save_histogram(string name, int bns, unsigned int *histo){
 }
 
 // Métodos para hacer histogramas.
-__global__ void make_histoXX(unsigned int *XX, Point3D *dataD;, int n_pts, , int bin, float d_max){
+__global__ void make_histoXX(unsigned int *XX, Point3D *data;, int n_pts, , int bin, float d_max){
     int pos; // Posición de apuntador.
     float dis, ds = (float)(bin)/d_max, dd_max = d_max*d_max, dx, dy, dz;
-    std::cout << "Estoy haciendo histogramas DD y RR..." << std::endl;
     for(int i = 0; i < n_pts-1; i++){
         for(int j = i+1; j < n_pts; j++){
             dx = data[i].x-data[j].x;
@@ -65,32 +64,23 @@ __global__ void make_histoXX(unsigned int *XX, Point3D *dataD;, int n_pts, , int
             dis = dx*dx + dy*dy + dz*dz;
             if(dis <= dd_max){
                 pos = (int)(sqrt(dis)*ds);
-                DD[pos] += 2;
-            }
-            dx = rand[i].x-rand[j].x;
-            dy = rand[i].y-rand[j].y;
-            dz = rand[i].z-rand[j].z;
-            dis = dx*dx + dy*dy + dz*dz;
-            if(dis <= dd_max){
-                pos = (int)(sqrt(dis)*ds);
-                RR[pos] +=2;
+                atomicAdd(&XX[pos],2);
             }
         }
     }
 }
-__global__ void make_histoXY(unsigned int *DR){
+__global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, int n_pts, , int bin, float d_max){
     int pos;
     float dis, ds = (float)(bin)/d_max, dd_max = d_max*d_max, dx, dy, dz;
-    std::cout << "Estoy haciendo histograma DR..." << std::endl;
     for (int i = 0; i < n_pts; i++){
         for(int j = 0; j < n_pts; j++){
-            dx = data[i].x-rand[j].x;
-            dy = data[i].y-rand[j].y;
-            dz = data[i].z-rand[j].z;
+            dx = dataD[i].x-dataR[j].x;
+            dy = dataD[i].y-dataR[j].y;
+            dz = dataD[i].z-dataR[j].z;
             dis = dx*dx + dy*dy + dz*dz;
             if(dis <= dd_max){
                 pos = (int)(sqrt(dis)*ds);
-                DR[pos] += 1;
+                atomicAdd(&XY[pos],1);
             }
         }
     }
@@ -110,7 +100,7 @@ int main(int argc, char **argv){
     cudaMallocManaged(&dataR, np*sizeof(Point3D));
 
     // Nombre de los archivos 
-    string nameDD = "DDiso", nameRR = "RRiso", nameDR = "DRiso";
+    string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
     /*
     nameDD.append(argv[3]);
     nameRR.append(argv[3]);
@@ -138,7 +128,7 @@ int main(int argc, char **argv){
     auto start = std::chrono::system_clock::now();
     make_histoXX<<<1,1>>>(DD, dataD, np, bn, dmax);
     make_histoXX<<<1,1>>>(RR, dataR, np, bn, dmax);
-    make_histoXX<<<1,1>>>(DR, dataR, dataR, np, bn, dmax);
+    make_histoXX<<<1,1>>>(DR, dataD, dataR, np, bn, dmax);
 	
 	auto end = std::chrono::system_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>((end - start)); //mostramos los segundos que corre el programa
