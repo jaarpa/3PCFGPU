@@ -139,8 +139,9 @@ int main(int argc, char **argv){
 	open_files(argv[1], np, dataD);
     open_files(argv[2], np, dataR); // guardo los datos en los Struct
     
+    int test = (int)(ceil((float)(np/(float)(1024))))
     cout << "blocks" << endl;
-    cout << (int)(ceil((float)(np/(float)(1024))) <<endl;
+    cout << test << endl;
     dim3 grid((int)(ceil((float)(np/(float)(1024))),1,1));
     dim3 block(1024,1,1);
 
