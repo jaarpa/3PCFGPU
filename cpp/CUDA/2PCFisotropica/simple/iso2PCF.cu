@@ -63,7 +63,7 @@ __global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, int ds,
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts){
         int pos; // Posición de apuntador.
-        float dx, dy, dz;
+        float dis, dx, dy, dz;
         for(int j = idx+1; j < n_pts; j++){
             dx = data[idx].x-data[j].x;
             dy = data[idx].y-data[j].y;
@@ -80,7 +80,7 @@ __global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, i
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts){
         int pos;
-        float dx, dy, dz;
+        float dis, dx, dy, dz;
         for(int j = 0; j < n_pts; j++){
             dx = dataD[i].x-dataR[j].x;
             dy = dataD[i].y-dataR[j].y;
