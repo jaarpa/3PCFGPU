@@ -59,9 +59,9 @@ void save_histogram(string name, int bns, unsigned int *histo){
 }
 
 // Métodos para hacer histogramas.
-__global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, int ds, float dd_max){
+__global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx==10){
+    if (idx<n_pts){
         int pos; // Posición de apuntador.
         float dis, dx, dy, dz;
         for(int j = idx+1; j < n_pts; j++){
@@ -69,9 +69,9 @@ __global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, int ds,
             dy = data[idx].y-data[j].y;
             dz = data[idx].z-data[j].z;
             dis = dx*dx + dy*dy + dz*dz;
-            printf("%f \n", dis);
-            printf("%f \n", sqrt(dis));
-            printf("%f \n", sqrt(dis)*ds);
+            //printf("%f \n", dis);
+            //printf("%f \n", sqrt(dis));
+            //printf("%f \n", sqrt(dis)*ds);
 
             if(dis <= dd_max){
                 pos = (int)(sqrt(dis)*ds);
@@ -80,7 +80,7 @@ __global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, int ds,
         }
     }
 }
-__global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, int n_pts, int ds, float dd_max){
+__global__ void make_histoXY(unsigned int *XY, Point3D *dataD, Point3D *dataR, int n_pts, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts){
         int pos;
@@ -142,6 +142,7 @@ int main(int argc, char **argv){
     dim3 block(1024,1,1);
 
     clock_t begin = clock();
+    cout << ds << endl;
     make_histoXX<<<grid,block>>>(DD, dataD, np, ds, dd_max);
     make_histoXX<<<grid,block>>>(RR, dataR, np, ds, dd_max);
     make_histoXY<<<grid,block>>>(DR, dataD, dataR, np, ds, dd_max);
