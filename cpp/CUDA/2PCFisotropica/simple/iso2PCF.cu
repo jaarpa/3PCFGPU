@@ -70,7 +70,6 @@ __global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, Point3D *da
             dy = data[idx].y-data[j].y;
             dz = data[idx].z-data[j].z;
             dis = dx*dx + dy*dy + dz*dz;
-
             if(dis <= dd_max){
                 pos = (int)(sqrt(dis)*ds);
                 if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
@@ -183,7 +182,7 @@ int main(int argc, char **argv){
         RR[i] = RR_A[i]+ RR_B[i];
         DR[i] = DR_A[i]+ DR_B[i];
     }
-    
+
 	cout << "Termine de hacer todos los histogramas" << endl;
 	// Mostramos los histogramas 
     cout << "\nHistograma DD:" << endl;
