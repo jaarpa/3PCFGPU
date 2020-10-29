@@ -62,7 +62,7 @@ void save_histogram(string name, int bns, unsigned int *histo){
 __global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts-1){
-        printf("%f \n",  blockDim.x);
+        //printf("%f \n",  blockDim.x);
         int pos; // Posición de apuntador.
         float dis, dx, dy, dz;
         for(int j = idx+1; j < n_pts; j++){
@@ -139,6 +139,8 @@ int main(int argc, char **argv){
 	open_files(argv[1], np, dataD);
     open_files(argv[2], np, dataR); // guardo los datos en los Struct
     
+    cout << "blocks" << endl;
+    cout << (int)(ceil((float)(np/(float)(1024))) <<endl;
     dim3 grid((int)(ceil((float)(np/(float)(1024))),1,1));
     dim3 block(1024,1,1);
 
