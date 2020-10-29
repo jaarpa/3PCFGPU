@@ -115,7 +115,7 @@ int main(int argc, char **argv){
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
 
-    unsigned int *DD, *RR, *DR, *DD_A, *RR_A, *DR_A, *DD_B *RR_B, *DR_B;
+    unsigned int *DD, *RR, *DR, *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     Point3D *dataD;
     Point3D *dataR;
     cudaMallocManaged(&dataD, np*sizeof(Point3D));// Asignamos meoria a esta variable
