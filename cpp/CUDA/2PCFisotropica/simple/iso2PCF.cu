@@ -61,7 +61,7 @@ void save_histogram(string name, int bns, unsigned int *histo){
 // Métodos para hacer histogramas.
 __global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, int ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx<n_pts){
+    if (idx==10){
         int pos; // Posición de apuntador.
         float dis, dx, dy, dz;
         for(int j = idx+1; j < n_pts; j++){
@@ -69,6 +69,10 @@ __global__ void make_histoXX(unsigned int *XX, Point3D *data, int n_pts, int ds,
             dy = data[idx].y-data[j].y;
             dz = data[idx].z-data[j].z;
             dis = dx*dx + dy*dy + dz*dz;
+            printf("%f \n", dis);
+            printf("%f \n", sqrt(dis));
+            printf("%f \n", sqrt(dis)*ds);
+
             if(dis <= dd_max){
                 pos = (int)(sqrt(dis)*ds);
                 atomicAdd(&XX[pos],2);
