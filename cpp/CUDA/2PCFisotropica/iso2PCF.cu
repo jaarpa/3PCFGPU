@@ -412,6 +412,7 @@ int main(int argc, char **argv){
     }
     cout << "Total: " << sum << endl;
 
+    sum=0;
     cout << "\nHistograma DD_A:" << endl;
     for (int k = 0; k<bn; k++){
         cout << DD_A[k] << "\t";
@@ -419,6 +420,7 @@ int main(int argc, char **argv){
     }
     cout << "Total: " << sum << endl;
 
+    sum=0;
     cout << "\nHistograma DD_B:" << endl;
     for (int k = 0; k<bn; k++){
         cout << DD_B[k] << "\t";
