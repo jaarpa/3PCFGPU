@@ -53,7 +53,9 @@ void save_histogram(string name, int bns, double *histo){
         exit(1);
     }
     for (i=0; i<bns; ++i){
-        for (j=0; j<bns; ++j) file << histo[i][j] << " ";
+        for (j=0; j<bns; ++j) {
+            file << histo[i][j] << " ";
+        }
         file << "\n";
     }
     file.close();
@@ -118,7 +120,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     Funcion para contar las distancias entre puntos en un mismo Nodo.
     */
 
-    int bin;
+    int bi, bj;
     float d, v;
     float x1,y1,z1,w1,x2,y2,z2,w2;
     float ddz, dd_ort;
@@ -135,9 +137,9 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             w2 = elements[j].w;
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
             ddz = (z2-z1)*(z2-z1);
-            if (dz < dd_max && r_ort < dd_max){
-                bi = int(sqrt(dz)*ds);
-                bj = int(sqrt(r_ort)*ds);
+            if (ddz < dd_max && dd_ort < dd_max){
+                bi = int(sqrt(ddz)*ds);
+                bj = int(sqrt(dd_ort)*ds);
                 v = 2*w1*w2;
                 atomicAdd(&XX[bi][bj],2);
             }
@@ -150,7 +152,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     Funcion para contar las distancias entre puntos en un mismo Nodo.
     */
 
-    int bin;
+    int bi, bj;
     float d, v;
     float x1,y1,z1,w1,x2,y2,z2,w2;
 
@@ -166,9 +168,9 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             w2 = elements2[j].w;
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
             ddz = (z2-z1)*(z2-z1);
-            if (dz < dd_max && r_ort < dd_max){
-                bi = int(sqrt(dz)*ds);
-                bj = int(sqrt(r_ort)*ds);
+            if (ddz < dd_max && dd_ort < dd_max){
+                bi = int(sqrt(ddz)*ds);
+                bj = int(sqrt(dd_ort)*ds);
                 v = 2*w1*w2;
                 atomicAdd(&XX[bi][bj],2);
             }
@@ -176,7 +178,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
-__global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2){
+__global__ void make_histoXX(float **XX_A, float **XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
@@ -242,7 +244,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
         }
     }
 }
-__global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, int partitions, float ds, float dd_max, int did_max, int did_max2){
+__global__ void make_histoXY(float **XY_A, float **XY_B, Node ***nodeD, Node ***nodeR, int partitions, float ds, float dd_max, int did_max, int did_max2){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
