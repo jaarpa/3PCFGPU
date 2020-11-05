@@ -352,7 +352,7 @@ int main(int argc, char **argv){
         cudaMallocManaged(&*(DD_B+i), bn*sizeof(float));
         cudaMallocManaged(&*(RR_B+i), bn*sizeof(float));
         cudaMallocManaged(&*(DR_B+i), bn*sizeof(float));
-
+    }
 
     //Inicializar en 0 los histogramas
     for (int i = 0; i<bn; i++){
@@ -452,6 +452,7 @@ int main(int argc, char **argv){
             cout << DR[i][k] << "\t";
             sum += DR[i][k];
         }
+        cout << "\n";
     }
 	
 	// Guardamos los histogramas
