@@ -136,7 +136,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
-                atomicAdd(&XX[bin],v);
+                atomicAdd(&XX[bin],1);
             }
         }
     }
@@ -166,7 +166,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
-                atomicAdd(&XX[bin],v);
+                atomicAdd(&XX[bin],1);
             }
         }
     }
@@ -375,9 +375,7 @@ int main(int argc, char **argv){
     dim3 block(1024,1,1);
 
     clock_t begin = clock();
-    printf("%f \n",nodeD[1][1][2].elements[2].x);
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2);
-    printf("%f \n",nodeR[1][1][2].elements[2].x);
     make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, partitions, ds, dd_max, did_max, did_max2);
     make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, partitions, ds, dd_max, did_max, did_max2);
 
