@@ -123,7 +123,7 @@ __device__ void count_distances11(float **XX, PointW3D *elements, int len, float
     */
 
     int bi, bj;
-    float d, v;
+    float v;
     float x1,y1,z1,w1,x2,y2,z2,w2;
     float ddz, dd_ort;
 
@@ -157,6 +157,7 @@ __device__ void count_distances12(float **XX, PointW3D *elements1, int len1, Poi
     int bi, bj;
     float d, v;
     float x1,y1,z1,w1,x2,y2,z2,w2;
+    float ddz, dd_ort;
 
     for (int i=0; i<len1; ++i){
         x1 = elements1[i].x;
@@ -417,16 +418,18 @@ int main(int argc, char **argv){
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
 
     for (int i = 0; i < bn; i++){
-        DD[i] = (double)(DD_A[i]+ DD_B[i]);
-        RR[i] = (double)(RR_A[i]+ RR_B[i]);
-        DR[i] = (double)(DR_A[i]+ DR_B[i]);
+        for (int j = 0; j < bn; j++){
+            DD[i][j] = (double)(DD_A[i][j]+ DD_B[i][j]);
+            RR[i][j] = (double)(RR_A[i][j]+ RR_B[i][j]);
+            DR[i][j] = (double)(DR_A[i][j]+ DR_B[i][j]);
+        }
     }
 
     cout << "Termine de hacer todos los histogramas" << endl;
     // Mostramos los histogramas 
     cout << "\nHistograma DD:" << endl;
     int sum = 0;
-    for (int i = 0; k<bn; k++){
+    for (int i = 0; i<bn; i++){
         for (int k = 0; k<bn; k++){
             cout << DD[i][k] << "\t";
             sum += DD[i][k];
@@ -436,7 +439,7 @@ int main(int argc, char **argv){
     cout << "Total: " << sum << endl;
 
     cout << "\nHistograma RR:" << endl;
-    for (int i = 0; k<bn; k++){
+    for (int i = 0; i<bn; i++){
         for (int k = 0; k<bn; k++){
             cout << RR[i][k] << "\t";
             sum += RR[i][k];
