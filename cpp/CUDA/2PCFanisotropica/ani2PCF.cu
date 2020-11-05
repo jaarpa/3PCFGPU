@@ -466,7 +466,7 @@ int main(int argc, char **argv){
     cudaFree(&dataD);
     cudaFree(&dataR);
 
-    for (i=0; i<bn; ++i){
+    for (int i=0; i<bn; ++i){
         delete[] *(DD+i);
         delete[] *(RR+i);
         delete[] *(DR+i);
