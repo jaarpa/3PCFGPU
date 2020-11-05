@@ -43,8 +43,9 @@ void open_files(string name_file, int pts, PointW3D *datos){
 
 //====================================================================
 
+/*
 void save_histogram(string name, int bns, double *histo){
-    /* Función para guardar nuestros archivos de histogramas */
+    //Función para guardar nuestros archivos de histogramas
     int i, j;
     ofstream file;
     file.open(name.c_str(),ios::out | ios::binary);
@@ -60,6 +61,7 @@ void save_histogram(string name, int bns, double *histo){
     }
     file.close();
 }
+*/
 
 //=================================================================== 
 void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
@@ -115,7 +117,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Sección de Kernels ================================== 
 //===================================================================
 
-__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max){
+__device__ void count_distances11(float **XX, PointW3D *elements, int len, float ds, float dd_max){
     /*
     Funcion para contar las distancias entre puntos en un mismo Nodo.
     */
@@ -147,7 +149,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     }
 }
 
-__device__ void count_distances12(float *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max){
+__device__ void count_distances12(float **XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max){
     /*
     Funcion para contar las distancias entre puntos en un mismo Nodo.
     */
@@ -449,11 +451,11 @@ int main(int argc, char **argv){
         }
 	
 	// Guardamos los histogramas
-	save_histogram(nameDD, bn, DD);
+	//save_histogram(nameDD, bn, DD);
 	cout << "Guarde histograma DD..." << endl;
-	save_histogram(nameRR, bn, RR);
+	//save_histogram(nameRR, bn, RR);
 	cout << "Guarde histograma RR..." << endl;
-	save_histogram(nameDR, bn, DR);
+	//save_histogram(nameDR, bn, DR);
 	cout << "Guarde histograma DR..." << endl;
 
     cudaFree(&dataD);
