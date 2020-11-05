@@ -314,7 +314,7 @@ int main(int argc, char **argv){
     float dmax = stof(argv[5]);
     float ds = (float)(bn)/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
-    int did_max = (int)(ceil(dmax/size_node);
+    int did_max = (int)(ceil(dmax/size_node));
     int did_max2 = (int)(ceil(dd_max/(size_node*size_node));
     unsigned int partitions = (int)(ceil(size_box/size_node));
     //int np = 32768, bn = 10;
@@ -382,8 +382,8 @@ int main(int argc, char **argv){
 
     clock_t begin = clock();
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2);
-    make_histoXX<<<grid,block>>>(RR_A, RR_B, dataR, np, ds, dd_max);
-    make_histoXY<<<grid,block>>>(DR_A, DR_B, dataD, dataR, np, ds, dd_max);
+    make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, partitions, ds, dd_max, did_max, did_max2);
+    make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, partitions, ds, dd_max, did_max, did_max2);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
