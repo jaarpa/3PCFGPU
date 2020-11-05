@@ -136,7 +136,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
-                atomicAdd(&XX[bin],1);
+                atomicAdd(&XX[bin],v);
             }
         }
     }
@@ -166,7 +166,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
-                atomicAdd(&XX[bin],1);
+                atomicAdd(&XX[bin],v);
             }
         }
     }
@@ -174,7 +174,6 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
 
 __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx == 7) { printf("%f \n",nodeD[1][1][2].elements[2].x); }
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -237,7 +236,6 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             }
 
         }
-        if (idx == 7) { printf("Exit the kernel"); }
     }
 }
 __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, int partitions, float ds, float dd_max, int did_max, int did_max2){
@@ -409,22 +407,6 @@ int main(int argc, char **argv){
     for (int k = 0; k<bn; k++){
         cout << DD[k] << "\t";
         sum += DD[k];
-    }
-    cout << "Total: " << sum << endl;
-
-    sum=0;
-    cout << "\nHistograma DD_A:" << endl;
-    for (int k = 0; k<bn; k++){
-        cout << DD_A[k] << "\t";
-        sum += DD_A[k];
-    }
-    cout << "Total: " << sum << endl;
-
-    sum=0;
-    cout << "\nHistograma DD_B:" << endl;
-    for (int k = 0; k<bn; k++){
-        cout << DD_B[k] << "\t";
-        sum += DD_B[k];
     }
     cout << "Total: " << sum << endl;
 
