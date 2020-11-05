@@ -260,7 +260,7 @@ int main(int argc, char **argv){
     cout << "\nHistograma DD:" << endl;
     int sum = 0;
 	for (int k = 0; k<bn; k++){
-        printf("%d \t",DD[k]);
+        printf("%i \t",DD[k]);
         sum += DD[k];
     }
 	cout << "TOtal: " << endl;
@@ -268,11 +268,11 @@ int main(int argc, char **argv){
 
 	cout << "\nHistograma RR:" << endl;
 	for (int k = 0; k<bn; k++){
-		printf("%d \t",RR[k]);
+		printf("%i \t",RR[k]);
 	}
 	cout << "\nHistograma DR:" << endl;
 	for (int k = 0; k<bn; k++){
-		printf("%d \t",DR[k]);
+		printf("%i \t",DR[k]);
 	}
 	
 	
