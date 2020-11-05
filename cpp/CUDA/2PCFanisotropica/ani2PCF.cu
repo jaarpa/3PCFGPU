@@ -447,11 +447,12 @@ int main(int argc, char **argv){
     }
 
     cout << "\nHistograma DR:" << endl;
-    for (int i = 0; k<bn; k++){
+    for (int i = 0; i<bn; i++){
         for (int k = 0; k<bn; k++){
             cout << DR[i][k] << "\t";
             sum += DR[i][k];
         }
+    }
 	
 	// Guardamos los histogramas
 	//save_histogram(nameDD, bn, DD);
