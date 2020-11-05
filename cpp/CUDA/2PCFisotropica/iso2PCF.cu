@@ -43,7 +43,7 @@ void open_files(string name_file, int pts, PointW3D *datos){
 
 //====================================================================
 
-void save_histogram(string name, int bns, unsigned long float *histo){
+void save_histogram(string name, int bns, long float *histo){
     /* Función para guardar nuestros archivos de histogramas */
     ofstream file2;
     file2.open(name.c_str(), ios::out | ios::binary);
@@ -117,10 +117,9 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     Funcion para contar las distancias entre puntos en un mismo Nodo.
     */
 
-    int i,j;
     int bin;
     float d, v;
-    float x1,y1,z1,x2,y2,z2;
+    float x1,y1,z1,w1,x2,y2,z2,w2;
 
     for (int i=0; i<len-1; ++i){
         x1 = elements[i].x;
@@ -133,7 +132,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             z2 = elements[j].z;
             w2 = elements[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-            if (d<=dmax2){
+            if (d<=dd_max){
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
@@ -147,11 +146,10 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     /*
     Funcion para contar las distancias entre puntos en un mismo Nodo.
     */
-
-    int i,j;
+    
     int bin;
     float d, v;
-    float x1,y1,z1,x2,y2,z2;
+    float x1,y1,z1,w1,x2,y2,z2,w2;
 
     for (int i=0; i<len1; ++i){
         x1 = elements1[i].x;
@@ -164,7 +162,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             z2 = elements2[j].z;
             w2 = elements2[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-            if (d<=dmax2){
+            if (d<=dd_max){
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
