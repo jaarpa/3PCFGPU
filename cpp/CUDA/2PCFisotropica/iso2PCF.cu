@@ -43,7 +43,7 @@ void open_files(string name_file, int pts, PointW3D *datos){
 
 //====================================================================
 
-void save_histogram(string name, int bns, unsigned long int *histo){
+void save_histogram(string name, int bns, unsigned long float *histo){
     /* Función para guardar nuestros archivos de histogramas */
     ofstream file2;
     file2.open(name.c_str(), ios::out | ios::binary);
@@ -110,66 +110,226 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 
 //====================================================================
 //============ Sección de Kernels ================================== 
-//====================================================================
-__global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, PointW3D *data, int np, float ds, float dd_max){
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx<np-1){
-        //printf("%f \n",  blockDim.x);
-        int pos; // Posición de apuntador.
-        float dis, dx, dy, dz;
-        for(int j = idx+1; j < np; j++){
-            dx = data[idx].x-data[j].x;
-            dy = data[idx].y-data[j].y;
-            dz = data[idx].z-data[j].z;
-            dis = dx*dx + dy*dy + dz*dz;
-            if(dis <= dd_max){
-                pos = (int)(sqrt(dis)*ds);
-                if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
-                    pos = (int)(sqrt(dis)*ds);
-                    atomicAdd(&XX_A[pos],2);
-                } else {
-                    pos = (int)(sqrt(dis)*ds);
-                    atomicAdd(&XX_B[pos],2);
-                }
+//===================================================================
+
+__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max){
+    /*
+    Funcion para contar las distancias entre puntos en un mismo Nodo.
+    */
+
+    int i,j;
+    int bin;
+    float d, v;
+    float x1,y1,z1,x2,y2,z2;
+
+    for (int i=0; i<len-1; ++i){
+        x1 = elements[i].x;
+        y1 = elements[i].y;
+        z1 = elements[i].z;
+        w1 = elements[i].w;
+        for (int j=i+1; j<len; ++j){
+            x2 = elements[j].x;
+            y2 = elements[j].y;
+            z2 = elements[j].z;
+            w2 = elements[j].w;
+            d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+            if (d<=dmax2){
+                d = sqrt(d);
+                bin = (int)(d*ds);
+                v = 2*w1*w2;
+                atomicAdd(&XX[bin],v);
             }
         }
     }
 }
-__global__ void make_histoXY(unsigned int *XY_A, unsigned int *XY_B, PointW3D *dataD, PointW3D *dataR, int np, float ds, float dd_max){
+
+__device__ void count_distances12(float *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max){
+    /*
+    Funcion para contar las distancias entre puntos en un mismo Nodo.
+    */
+
+    int i,j;
+    int bin;
+    float d, v;
+    float x1,y1,z1,x2,y2,z2;
+
+    for (int i=0; i<len1; ++i){
+        x1 = elements1[i].x;
+        y1 = elements1[i].y;
+        z1 = elements1[i].z;
+        w1 = elements1[i].w;
+        for (int j=0; j<len2; ++j){
+            x2 = elements2[j].x;
+            y2 = elements2[j].y;
+            z2 = elements2[j].z;
+            w2 = elements2[j].w;
+            d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+            if (d<=dmax2){
+                d = sqrt(d);
+                bin = (int)(d*ds);
+                v = 2*w1*w2;
+                atomicAdd(&XX[bin],v);
+            }
+        }
+    }
+}
+
+__global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx<np-1){
-        int pos;
-        float dis, dx, dy, dz;
-        for(int j = 0; j < np; j++){
-            dx = dataD[idx].x-dataR[j].x;
-            dy = dataD[idx].y-dataR[j].y;
-            dz = dataD[idx].z-dataR[j].z;
-            dis = dx*dx + dy*dy + dz*dz;
-            if(dis <= dd_max){
-                if (idx%2==0){
-                    pos = (int)(sqrt(dis)*ds);
-                    atomicAdd(&XY_A[pos],1);
+    if (idx<(partitions*partitions*partitions)){
+        //Get the node positon in this thread
+        int mom = (int) (idx/(partitions*partitions));
+        int col = (int) ((idx%(partitions*partitions))/partitions);
+        int row = idx%partitions;
+        
+        if nodeD[row][col][mom].len > 0{
+            
+            if (idx%2==0){
+                count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max)
+            } else {
+                count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max)
+            }
+            
+            int u,v,w; //Posicion del nodo 2
+            unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
+            int pos; // Posicion de apuntador en el histograma.
+
+            float dis, dx, dy, dz;
+
+            //Nodo2 solo movil en z
+            for(w = mom+1; w<partitions && w-row<=did_max; w++){
+                if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max)
                 } else {
-                    pos = (int)(sqrt(dis)*ds);
-                    atomicAdd(&XY_B[pos],1);
+                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max)
                 }
             }
+
+            //Nodo2 movil en ZY
+            w = (mom-did_max)*(mom>did_max);
+            for(v=col+1; v<partitions && v-col<=did_max; v++){
+                dy_nod12 = v-col;
+                for(w; w<partitions && w-mom<=did_max; w++){
+                    dz_nod12 = w-mom;
+                    dd_nod_12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
+                    if (d_nod12<=did_max2){
+                        if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max)
+                        } else {
+                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max)
+                        }
+                    }
+                }
+            }
+
+            //Nodo movil en XYZ
+            w = (mom-did_max)*(mom>did_max);
+            v = (col-did_max)*(col>did_max);
+            for(u = row+1; u < partitions && u-row< did_max; u++){
+                dx_nod12 = u-row;
+                for(v = col+1; v < partitions && v-col< did_max; v++){
+                    dy_nod12 = v-col;
+                    for(w = row+1; w < partitions && w-mom< did_max; w++){
+                        dz_nod12 = w-mom;
+                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
+                        if (d_nod12<=did_max2){
+                            if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max)
+                            } else {
+                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max)
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+}
+__global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, int partitions, float ds, float dd_max, int did_max, int did_max2){
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx<(partitions*partitions*partitions)){
+        //Get the node positon in this thread
+        int mom = (int) (idx/(partitions*partitions));
+        int col = (int) ((idx%(partitions*partitions))/partitions);
+        int row = idx%partitions;
+        
+        if nodeD[row][col][mom].len > 0{
+            
+            int u,v,w; //Posicion del nodo 2
+            unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
+            int pos; // Posicion de apuntador en el histograma.
+
+            float dis, dx, dy, dz;
+
+            //Nodo2 solo movil en z
+            w = (mom-did_max)*(mom>did_max);
+            for(w ; w<partitions && w-row<=did_max; w++){
+                if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                    count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max)
+                } else {
+                    count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max)
+                }
+            }
+
+            //Nodo2 movil en ZY
+            w = (mom-did_max)*(mom>did_max);
+            v = (col-did_max)*(col>did_max);
+            for(v; v<partitions && v-col<=did_max; v++){
+                dy_nod12 = v-col;
+                for(w; w<partitions && w-mom<=did_max; w++){
+                    dz_nod12 = w-mom;
+                    dd_nod_12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
+                    if (d_nod12<=did_max2){
+                        if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                            count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max)
+                        } else {
+                            count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max)
+                        }
+                    }
+                }
+            }
+
+            //Nodo movil en XYZ
+            w = (mom-did_max)*(mom>did_max);
+            v = (col-did_max)*(col>did_max);
+            u = (row-did_max)*(row>did_max);
+            for(u = row+1; u < partitions && u-row< did_max; u++){
+                dx_nod12 = u-row;
+                for(v = col+1; v < partitions && v-col< did_max; v++){
+                    dy_nod12 = v-col;
+                    for(w = row+1; w < partitions && w-mom< did_max; w++){
+                        dz_nod12 = w-mom;
+                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
+                        if (d_nod12<=did_max2){
+                            if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max)
+                            } else {
+                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max)
+                            }
+                        }
+                    }
+                }
+            }
+            
         }
     }
 }
 
 int main(int argc, char **argv){
 	
-    int np = stoi(argv[3]), bn = stoi(argv[4]);
+    unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
     float ds = (float)(bn)/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
-    int partitions = (int)(ceil(size_box/size_node));
+    int did_max = (int)(ceil(dmax/size_node);
+    int did_max2 = (int)(ceil(dd_max/(size_node*size_node));
+    unsigned int partitions = (int)(ceil(size_box/size_node));
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
 
-    unsigned int *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
-    unsigned long int *DD, *RR, *DR;
+    float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
+    long float *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
     cudaMallocManaged(&dataD, np*sizeof(PointW3D));// Asignamos meoria a esta variable
@@ -179,15 +339,15 @@ int main(int argc, char **argv){
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
     // Asignamos memoria para los histogramas
-    DD = new unsigned long int[bn];
-    RR = new unsigned long int[bn];
-    DR = new unsigned long int[bn];
-    cudaMallocManaged(&DD_A, bn*sizeof(unsigned int));
-    cudaMallocManaged(&RR_A, bn*sizeof(unsigned int));
-    cudaMallocManaged(&DR_A, bn*sizeof(unsigned int));
-    cudaMallocManaged(&DD_B, bn*sizeof(unsigned int));
-    cudaMallocManaged(&RR_B, bn*sizeof(unsigned int));
-    cudaMallocManaged(&DR_B, bn*sizeof(unsigned int));
+    DD = new long float[bn];
+    RR = new long float[bn];
+    DR = new long float[bn];
+    cudaMallocManaged(&DD_A, bn*sizeof(float));
+    cudaMallocManaged(&RR_A, bn*sizeof(float));
+    cudaMallocManaged(&DR_A, bn*sizeof(float));
+    cudaMallocManaged(&DD_B, bn*sizeof(float));
+    cudaMallocManaged(&RR_B, bn*sizeof(float));
+    cudaMallocManaged(&DR_B, bn*sizeof(float));
     
     //Inicializar en 0 los histogramas
     for (int i = 0; i < bn; i++){
@@ -224,14 +384,14 @@ int main(int argc, char **argv){
     make_nodos(nodeD, dataD, partitions, size_node, np);
     make_nodos(nodeR, dataR, partitions, size_node, np);
 
-    int blocks = (int)(ceil((float)(np/(float)(1024))));
+    int blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(1024))));
     dim3 grid(blocks,1,1);
     dim3 block(1024,1,1);
 
     clock_t begin = clock();
-    //make_histoXX<<<grid,block>>>(DD_A, DD_B, dataD, np, ds, dd_max);
-    //make_histoXX<<<grid,block>>>(RR_A, RR_B, dataR, np, ds, dd_max);
-    //make_histoXY<<<grid,block>>>(DR_A, DR_B, dataD, dataR, np, ds, dd_max);
+    make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2);
+    make_histoXX<<<grid,block>>>(RR_A, RR_B, dataR, np, ds, dd_max);
+    make_histoXY<<<grid,block>>>(DR_A, DR_B, dataD, dataR, np, ds, dd_max);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
