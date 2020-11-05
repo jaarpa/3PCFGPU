@@ -33,7 +33,6 @@ void open_files(string name_file, int pts, PointW3D *datos){
         exit(1);
     }
 
-    int remove;
     for ( int c = 0; c < pts; c++)
     {
         file >> datos[c].x >> datos[c].y >> datos[c].z >> datos[c].w; 
@@ -43,7 +42,7 @@ void open_files(string name_file, int pts, PointW3D *datos){
 
 //====================================================================
 
-void save_histogram(string name, int bns, unsigned int *histo){
+void save_histogram(string name, int bns, unsigned long int *histo){
     /* Función para guardar nuestros archivos de histogramas */
     ofstream file2;
     file2.open(name.c_str(), ios::out | ios::binary);
@@ -78,7 +77,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].z = _w;
 }
 
-void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int n_pts){
+void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np){
     /*
     Función para crear los nodos con los datos y puntos random
 
@@ -100,7 +99,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     }
 
     // Llenamos los nodos con los puntos de dat:
-    for (int i=0; i<n_pts; i++){
+    for (int i=0; i<np; i++){
         row = (int)(dat[i].x/size_node);
         col = (int)(dat[i].y/size_node);
         mom = (int)(dat[i].z/size_node);
@@ -111,13 +110,13 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //====================================================================
 //============ Sección de Kernels ================================== 
 //====================================================================
-__global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, PointW3D *data, int n_pts, float ds, float dd_max){
+__global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, PointW3D *data, int np, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx<n_pts-1){
+    if (idx<np-1){
         //printf("%f \n",  blockDim.x);
         int pos; // Posición de apuntador.
         float dis, dx, dy, dz;
-        for(int j = idx+1; j < n_pts; j++){
+        for(int j = idx+1; j < np; j++){
             dx = data[idx].x-data[j].x;
             dy = data[idx].y-data[j].y;
             dz = data[idx].z-data[j].z;
@@ -135,12 +134,12 @@ __global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, PointW3D *d
         }
     }
 }
-__global__ void make_histoXY(unsigned int *XY_A, unsigned int *XY_B, PointW3D *dataD, PointW3D *dataR, int n_pts, float ds, float dd_max){
+__global__ void make_histoXY(unsigned int *XY_A, unsigned int *XY_B, PointW3D *dataD, PointW3D *dataR, int np, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx<n_pts-1){
+    if (idx<np-1){
         int pos;
         float dis, dx, dy, dz;
-        for(int j = 0; j < n_pts; j++){
+        for(int j = 0; j < np; j++){
             dx = dataD[idx].x-dataR[j].x;
             dy = dataD[idx].y-dataR[j].y;
             dz = dataD[idx].z-dataR[j].z;
@@ -163,13 +162,13 @@ int main(int argc, char **argv){
     int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
     float ds = (float)(bn)/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
-    float size_node = alpha*(size_box/pow((float)(n_pts),1/3.));
+    float size_node = alpha*(size_box/pow((float)(np),1/3.));
     int partitions = (int)(ceil(size_box/size_node));
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
 
     unsigned int *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
-    unsigned long int *DD, *RR, *DR,
+    unsigned long int *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
     cudaMallocManaged(&dataD, np*sizeof(PointW3D));// Asignamos meoria a esta variable
@@ -221,8 +220,8 @@ int main(int argc, char **argv){
     }
     
     //Clasificar los puntos en los nodos
-    make_nodos(nodeD, dataD, partitions, size_node, n_pts);
-    make_nodos(nodeR, dataR, partitions, size_node, n_pts);
+    make_nodos(nodeD, dataD, partitions, size_node, np);
+    make_nodos(nodeR, dataR, partitions, size_node, np);
 
     int blocks = (int)(ceil((float)(np/(float)(1024))));
     dim3 grid(blocks,1,1);
