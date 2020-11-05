@@ -248,32 +248,32 @@ int main(int argc, char **argv){
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
-    
+
     for (int i = 0; i < bn; i++){
         DD[i] = DD_A[i]+ DD_B[i];
         RR[i] = RR_A[i]+ RR_B[i];
         DR[i] = DR_A[i]+ DR_B[i];
     }
 
-	cout << "Termine de hacer todos los histogramas" << endl;
-	// Mostramos los histogramas 
+    cout << "Termine de hacer todos los histogramas" << endl;
+    // Mostramos los histogramas 
     cout << "\nHistograma DD:" << endl;
     int sum = 0;
-	for (int k = 0; k<bn; k++){
-        printf("%i \t",DD[k]);
+    for (int k = 0; k<bn; k++){
+        cout << DD[k] << "\t"
         sum += DD[k];
     }
-	cout << "TOtal: " << endl;
+    cout << "Total: " << endl;
     cout << sum << endl;
 
-	cout << "\nHistograma RR:" << endl;
-	for (int k = 0; k<bn; k++){
-		printf("%i \t",RR[k]);
-	}
-	cout << "\nHistograma DR:" << endl;
-	for (int k = 0; k<bn; k++){
-		printf("%i \t",DR[k]);
-	}
+    cout << "\nHistograma RR:" << endl;
+    for (int k = 0; k<bn; k++){
+        cout << RR[k] << "\t"
+    }
+    cout << "\nHistograma DR:" << endl;
+    for (int k = 0; k<bn; k++){
+        cout << DR[k] << "\t"
+    }
 	
 	
 	// Guardamos los histogramas
