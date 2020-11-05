@@ -201,7 +201,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             }
 
             //Nodo2 movil en ZY
-            w = (mom-did_max)*(mom>did_max);
+            w = 0//(mom-did_max)*(mom>did_max);
             for(v=col+1; v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
                 for(w; w<partitions && w-mom<=did_max; w++){
@@ -218,8 +218,8 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             }
 
             //Nodo movil en XYZ
-            w = (mom-did_max)*(mom>did_max);
-            v = (col-did_max)*(col>did_max);
+            w = 0//(mom-did_max)*(mom>did_max);
+            v = 0//(col-did_max)*(col>did_max);
             for(u = row+1; u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
                 for(v = col+1; v < partitions && v-col< did_max; v++){
@@ -255,7 +255,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
 
             //Nodo2 solo movil en z
-            w = (mom-did_max)*(mom>did_max);
+            w = 0//(mom-did_max)*(mom>did_max);
             for(w ; w<partitions && w-row<=did_max; w++){
                 if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
                     count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max);
@@ -265,8 +265,8 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             }
 
             //Nodo2 movil en ZY
-            w = (mom-did_max)*(mom>did_max);
-            v = (col-did_max)*(col>did_max);
+            w = 0//(mom-did_max)*(mom>did_max);
+            v = 0//(col-did_max)*(col>did_max);
             for(v; v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
                 for(w; w<partitions && w-mom<=did_max; w++){
@@ -283,9 +283,9 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             }
 
             //Nodo movil en XYZ
-            w = (mom-did_max)*(mom>did_max);
-            v = (col-did_max)*(col>did_max);
-            u = (row-did_max)*(row>did_max);
+            w = 0//(mom-did_max)*(mom>did_max);
+            v = 0//(col-did_max)*(col>did_max);
+            u = 0//(row-did_max)*(row>did_max);
             for(u = row+1; u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
                 for(v = col+1; v < partitions && v-col< did_max; v++){
@@ -416,18 +416,19 @@ int main(int argc, char **argv){
         cout << DD[k] << "\t";
         sum += DD[k];
     }
-    cout << "Total: " << endl;
-    cout << sum << endl;
+    cout << "Total: " << sum << endl;
+
+    cout << "\nHistograma DD_A:" << endl;
+    int sum = 0;
+    for (int k = 0; k<bn; k++){
+        cout << DD_A[k] << "\t";
+        sum += DD_A[k];
+    }
+    cout << "Total: " << sum << endl;
 
     cout << "\nHistograma RR:" << endl;
     for (int k = 0; k<bn; k++){
         cout << RR[k] << "\t";
-    }
-
-
-    cout << "\nHistograma RR_A:" << endl;
-    for (int k = 0; k<bn; k++){
-        cout << RR_A[k] << "\t";
     }
 
     cout << "\nHistograma DR:" << endl;
