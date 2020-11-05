@@ -253,9 +253,6 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             
             int u,v,w; //Posicion del nodo 2
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
-            int pos; // Posicion de apuntador en el histograma.
-
-            float dis, dx, dy, dz;
 
             //Nodo2 solo movil en z
             w = (mom-did_max)*(mom>did_max);
@@ -275,7 +272,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                 for(w; w<partitions && w-mom<=did_max; w++){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    if (d_nod12<=did_max2){
+                    if (dd_nod12<=did_max2){
                         if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
                             count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max);
                         } else {
@@ -296,7 +293,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                     for(w = row+1; w < partitions && w-mom< did_max; w++){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (d_nod12<=did_max2){
+                        if (dd_nod12<=did_max2){
                             if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
                                 count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max);
                             } else {
