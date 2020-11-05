@@ -174,6 +174,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
 
 __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx == 7) { printf("Entered to the kernel") }
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -236,6 +237,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             }
 
         }
+        if (idx == 7) { printf("Exit the kernel") }
     }
 }
 __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, int partitions, float ds, float dd_max, int did_max, int did_max2){
