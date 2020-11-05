@@ -6,21 +6,24 @@
 
 using namespace std;
 
-struct Point3D{
+struct PointW3D{
     float x;
-    float y;
+    float y; 
     float z;
+    float w;
 };
 
-//====================================================================
-//============ Sección de Funciones ================================== 
-//====================================================================
+struct Node{
+    int len;		// Cantidad de elementos en el nodo.
+    PointW3D *elements;	// Elementos del nodo.
+};
 
-void open_files(string name_file, int pts, Point3D *datos){
+
+void open_files(string name_file, int pts, PointW3D *datos){
     /* Función para abrir nuestros archivos de datos */
     ifstream file;
 
-    string mypathto_files = "../../../../fake_DATA/DATOS/";
+    string mypathto_files = "../../../fake_DATA/DATOS/";
     //This creates the full path to where I have my data files
     name_file.insert(0,mypathto_files);
 
@@ -30,13 +33,10 @@ void open_files(string name_file, int pts, Point3D *datos){
         exit(1);
     }
 
-    //int c=0,remove;
     int remove;
-    //while (!file.eof())
     for ( int c = 0; c < pts; c++)
     {
-        file >> datos[c].x >> datos[c].y >> datos[c].z >> remove; 
-        //c++;
+        file >> datos[c].x >> datos[c].y >> datos[c].z >> datos[c].w; 
     }
     file.close();
 }
@@ -58,8 +58,60 @@ void save_histogram(string name, int bns, unsigned int *histo){
     file2.close();
 }
 
-// Métodos para hacer histogramas.
-__global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, Point3D *data, int n_pts, float ds, float dd_max){
+//=================================================================== 
+void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
+    lon++;
+    PointW3D *array_aux;
+    cudaMallocManaged(&array_aux, lon*sizeof(PointW3D)); 
+    for (int i=0; i<lon-1; i++){
+        array_aux[i].x = array[i].x;
+        array_aux[i].y = array[i].y;
+        array_aux[i].z = array[i].z;
+        array_aux[i].w = array[i].w;
+    }
+
+    cudaFree(array);
+    array = array_aux;
+    array[lon-1].x = _x;
+    array[lon-1].y = _y;
+    array[lon-1].z = _z;
+    array[lon-1].z = _w;
+}
+
+void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int n_pts){
+    /*
+    Función para crear los nodos con los datos y puntos random
+
+    Argumentos
+    nod: arreglo donde se crean los nodos.
+    dat: datos a dividir en nodos.
+    */
+
+    int row, col, mom;
+
+    // Inicializamos los nodos vacíos:
+    for (row=0; row<partitions; row++){
+        for (col=0; col<partitions; col++){
+            for (mom=0; mom<partitions; mom++){
+                nod[row][col][mom].len = 0;
+                cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D));
+            }
+        }
+    }
+
+    // Llenamos los nodos con los puntos de dat:
+    for (int i=0; i<n_pts; i++){
+        row = (int)(dat[i].x/size_node);
+        col = (int)(dat[i].y/size_node);
+        mom = (int)(dat[i].z/size_node);
+        add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
+    }
+}
+
+//====================================================================
+//============ Sección de Kernels ================================== 
+//====================================================================
+__global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, PointW3D *data, int n_pts, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts-1){
         //printf("%f \n",  blockDim.x);
@@ -83,7 +135,7 @@ __global__ void make_histoXX(unsigned int *XX_A, unsigned int *XX_B, Point3D *da
         }
     }
 }
-__global__ void make_histoXY(unsigned int *XY_A, unsigned int *XY_B, Point3D *dataD, Point3D *dataR, int n_pts, float ds, float dd_max){
+__global__ void make_histoXY(unsigned int *XY_A, unsigned int *XY_B, PointW3D *dataD, PointW3D *dataR, int n_pts, float ds, float dd_max){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<n_pts-1){
         int pos;
@@ -110,23 +162,26 @@ int main(int argc, char **argv){
 	
     int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
-    float ds = (float)(bn)/dmax, dd_max=dmax*dmax;
+    float ds = (float)(bn)/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
+    float size_node = alpha*(size_box/pow((float)(n_pts),1/3.));
+    int partitions = (int)(ceil(size_box/size_node));
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
 
-    unsigned int *DD, *RR, *DR, *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
-    Point3D *dataD;
-    Point3D *dataR;
-    cudaMallocManaged(&dataD, np*sizeof(Point3D));// Asignamos meoria a esta variable
-    cudaMallocManaged(&dataR, np*sizeof(Point3D));
+    unsigned int *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
+    unsigned long int *DD, *RR, *DR,
+    PointW3D *dataD;
+    PointW3D *dataR;
+    cudaMallocManaged(&dataD, np*sizeof(PointW3D));// Asignamos meoria a esta variable
+    cudaMallocManaged(&dataR, np*sizeof(PointW3D));
 
     // Nombre de los archivos 
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
-    // Creamos los histogramas
-    DD = new unsigned int[bn];
-    RR = new unsigned int[bn];
-    DR = new unsigned int[bn];
+    // Asignamos memoria para los histogramas
+    DD = new unsigned long int[bn];
+    RR = new unsigned long int[bn];
+    DR = new unsigned long int[bn];
     cudaMallocManaged(&DD_A, bn*sizeof(unsigned int));
     cudaMallocManaged(&RR_A, bn*sizeof(unsigned int));
     cudaMallocManaged(&DR_A, bn*sizeof(unsigned int));
@@ -134,6 +189,7 @@ int main(int argc, char **argv){
     cudaMallocManaged(&RR_B, bn*sizeof(unsigned int));
     cudaMallocManaged(&DR_B, bn*sizeof(unsigned int));
     
+    //Inicializar en 0 los histogramas
     for (int i = 0; i < bn; i++){
         *(DD+i) = 0;
         *(RR+i) = 0;
@@ -146,19 +202,36 @@ int main(int argc, char **argv){
         *(DR_B+i) = 0;
     }
 	
-	// Abrimos y trabajamos los datos en los histogramas
+	// Abrimos y guardamos los datos en los en los arrays correspondientes
 	open_files(argv[1], np, dataD);
-    open_files(argv[2], np, dataR); // guardo los datos en los Struct
+    open_files(argv[2], np, dataR);
+
+    //Iniciar los nodos.
+    Node ***nodeD;
+    Node ***nodeR;
+    cudaMallocManaged(&nodeR, partitions*sizeof(Node**));
+    cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
+    for (int i=0; i<partitions; i++){
+        cudaMallocManaged(&*(nodeR+i), partitions*sizeof(Node*));
+        cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*));
+        for (int j=0; j<partitions; j++){
+            cudaMallocManaged(&*(*(nodeR+i)+j), partitions*sizeof(Node));
+            cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
+        }
+    }
     
+    //Clasificar los puntos en los nodos
+    make_nodos(nodeD, dataD, partitions, size_node, n_pts);
+    make_nodos(nodeR, dataR, partitions, size_node, n_pts);
+
     int blocks = (int)(ceil((float)(np/(float)(1024))));
     dim3 grid(blocks,1,1);
     dim3 block(1024,1,1);
 
     clock_t begin = clock();
-    cout << ds << endl;
-    make_histoXX<<<grid,block>>>(DD_A, DD_B, dataD, np, ds, dd_max);
-    make_histoXX<<<grid,block>>>(RR_A, RR_B, dataR, np, ds, dd_max);
-    make_histoXY<<<grid,block>>>(DR_A, DR_B, dataD, dataR, np, ds, dd_max);
+    //make_histoXX<<<grid,block>>>(DD_A, DD_B, dataD, np, ds, dd_max);
+    //make_histoXX<<<grid,block>>>(RR_A, RR_B, dataR, np, ds, dd_max);
+    //make_histoXY<<<grid,block>>>(DR_A, DR_B, dataD, dataR, np, ds, dd_max);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
@@ -214,9 +287,28 @@ int main(int argc, char **argv){
 
     cudaFree(&dataD);
     cudaFree(&dataR);
-    cudaFree(&DD);
-    cudaFree(&RR);
-    cudaFree(&DR);
+
+    delete[] DD;
+    delete[] DR;
+    delete[] RR;
+    cudaFree(&DD_A);
+    cudaFree(&RR_A);
+    cudaFree(&DR_A);
+    cudaFree(&DD_B);
+    cudaFree(&RR_B);
+    cudaFree(&DR_B);
+
+
+    for (int i=0; i<partitions; i++){
+        for (int j=0; j<partitions; j++){
+            cudaFree(&*(*(nodeR+i)+j));
+            cudaFree(&*(*(nodeD+i)+j));
+        }
+        cudaFree(&*(nodeR+i));
+        cudaFree(&*(nodeD+i));
+    }
+    cudaFree(&nodeR);
+    cudaFree(&nodeD);
 
     cout << "Programa Terminado..." << endl;
     return 0;
