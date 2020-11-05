@@ -423,6 +423,13 @@ int main(int argc, char **argv){
     for (int k = 0; k<bn; k++){
         cout << RR[k] << "\t";
     }
+
+
+    cout << "\nHistograma RR_A:" << endl;
+    for (int k = 0; k<bn; k++){
+        cout << RR_A[k] << "\t";
+    }
+
     cout << "\nHistograma DR:" << endl;
     for (int k = 0; k<bn; k++){
         cout << DR[k] << "\t";
