@@ -43,7 +43,7 @@ void open_files(string name_file, int pts, PointW3D *datos){
 
 //====================================================================
 
-void save_histogram(string name, int bns, long float *histo){
+void save_histogram(string name, int bns, double *histo){
     /* Función para guardar nuestros archivos de histogramas */
     ofstream file2;
     file2.open(name.c_str(), ios::out | ios::binary);
@@ -146,7 +146,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     /*
     Funcion para contar las distancias entre puntos en un mismo Nodo.
     */
-    
+
     int bin;
     float d, v;
     float x1,y1,z1,w1,x2,y2,z2,w2;
@@ -180,7 +180,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
         
-        if nodeD[row][col][mom].len > 0{
+        if (nodeD[row][col][mom].len > 0){
             
             if (idx%2==0){
                 count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max)
@@ -327,7 +327,7 @@ int main(int argc, char **argv){
     //float dmax = 180.0;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
-    long float *DD, *RR, *DR;
+    double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
     cudaMallocManaged(&dataD, np*sizeof(PointW3D));// Asignamos meoria a esta variable
@@ -337,9 +337,9 @@ int main(int argc, char **argv){
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
     // Asignamos memoria para los histogramas
-    DD = new long float[bn];
-    RR = new long float[bn];
-    DR = new long float[bn];
+    DD = new double[bn];
+    RR = new double[bn];
+    DR = new double[bn];
     cudaMallocManaged(&DD_A, bn*sizeof(float));
     cudaMallocManaged(&RR_A, bn*sizeof(float));
     cudaMallocManaged(&DR_A, bn*sizeof(float));
