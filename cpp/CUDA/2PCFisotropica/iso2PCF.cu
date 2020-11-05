@@ -1,3 +1,4 @@
+// nvcc iso2PCF.cu -o par.out && ./par.out data.dat rand0.dat 32768 30 180
 #include <iostream>
 #include <fstream> //manejo de archivos
 #include <string.h>
@@ -274,7 +275,6 @@ int main(int argc, char **argv){
     for (int k = 0; k<bn; k++){
         cout << DR[k] << "\t";
     }
-	
 	
 	// Guardamos los histogramas
 	save_histogram(nameDD, bn, DD);
