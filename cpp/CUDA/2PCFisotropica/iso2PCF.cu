@@ -397,9 +397,9 @@ int main(int argc, char **argv){
     printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
 
     for (int i = 0; i < bn; i++){
-        DD[i] = DD_A[i]+ DD_B[i];
-        RR[i] = RR_A[i]+ RR_B[i];
-        DR[i] = DR_A[i]+ DR_B[i];
+        DD[i] = (double)(DD_A[i]+ DD_B[i]);
+        RR[i] = (double)(RR_A[i]+ RR_B[i]);
+        DR[i] = (double)(DR_A[i]+ DR_B[i]);
     }
 
     cout << "Termine de hacer todos los histogramas" << endl;
