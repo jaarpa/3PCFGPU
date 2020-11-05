@@ -201,10 +201,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             }
 
             //Nodo2 movil en ZY
-            w = 0;//(mom-did_max)*(mom>did_max);
             for(v=col+1; v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
-                for(w; w<partitions && w-mom<=did_max; w++){
+                for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
@@ -218,13 +217,11 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             }
 
             //Nodo movil en XYZ
-            w = 0;//(mom-did_max)*(mom>did_max);
-            v = 0;//(col-did_max)*(col>did_max);
             for(u = row+1; u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
-                for(v = col+1; v < partitions && v-col< did_max; v++){
+                for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
                     dy_nod12 = v-col;
-                    for(w = row+1; w < partitions && w-mom< did_max; w++){
+                    for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
@@ -256,7 +253,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
 
             //Nodo2 solo movil en z
             w = 0;//(mom-did_max)*(mom>did_max);
-            for(w ; w<partitions && w-row<=did_max; w++){
+            for(w = (mom-did_max)*(mom>did_max); w<partitions && w-row<=did_max; w++){
                 if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
                     count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max);
                 } else {
@@ -265,11 +262,9 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             }
 
             //Nodo2 movil en ZY
-            w = 0;//(mom-did_max)*(mom>did_max);
-            v = 0;//(col-did_max)*(col>did_max);
-            for(v; v<partitions && v-col<=did_max; v++){
+            for(v = (col-did_max)*(col>did_max); v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
-                for(w; w<partitions && w-mom<=did_max; w++){
+                for(w = (mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
@@ -283,14 +278,11 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             }
 
             //Nodo movil en XYZ
-            w = 0;//(mom-did_max)*(mom>did_max);
-            v = 0;//(col-did_max)*(col>did_max);
-            u = 0;//(row-did_max)*(row>did_max);
-            for(u = row+1; u < partitions && u-row< did_max; u++){
+            for(u = (row-did_max)*(row>did_max); u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
-                for(v = col+1; v < partitions && v-col< did_max; v++){
+                for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
                     dy_nod12 = v-col;
-                    for(w = row+1; w < partitions && w-mom< did_max; w++){
+                    for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
