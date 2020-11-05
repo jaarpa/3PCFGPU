@@ -136,7 +136,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
-                atomicAdd(&XX[bin],v);
+                atomicAdd(&XX[bin],2);
             }
         }
     }
@@ -166,7 +166,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
-                atomicAdd(&XX[bin],v);
+                atomicAdd(&XX[bin],2);
             }
         }
     }
