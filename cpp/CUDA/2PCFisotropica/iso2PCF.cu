@@ -183,23 +183,20 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
         if (nodeD[row][col][mom].len > 0){
             
             if (idx%2==0){
-                count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max)
+                count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
             } else {
-                count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max)
+                count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
             }
             
             int u,v,w; //Posicion del nodo 2
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
-            int pos; // Posicion de apuntador en el histograma.
-
-            float dis, dx, dy, dz;
 
             //Nodo2 solo movil en z
             for(w = mom+1; w<partitions && w-row<=did_max; w++){
                 if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
-                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max)
+                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max);
                 } else {
-                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max)
+                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max);
                 }
             }
 
@@ -209,12 +206,12 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                 dy_nod12 = v-col;
                 for(w; w<partitions && w-mom<=did_max; w++){
                     dz_nod12 = w-mom;
-                    dd_nod_12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    if (d_nod12<=did_max2){
+                    dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
+                    if (dd_nod12<=did_max2){
                         if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
-                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max)
+                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
                         } else {
-                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max)
+                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
                         }
                     }
                 }
@@ -230,11 +227,11 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                     for(w = row+1; w < partitions && w-mom< did_max; w++){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (d_nod12<=did_max2){
+                        if (dd_nod12<=did_max2){
                             if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
-                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max)
+                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
                             } else {
-                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max)
+                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
                             }
                         }
                     }
@@ -252,7 +249,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
         
-        if nodeD[row][col][mom].len > 0{
+        if (nodeD[row][col][mom].len > 0){
             
             int u,v,w; //Posicion del nodo 2
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
@@ -264,9 +261,9 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             w = (mom-did_max)*(mom>did_max);
             for(w ; w<partitions && w-row<=did_max; w++){
                 if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
-                    count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max)
+                    count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max);
                 } else {
-                    count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max)
+                    count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max);
                 }
             }
 
@@ -277,12 +274,12 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                 dy_nod12 = v-col;
                 for(w; w<partitions && w-mom<=did_max; w++){
                     dz_nod12 = w-mom;
-                    dd_nod_12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
+                    dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (d_nod12<=did_max2){
                         if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
-                            count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max)
+                            count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max);
                         } else {
-                            count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max)
+                            count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max);
                         }
                     }
                 }
@@ -301,9 +298,9 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (d_nod12<=did_max2){
                             if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
-                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max)
+                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max);
                             } else {
-                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max)
+                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max);
                             }
                         }
                     }
