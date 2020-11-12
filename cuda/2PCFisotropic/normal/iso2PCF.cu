@@ -133,8 +133,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             w2 = elements[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
             if (d<=dd_max){
-                d = sqrt(d);
-                bin = (int)(d*ds);
+                bin = (int)(sqrt(d)*ds);
                 v = 2*w1*w2;
                 //printf("%f,%f,%f and %f,%f,%f bin: %i \n",x1,y1,z1, x2,y2,z2, bin);
                 atomicAdd(&XX[bin],2);
@@ -164,8 +163,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             w2 = elements2[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
             if (d<=dd_max){
-                d = sqrt(d);
-                bin = (int)(d*ds);
+                bin = (int)(sqrt(d)*ds);
                 v = 2*w1*w2;
                 atomicAdd(&XX[bin],2);
             }
@@ -183,6 +181,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
         
         if (nodeD[row][col][mom].len > 0){
             
+            // Counts distances betweeen the same node
             if (idx%2==0){
                 count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
             } else {
@@ -191,7 +190,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             
             
             int u,v,w; //Posicion del nodo 2
-            unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
+            int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
 
             //Nodo2 solo movil en z
             for(w = mom+1; w<partitions && w-row<=did_max; w++){
@@ -205,7 +204,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             //Nodo2 movil en ZY
             for(v=col+1; v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
-                for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
+                //for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
+                for(w=0; w<partitions; w++){
+                    if (w-mom<=did_max){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
@@ -215,15 +216,20 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                             count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
                         }
                     }
+                    }
                 }
             }
 
             //Nodo movil en XYZ
             for(u = row+1; u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
-                for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
+                //for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
+                for(v=0; v<partitions; v++){
+                    if (v-col<=did_max){
                     dy_nod12 = v-col;
-                    for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
+                    //for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
+                    for(w=0; w<partitions; w++){
+                        if (w-mom<=did_max){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
@@ -233,6 +239,8 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                                 count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
                             }
                         }
+                        }
+                    }
                     }
                 }
             }
@@ -310,6 +318,7 @@ int main(int argc, char **argv){
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
     int did_max = (int)(ceil(dmax/size_node));
     int did_max2 = (int)(ceil(dd_max/(size_node*size_node)));
+    cout << "did_max" << did_max << "did_max2" << did_max2 << endl;
     unsigned int partitions = (int)(ceil(size_box/size_node));
     //int np = 32768, bn = 10;
     //float dmax = 180.0;
