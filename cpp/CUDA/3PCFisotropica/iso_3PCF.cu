@@ -283,10 +283,10 @@ __global__
 void histo_XXX(Node ***tensor_node, unsigned int ***XXX_A, unsigned int ***XXX_B, unsigned int ***XXX_C, unsigned int ***XXX_D, unsigned int partitions, float dmax2, float dmax, float ds, float size_node){
 
     // Esto es para el nodo pivote.
-    unsigned int row, col, mom, idx;
+    int row, col, mom, idx;
     idx = blockIdx.x * blockDim.x + threadIdx.x;
-    mom = (unsigned int) (idx/(partitions*partitions));
-    col = (unsigned int) ((idx%(partitions*partitions))/partitions);
+    mom = (int) (idx/(partitions*partitions));
+    col = (int) ((idx%(partitions*partitions))/partitions);
     row = idx%partitions;
 
     if (row<partitions && col<partitions && mom<partitions){
