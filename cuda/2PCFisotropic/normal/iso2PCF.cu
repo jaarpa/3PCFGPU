@@ -1,12 +1,13 @@
 // nvcc iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
 #include <iostream>
-#include <fstream> //manejo de archivos
+#include <fstream>
 #include <string.h>
 #include <time.h>
 #include <math.h>
 
 using namespace std;
 
+//Point with weight value. Structure
 struct PointW3D{
     float x;
     float y; 
@@ -15,26 +16,26 @@ struct PointW3D{
 };
 
 struct Node{
-    int len;		// Cantidad de elementos en el nodo.
-    PointW3D *elements;	// Elementos del nodo.
+    int len;		// Number of points in the node
+    PointW3D *elements;	// Points in the node
 };
 
 
 void open_files(string name_file, int pts, PointW3D *datos){
-    /* Función para abrir nuestros archivos de datos */
+    /* Opens the daya files. Receives the file location, number of points to read and the array of points where the data is stored */
     ifstream file;
 
     string mypathto_files = "../../../fake_DATA/DATOS/";
     //This creates the full path to where I have my data files
     name_file.insert(0,mypathto_files);
 
-    file.open(name_file.c_str(), ios::in | ios::binary); //le indico al programa que se trata de un archivo binario con ios::binary
+    file.open(name_file.c_str(), ios::in | ios::binary); //Tells the program this is a binary file using ios::binary
     if (file.fail()){
-        cout << "Error al cargar el archivo " << endl;
+        cout << "Failed to load the file in " << name_file << endl;
         exit(1);
     }
 
-    for ( int c = 0; c < pts; c++)
+    for ( int c = 0; c < pts; c++) //Reads line by line and stores each c line in the c PointW3D element of the array
     {
         file >> datos[c].x >> datos[c].y >> datos[c].z >> datos[c].w; 
     }
@@ -44,12 +45,15 @@ void open_files(string name_file, int pts, PointW3D *datos){
 //====================================================================
 
 void save_histogram(string name, int bns, double *histo){
-    /* Función para guardar nuestros archivos de histogramas */
+    /* This function saves a one dimensional histogram in a file.
+    Receives the name of the file, number of bins in the histogram and the histogram array
+    */
+
     ofstream file2;
     file2.open(name.c_str(), ios::out | ios::binary);
 
     if (file2.fail()){
-        cout << "Error al guardar el archivo " << endl;
+        cout << "Failed to save the the histogram in " << name << endl;
         exit(1);
     }
     for (int i = 0; i < bns; i++){
@@ -60,6 +64,12 @@ void save_histogram(string name, int bns, double *histo){
 
 //=================================================================== 
 void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
+    /*
+    This function manages adding points to an specific Node. It receives the previous array, longitude and point to add
+    and updates the previous array and length with the same array with the new point at the end and adds +1 to the length +1
+
+    It manages the memory allocation and free of the previous and new elements.
+    */
     lon++;
     PointW3D *array_aux;
     cudaMallocManaged(&array_aux, lon*sizeof(PointW3D)); 
@@ -80,16 +90,19 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
 
 void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np){
     /*
-    Función para crear los nodos con los datos y puntos random
+    This function classifies the data in the nodes
 
-    Argumentos
-    nod: arreglo donde se crean los nodos.
-    dat: datos a dividir en nodos.
+    Args
+    nod: Node 3D array where the data will be classified
+    dat: array of PointW3D data to be classified and stored in the nodes
+    partitions: number nodes in each direction
+    size_node: dimensions of a single node
+    np: number of points in the dat array
     */
 
     int row, col, mom;
 
-    // Inicializamos los nodos vacíos:
+    // First allocate memory as an empty node:
     for (row=0; row<partitions; row++){
         for (col=0; col<partitions; col++){
             for (mom=0; mom<partitions; mom++){
@@ -99,7 +112,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
         }
     }
 
-    // Llenamos los nodos con los puntos de dat:
+    // Classificate the ith elment of the data into a node and add that point to the node with the add function:
     for (int i=0; i<np; i++){
         row = (int)(dat[i].x/size_node);
         col = (int)(dat[i].y/size_node);
@@ -109,12 +122,19 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 }
 
 //====================================================================
-//============ Sección de Kernels ================================== 
-//===================================================================
+//============ Kernels Section ======================================= 
+//====================================================================
 
 __device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max){
     /*
-    Funcion para contar las distancias entre puntos en un mismo Nodo.
+    This device function counts the distances betweeen points within one node.
+
+    Args:
+    XX: The histogram where the distances are counted in
+    elements:  Array of PointW3D points inside the node
+    len: lenght of the elements array
+    ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
+    dd_max: The maximum distance of interest.
     */
 
     int bin;
@@ -144,7 +164,16 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
 
 __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max){
     /*
-    Funcion para contar las distancias entre puntos en un mismo Nodo.
+    This device function counts the distances betweeen points between two different nodes.
+
+    Args:
+    XX: The histogram where the distances are counted in
+    elements1:  Array of PointW3D points inside the first node
+    len1: lenght of the first elements array
+    elements2:  Array of PointW3D points inside the second node
+    len2: lenght of the second elements array
+    ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
+    dd_max: The maximum distance of interest.
     */
 
     int bin;
@@ -178,39 +207,38 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
+        //printf("%i, %i, %i \n", mom, col,row)
         
         if (nodeD[row][col][mom].len > 0){
             
             // Counts distances betweeen the same node
-            if (idx%2==0){
+            if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
                 count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
-            } else {
+            } else { //If the main index is odd stores the countings in the XX_B subhistogram
                 count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
             }
             
             
-            int u,v,w; //Posicion del nodo 2
-            int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
+            int u,v,w; // Position index of the second node
+            int dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
-            //Nodo2 solo movil en z
+            //Second node movil in Z direction
             for(w = mom+1; w<partitions && w-row<=did_max; w++){
-                if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
                     count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max);
-                } else {
+                } else { //If the main index is odd stores the countings in the XX_B subhistogram
                     count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max);
                 }
             }
 
-            //Nodo2 movil en ZY
+            //Second node movil in YZ
             for(v=col+1; v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
                 for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
-                //for(w=0; w<partitions; w++){
-                    //if (w-mom<=did_max){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
-                        if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                        if (idx%2==0){
                             count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
                         } else {
                             count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
@@ -220,7 +248,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                 }
             }
 
-            //Nodo movil en XYZ
+            //Second node movil in XYZ
             for(u = row+1; u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
                 for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
@@ -233,7 +261,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
-                            if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                            if (idx%2==0){
                                 count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
                             } else {
                                 count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
@@ -258,27 +286,26 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
         
         if (nodeD[row][col][mom].len > 0){
             
-            int u,v,w; //Posicion del nodo 2
+            int u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
 
-            //Nodo2 solo movil en z
-            w = 0;//(mom-did_max)*(mom>did_max);
+             //Second node movil in Z
             for(w = (mom-did_max)*(mom>did_max); w<partitions && w-row<=did_max; w++){
-                if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                if (idx%2==0){
                     count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max);
                 } else {
                     count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][col][w].elements, nodeR[row][col][w].len, ds, dd_max);
                 }
             }
 
-            //Nodo2 movil en ZY
+            //Second node movil in YZ
             for(v = (col-did_max)*(col>did_max); v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
                 for(w = (mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
-                        if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                        if (idx%2==0){
                             count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max);
                         } else {
                             count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[row][v][w].elements, nodeR[row][v][w].len, ds, dd_max);
@@ -287,7 +314,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                 }
             }
 
-            //Nodo movil en XYZ
+            //Second node movil in XYZ
             for(u = (row-did_max)*(row>did_max); u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
                 for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
@@ -296,7 +323,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
-                            if (idx%2==0){ //Si es par lo guarda en histograma A, si no en el B
+                            if (idx%2==0){
                                 count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max);
                             } else {
                                 count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max);
@@ -320,20 +347,19 @@ int main(int argc, char **argv){
     int did_max2 = (int)(ceil(dd_max/(size_node*size_node)));
     cout << "did_max" << did_max << "did_max2" << did_max2 << endl;
     unsigned int partitions = (int)(ceil(size_box/size_node));
-    //int np = 32768, bn = 10;
-    //float dmax = 180.0;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
-    cudaMallocManaged(&dataD, np*sizeof(PointW3D));// Asignamos meoria a esta variable
+    cudaMallocManaged(&dataD, np*sizeof(PointW3D));
     cudaMallocManaged(&dataR, np*sizeof(PointW3D));
 
-    // Nombre de los archivos 
+    // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
-    // Asignamos memoria para los histogramas
+    // Allocate memory for the histogram as double
+    // And the subhistograms as simple presision floats
     DD = new double[bn];
     RR = new double[bn];
     DR = new double[bn];
@@ -344,7 +370,7 @@ int main(int argc, char **argv){
     cudaMallocManaged(&RR_B, bn*sizeof(float));
     cudaMallocManaged(&DR_B, bn*sizeof(float));
     
-    //Inicializar en 0 los histogramas
+    //Initialize the histograms in 0
     for (int i = 0; i < bn; i++){
         *(DD+i) = 0;
         *(RR+i) = 0;
@@ -357,11 +383,11 @@ int main(int argc, char **argv){
         *(DR_B+i) = 0;
     }
 	
-	// Abrimos y guardamos los datos en los en los arrays correspondientes
+	// Open and read the files to store the data in the arrays
 	open_files(argv[1], np, dataD);
     open_files(argv[2], np, dataR);
 
-    //Iniciar los nodos.
+    //Init the nodes arrays
     Node ***nodeD;
     Node ***nodeR;
     cudaMallocManaged(&nodeR, partitions*sizeof(Node**));
@@ -375,15 +401,17 @@ int main(int argc, char **argv){
         }
     }
     
-    //Clasificar los puntos en los nodos
+    //Classificate the data into the nodes
     make_nodos(nodeD, dataD, partitions, size_node, np);
     make_nodos(nodeR, dataR, partitions, size_node, np);
 
+    //Get the dimensions of the GPU grid
     int blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(1024))));
     dim3 grid(blocks,1,1);
     dim3 block(1024,1,1);
 
     clock_t begin = clock();
+    //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2);
     make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, partitions, ds, dd_max, did_max, did_max2);
     make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, partitions, ds, dd_max, did_max, did_max2);
@@ -403,8 +431,10 @@ int main(int argc, char **argv){
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("\nTiempo en CPU usado = %.4f seg.\n", time_spent );
+    printf("\nSpent time = %.4f seg.\n", time_spent );
 
+    //Collect the subhistograms data into the double precision main histograms
+    //THis has to be done in CPU since GPU only allows single precision
     for (int i = 0; i < bn; i++){
         DD[i] = (double)(DD_A[i]+ DD_B[i]);
         RR[i] = (double)(RR_A[i]+ RR_B[i]);
@@ -412,7 +442,8 @@ int main(int argc, char **argv){
     }
 
     cout << "Termine de hacer todos los histogramas" << endl;
-    // Mostramos los histogramas 
+    /*
+    // Shows the histograms
     cout << "\nHistograma DD:" << endl;
     int sum = 0;
     for (int k = 0; k<bn; k++){
@@ -430,6 +461,7 @@ int main(int argc, char **argv){
     for (int k = 0; k<bn; k++){
         cout << DR[k] << "\t";
     }
+    */
 	
 	// Guardamos los histogramas
 	save_histogram(nameDD, bn, DD);
@@ -439,6 +471,7 @@ int main(int argc, char **argv){
 	save_histogram(nameDR, bn, DR);
 	cout << "Guarde histograma DR..." << endl;
 
+    //Free the memory
     cudaFree(&dataD);
     cudaFree(&dataR);
 

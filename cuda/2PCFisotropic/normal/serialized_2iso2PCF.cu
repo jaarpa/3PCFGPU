@@ -1,4 +1,4 @@
-// nvcc iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
+// nvcc serialized_iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -102,7 +102,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     */
 
     int row, col, mom;
-    float p_med = size_node*0.5
+    float p_med = size_node*0.5;
 
     // First allocate memory as an empty node:
     for (row=0; row<partitions; row++){
