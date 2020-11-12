@@ -132,7 +132,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             z2 = elements[j].z;
             w2 = elements[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-            if (d<=dd_max){
+            if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = 2*w1*w2;
                 //printf("%f,%f,%f and %f,%f,%f bin: %i \n",x1,y1,z1, x2,y2,z2, bin);
@@ -162,7 +162,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             z2 = elements2[j].z;
             w2 = elements2[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-            if (d<=dd_max){
+            if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = 2*w1*w2;
                 atomicAdd(&XX[bin],2);
@@ -204,8 +204,8 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             //Nodo2 movil en ZY
             for(v=col+1; v<partitions && v-col<=did_max; v++){
                 dy_nod12 = v-col;
-                //for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
-                for(w=0; w<partitions; w++){
+                for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
+                //for(w=0; w<partitions; w++){
                     //if (w-mom<=did_max){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
@@ -223,12 +223,12 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             //Nodo movil en XYZ
             for(u = row+1; u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
-                //for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
-                for(v=0; v<partitions; v++){
+                for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
+                //for(v=0; v<partitions; v++){
                     //if (v-col<=did_max){
                     dy_nod12 = v-col;
-                    //for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
-                    for(w=0; w<partitions; w++){
+                    for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
+                    //for(w=0; w<partitions; w++){
                         //if (w-mom<=did_max){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
