@@ -343,9 +343,8 @@ int main(int argc, char **argv){
     float dmax = stof(argv[5]);
     float ds = ((float)(bn))/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
-    int did_max = (int)(ceil(dmax/size_node));
-    int did_max2 = (int)(ceil(dd_max/(size_node*size_node)));
-    cout << "did_max" << did_max << "did_max2" << did_max2 << endl;
+    int did_max = (int)(ceil((dmax+size_node*sqrt(3))/size_node));
+    int did_max2 = did_max*did_max;
     unsigned int partitions = (int)(ceil(size_box/size_node));
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
