@@ -125,7 +125,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max){
+__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points within one node.
 
@@ -156,13 +156,13 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 bin = (int)(sqrt(d)*ds);
                 v = 2*w1*w2;
                 //printf("%f,%f,%f and %f,%f,%f bin: %i \n",x1,y1,z1, x2,y2,z2, bin);
-                atomicAdd(&XX[bin],2);
+                atomicAdd(&XX[bin],sum);
             }
         }
     }
 }
 
-__device__ void count_distances12(float *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max){
+__device__ void count_distances12(float *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points between two different nodes.
 
@@ -194,7 +194,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = 2*w1*w2;
-                atomicAdd(&XX[bin],2);
+                atomicAdd(&XX[bin],sum);
             }
         }
     }
@@ -213,9 +213,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             
             // Counts distances betweeen the same node
             if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
-                count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
+                count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             } else { //If the main index is odd stores the countings in the XX_B subhistogram
-                count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
+                count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             }
             
             
@@ -225,9 +225,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
             //Second node movil in Z direction
             for(w = mom+1; w<partitions && w-row<=did_max; w++){
                 if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
-                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max);
+                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
                 } else { //If the main index is odd stores the countings in the XX_B subhistogram
-                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max);
+                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
                 }
             }
 
@@ -239,9 +239,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
                         if (idx%2==0){
-                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
+                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
                         } else {
-                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
+                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
                         }
                     }
                     //}
@@ -262,9 +262,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
                             if (idx%2==0){
-                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
+                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                             } else {
-                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
+                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                             }
                         }
                         //}
@@ -300,9 +300,9 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
                             if (idx%2==0){
-                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max);
+                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                             } else {
-                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max);
+                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                             }
                         }
                     }
