@@ -214,12 +214,12 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
 
-        int bin, u, v, w;
+        int bin, u, v, w, i, j, k;
         float dis, dis_nod;
         float x1D, y1D, z1D, x2D, y2D, z2D;
-        x1D = nodeX[row][0][0].nodepos.x;
-        y1D = nodeX[0][col][0].nodepos.y;
-        z1D = nodeX[0][0][mom].nodepos.z;
+        x1D = nodeD[row][0][0].nodepos.x;
+        y1D = nodeD[0][col][0].nodepos.y;
+        z1D = nodeD[0][0][mom].nodepos.z;
         float x, y, z, w1;
         float dx, dy, dz, dx_nod, dy_nod, dz_nod;
         //printf("%i, %i, %i \n", mom, col,row)
@@ -240,7 +240,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                     dz = z-nodeD[row][col][mom].elements[j].z;
                     dis = dx*dx+dy*dy+dz*dz;
                     if (dis <= dd_max){
-                    bin = (int)(sqrt(dis)*ds)
+                    bin = (int)(sqrt(dis)*ds);
                     atomicAdd(&XX_A[bin],2);
                     }
                 }
@@ -271,7 +271,8 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                     dz = z-nodeD[u][v][w].elements[j].z;
                     dis = dx*dx+dy*dy+dz*dz;
                     if (dis <= dd_max){
-                    *(XX + (int)(sqrt(dis)*ds)) += 2*w1*nodeD[u][v][w].elements[j].w;
+                        bin = (int)(sqrt(dis)*ds);
+                        atomicAdd(&XX_A[bin],2);
                     }
                     }
                     }
@@ -302,7 +303,8 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                         dz =  z-nodeD[u][v][w].elements[j].z;
                         dis = dx*dx+dy*dy+dz*dz;
                         if (dis <= dd_max){
-                        *(XX + (int)(sqrt(dis)*ds)) += 2*w1*nodeD[u][v][w].elements[j].w;
+                            bin = (int)(sqrt(dis)*ds);
+                            atomicAdd(&XX_A[bin],2);
                         }
                         }
                     }
@@ -338,7 +340,8 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                             dz = z-nodeD[u][v][w].elements[j].z;
                             dis = dx*dx + dy*dy + dz*dz;
                             if (dis <= dd_max){
-                                *(XX + (int)(sqrt(dis)*ds)) += 2*w1*nodeD[u][v][w].elements[j].w;
+                                bin = (int)(sqrt(dis)*ds);
+                                atomicAdd(&XX_A[bin],2);
                             }
                             }
                         }
