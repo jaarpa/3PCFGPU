@@ -155,7 +155,6 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = 2*w1*w2;
-                //printf("%f,%f,%f and %f,%f,%f bin: %i \n",x1,y1,z1, x2,y2,z2, bin);
                 atomicAdd(&XX[bin],sum);
             }
         }
