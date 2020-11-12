@@ -1,4 +1,4 @@
-// nvcc iso2PCF.cu -o par.out && ./par.out data.dat rand0.dat 32768 30 180
+// nvcc iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
 #include <iostream>
 #include <fstream> //manejo de archivos
 #include <string.h>
@@ -206,7 +206,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                 dy_nod12 = v-col;
                 //for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
                 for(w=0; w<partitions; w++){
-                    if (w-mom<=did_max){
+                    //if (w-mom<=did_max){
                     dz_nod12 = w-mom;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
@@ -216,7 +216,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                             count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max);
                         }
                     }
-                    }
+                    //}
                 }
             }
 
@@ -225,11 +225,11 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                 dx_nod12 = u-row;
                 //for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
                 for(v=0; v<partitions; v++){
-                    if (v-col<=did_max){
+                    //if (v-col<=did_max){
                     dy_nod12 = v-col;
                     //for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
                     for(w=0; w<partitions; w++){
-                        if (w-mom<=did_max){
+                        //if (w-mom<=did_max){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
@@ -239,9 +239,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                                 count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max);
                             }
                         }
-                        }
+                        //}
                     }
-                    }
+                    //}
                 }
             }
             
