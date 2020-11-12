@@ -494,7 +494,7 @@ int main(int argc, char **argv){
     clock_t begin = clock();
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2, ddmax_nod);
-    make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, partitions, ds, dd_max, did_max, did_max2);
+    make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, partitions, ds, dd_max, did_max, did_max2, ddmax_nod);
     make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, partitions, ds, dd_max, did_max, did_max2);
 
     //Waits for the GPU to finish
