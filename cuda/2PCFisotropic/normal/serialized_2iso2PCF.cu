@@ -206,7 +206,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
-__global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2){
+__global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2, float ddmax_nod){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
@@ -432,6 +432,10 @@ int main(int argc, char **argv){
     cudaMallocManaged(&dataD, np*sizeof(PointW3D));
     cudaMallocManaged(&dataR, np*sizeof(PointW3D));
 
+
+    float ddmax_nod = d_max+size_node*sqrt(3);
+    ddmax_nod *= ddmax_nod; 
+
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
@@ -489,7 +493,7 @@ int main(int argc, char **argv){
 
     clock_t begin = clock();
     //Launch the kernels
-    make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2);
+    make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2, ddmax_nod);
     make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, partitions, ds, dd_max, did_max, did_max2);
     make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, partitions, ds, dd_max, did_max, did_max2);
 
