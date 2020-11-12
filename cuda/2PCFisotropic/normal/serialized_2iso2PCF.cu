@@ -1,4 +1,4 @@
-// nvcc serialized_iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
+// nvcc serialized_2iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -433,7 +433,7 @@ int main(int argc, char **argv){
     cudaMallocManaged(&dataR, np*sizeof(PointW3D));
 
 
-    float ddmax_nod = d_max+size_node*sqrt(3);
+    float ddmax_nod = dmax+size_node*sqrt(3);
     ddmax_nod *= ddmax_nod; 
 
     // Name of the files where the results are saved
