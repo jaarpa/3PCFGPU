@@ -42,7 +42,7 @@ int main(int argc, char **argv){
 	cout << "\n::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	// Nombre de los archivos 
-	string nameDD = "DDiso_mesh_3D_", nameRR = "RRiso_mesh_3D_", nameDR = "DRiso_mesh_3D_";
+	string nameDD = "DDiso_mesh_3D_", nameRR = "RRiso_mesh_3D_", nameDR = "DRiso_mesh_3D";
 	nameDD.append(argv[2]);
 	nameRR.append(argv[2]);
 	nameDD += ".dat";
@@ -56,8 +56,8 @@ int main(int argc, char **argv){
 	int i, j;
 	for (i = 0; i < bn; ++i){
 		*(DD+i) = 0; // vector[i]
-		*(RR+i) = 0.0;
-		*(DR+i) = 0.0;
+		*(RR+i) = 0;
+		*(DR+i) = 0;
 	}
 
 	// Abrimos y trabajamos los datos en los histogramas
@@ -88,11 +88,17 @@ int main(int argc, char **argv){
 	delete[] DD;
 	
 	my_hist.make_histoXX(RR, my_hist.meshRand()); 
+	for (int i = 0; i<bn; i++){
+		cout << RR[i] << endl;
+	}
 	save_histogram(nameRR, bn, RR);
 	cout << "Guarde histograma RR..." << endl;
 	delete[] RR;
 	
-	my_hist.make_histoXY(DR, my_hist.meshData(), my_hist.meshRand()); 
+	my_hist.make_histoXY(DR, my_hist.meshData(), my_hist.meshRand());
+	for (int i = 0; i<bn; i++){
+		cout << DR[i] << endl;
+	}
 	save_histogram(nameDR, bn, DR);
 	cout << "Guarde histograma DR..." << endl;
 	delete[] DR;
