@@ -75,7 +75,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].x = _x;
     array[lon-1].y = _y;
     array[lon-1].z = _z;
-    array[lon-1].z = _w;
+    array[lon-1].w = _w;
 }
 
 void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np){
@@ -136,6 +136,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 d = sqrt(d);
                 bin = (int)(d*ds);
                 v = 2*w1*w2;
+                //printf("%f,%f,%f and %f,%f,%f bin: %i \n",x1,y1,z1, x2,y2,z2, bin);
                 atomicAdd(&XX[bin],2);
             }
         }
@@ -188,6 +189,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                 count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max);
             }
             
+            
             int u,v,w; //Posicion del nodo 2
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
 
@@ -234,7 +236,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                     }
                 }
             }
-
+            
         }
     }
 }
@@ -304,7 +306,7 @@ int main(int argc, char **argv){
 	
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
-    float ds = (float)(bn)/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
+    float ds = ((float)(bn))/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
     int did_max = (int)(ceil(dmax/size_node));
     int did_max2 = (int)(ceil(dd_max/(size_node*size_node)));
