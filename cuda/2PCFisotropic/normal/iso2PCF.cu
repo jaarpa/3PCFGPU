@@ -291,11 +291,14 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
 
 
             //Second node movil in XYZ
-            for(u = (row-did_max)*(row>did_max); u < partitions && u-row< did_max; u++){
+            //for(u = (row-did_max)*(row>did_max); u < partitions && u-row< did_max; u++){
+            for(u = 0; u < partitions && u-row< did_max; u++){
                 dx_nod12 = u-row;
-                for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
+                //for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
+                for(v = 0; v < partitions && v-col< did_max; v++){
                     dy_nod12 = v-col;
-                    for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
+                    //for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
+                    for(w = 0; w < partitions && w-mom< did_max; w++){
                         dz_nod12 = w-mom;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
