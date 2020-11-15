@@ -230,6 +230,16 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                 }
             }
 
+            int d_boundaryz;
+            if (mom<did_max-1 || partitions-mom<did_max){
+                d_boundaryz = (did_max-1-mom)*(mom<did_max-1) + (did_max-(partitions-mom))*(partitions-mom<did_max); //Number of nodes to walk in the Z direction to get to the next node in the other side of the border.
+                w = (partitions-1-did_max+d_boundaryz)*(mom<did_max-1); //Either start from zero if the node was at the end of the node or starts from the end if the node was at the beggining
+                for (int dz=1; dz<=d_boundaryz; dz++){
+                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
+                    w+=dz;
+                }
+            }
+
             /*
             //Second node movil in YZ
             for(v=col+1; v<partitions && v-col<=did_max; v++){
@@ -273,6 +283,20 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partit
                 }
             }
             */
+
+            //Boundary conditions
+            /*
+            if (row<did_max-1 || col<did_max-1 || mom<did_max-1 || partitions-row<did_max || partitions-col<did_max || partitions-mom<did_max  ){
+                //If the node1 is near to any of the boundaries then I calculate its periodic boundary conditions contribution
+
+                //Caso en el que esta en una de las paredes
+                for (int b_row=partitions-1; b_row-did_max-1==0 ;b_row--){
+                    
+                }
+
+            }
+            */
+
         }
     }
 }
