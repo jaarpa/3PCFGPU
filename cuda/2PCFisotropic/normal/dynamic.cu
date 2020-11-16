@@ -273,7 +273,7 @@ __global__ void XYZ_direction_child1(float *XX, Node ***nodeD, int partitions, f
     }
 }
 
-__global__ void XYZ_direction(float *XX, Node ***nodeD, Node ***nodeR, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
+__global__ void XYZ_direction(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
 
     int idx = (row + 1) + blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -325,7 +325,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
     }
 }
 
-__global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
+__global__ void make_histoXY_child(float *XY, Node ***nodeD, Node ***nodeR, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
 
         
     int id = blockIdx.x * blockDim.x + threadIdx.x;
