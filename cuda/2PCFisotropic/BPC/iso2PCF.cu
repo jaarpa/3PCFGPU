@@ -571,7 +571,6 @@ int main(int argc, char **argv){
     clock_t begin = clock();
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
-
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
@@ -585,9 +584,6 @@ int main(int argc, char **argv){
       exit(-1);
     }
 
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("\nSpent time = %.4f seg.\n", time_spent );
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     
