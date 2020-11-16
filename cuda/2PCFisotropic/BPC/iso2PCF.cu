@@ -302,14 +302,20 @@ __global__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
-        //printf("%i, %i, %i \n", mom, col,row)
+        //printf("%i, %i, %i \n", mom, col,row);
 
         //This may see redundant but with this these often checked values are upgraded to device memory
         float dd_max = d_max*d_max;
         int did_max = (int)(ceilf((d_max+size_node*sqrt(3.0))/size_node));
+
+        if (idx==0){
+            printf("Partitions: %i, did_max: %i\n", partitions, did_max);
+        }
         
         if (nodeD[row][col][mom].len > 0 && (row<did_max-1 || partitions-row<did_max || col<did_max-1 || partitions-col<did_max || mom<did_max-1 || partitions-mom<did_max)){
             //Only if the current node has elements and it is near to any border does the thread will be active
+            atomicAdd(&XX_A[0],1); //Count how many nodes are considered as near a border
+            /*
             bool x_border=false, y_border=false, z_border=false, x_upperborder=false, y_upperborder=false, z_upperborder=false, x_lowerborder=false, y_lowerborder=false, z_lowerborder=false;
             
             x_border=(row<did_max-1 || partitions-row<did_max);
@@ -354,7 +360,7 @@ __global__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
                     BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, y_border, z_border, false, y_upperborder, z_upperborder, false, y_lowerborder, z_lowerborder); 
                 }
             }
-
+            */
 
         }
     }
@@ -570,8 +576,9 @@ int main(int argc, char **argv){
 
     clock_t begin = clock();
     //Launch the kernels
-    make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
+    //make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
+    cout << DD_A[0] <<endl;
 
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     
