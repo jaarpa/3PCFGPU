@@ -571,7 +571,7 @@ int main(int argc, char **argv){
     clock_t begin = clock();
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
-    
+
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
@@ -599,16 +599,6 @@ int main(int argc, char **argv){
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
-
-    //Check here for errors
-    cudaError_t error = cudaGetLastError(); 
-    cout << "The error code is " << error << endl;
-    if(error != 0)
-    {
-      // print the CUDA error message and exit
-      printf("CUDA error: %s\n", cudaGetErrorString(error));
-      exit(-1);
-    }
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
