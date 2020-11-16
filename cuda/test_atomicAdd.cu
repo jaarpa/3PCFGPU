@@ -29,7 +29,8 @@ __global__ void kernel(double *XX, float *data) {
 }
 
 int main(){
-    float *XX, *data;
+    double *XX;
+    float *data;
     cudaMallocManaged(&data, 50*sizeof(float));
     cudaMallocManaged(&XX, 10*sizeof(double));
     for (int i=0 ; i<50 ;i++){
