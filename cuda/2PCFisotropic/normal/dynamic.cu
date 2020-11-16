@@ -245,7 +245,7 @@ __global__ void YZ_direction(float *XX, Node ***nodeD, int partitions, float dd_
 
     if (idy<partitions){
         float dy_nod12 = nodeD[row][idy][mom].nodepos.y - nodeD[row][col][mom].nodepos.y;
-        dy_nod12*=dy_nod12
+        dy_nod12*=dy_nod12;
 
         if (dy_nod12 <= dd_max_node){
             int blocks = (int)(ceilf((float)(partitions)/32.0));
@@ -279,7 +279,7 @@ __global__ void XYZ_direction(float *XX, Node ***nodeD, int partitions, float dd
 
     if (idx<partitions){
         float dx_nod12 = nodeD[idx][col][mom].nodepos.x - nodeD[row][col][mom].nodepos.y;
-        dx_nod12*=dx_nod12
+        dx_nod12*=dx_nod12;
 
         if (dx_nod12 <= dd_max_node){
             int blocks = (int)(ceilf((float)(partitions)/32.0));
@@ -317,7 +317,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
-            blocks = (int)(ceilf((float)(partitions-1))/32.0))
+            blocks = (int)(ceilf((float)(partitions-1))/32.0));
             Z_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom)
 
             //Second node mobil in YZ
@@ -330,7 +330,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
     }
 }
 
-__global__ void make_histoXY_child(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
+__global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
     int idz = blockIdx.x * blockDim.z + threadIdx.z;
     int idy = blockIdx.x * blockDim.y + threadIdx.y;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -344,7 +344,7 @@ __global__ void make_histoXY_child(float *XX, Node ***nodeD, int partitions, flo
         dx_nod12*=dx_nod12;
         float dd_nod12 = dz_nod12 + dy_nod12 + dx_nod12;
         if (dd_nod12 <= dd_max_node && nodeD[idx][idy][idz].len>0){
-            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[idx][idy][idz].elements, nodeD[idx][idy][idz].len, ds, dd_max, 1);
+            count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[idx][idy][idz].elements, nodeD[idx][idy][idz].len, ds, dd_max, 1);
         }
     }
 }
@@ -379,7 +379,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             //Second node mobil in XYZ
             dim3 grid(gridDim.x ,1,1);
             dim3 block(blockDim.x,blockDim.x,blockDim.x);
-            make_histoXY_child<<<grid,block>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
             
         }
     }
