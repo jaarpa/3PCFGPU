@@ -463,14 +463,31 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
     }
 }
 
+__global__ make_analyticRR(RR, d_max, bn, size_box, n_pts){
+    /*
+    Analytic calculation of the RR histogram
+
+    */
+    int a = threadIdx.x;
+    if (a < bn){
+        float dr = (d_max/bn);
+        float V = size_box*size_box*size_box;
+        float beta1 = n_pts*n_pts/V;
+        float alph = 4*(2*acosf(0.0))*(beta1)*dr*dr*dr/3;
+        float r1, r2;
+        r2 = (float) a;
+        r1 = r2+1;
+        float sum = alph*((r1*r1*r1)-(r2*r2*r2));
+        atomicAdd(&RR[a],sum);
+    }
+}
+
 int main(int argc, char **argv){
 	
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
-    float ds = ((float)(bn))/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
+    float ds = ((float)(bn))/dmax, size_box = 250.0, alpha = 2.176;
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
-    int did_max = (int)(ceil((dmax+size_node*sqrt(3))/size_node));
-    int did_max2 = did_max*did_max;
     unsigned int partitions = (int)(ceil(size_box/size_node));
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
@@ -539,8 +556,16 @@ int main(int argc, char **argv){
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
-    make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, ds, dmax, size_node, size_box);
     make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
+    if (bn<1024){
+        dim3 grid(1,1,1);
+        dim3 block(bn,1,1);
+    } else {
+        blocks = (int)(ceil((float)(bn)/1024.0))
+        dim3 grid(blocks,1,1);
+        dim3 block(1024,1,1);
+    }
+    make_analyticRR<<<grid,block>>>(RR_A, RR_B, nodeR, ds, dmax, size_node, size_box);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
