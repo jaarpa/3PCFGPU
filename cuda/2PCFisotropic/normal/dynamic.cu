@@ -366,7 +366,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             float dd_max_node = dmax + size_node*sqrt(3.0);
             dd_max_node*=dd_max_node;
 
-            /*
+            
             int u,v,w;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
             float dx_nod12,dy_nod12,dz_nod12,dd_nod12;
@@ -383,11 +383,12 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
                     }
                 }
             }
-            */
 
+            /*
             dim3 grid(gridDim.x ,1,1);
             dim3 block(blockDim.x,blockDim.x,blockDim.x);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            */
             
         }
     }
