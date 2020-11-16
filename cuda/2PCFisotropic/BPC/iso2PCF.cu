@@ -62,6 +62,26 @@ void save_histogram(string name, int bns, double *histo){
     file2.close();
 }
 
+//====================================================================
+
+void save_histogram(string name, int bns, float *histo){
+    /* This function saves a one dimensional histogram in a file.
+    Receives the name of the file, number of bins in the histogram and the histogram array
+    */
+
+    ofstream file2;
+    file2.open(name.c_str(), ios::out | ios::binary);
+
+    if (file2.fail()){
+        cout << "Failed to save the the histogram in " << name << endl;
+        exit(1);
+    }
+    for (int i = 0; i < bns; i++){
+        file2 << histo[i] << endl;
+    }
+    file2.close();
+}
+
 //=================================================================== 
 void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     /*
@@ -553,14 +573,11 @@ int main(int argc, char **argv){
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
-    if (bn<1024){
-        dim3 grid_a(1,1,1);
-        dim3 block_a(bn,1,1);
-    } else {
-        blocks = (int)(ceil((float)(bn)/1024.0));
-        dim3 grid_a(blocks,1,1);
-        dim3 block_a(1024,1,1);
-    }
+    
+    blocks = (int)(ceil((float)(bn)/1024.0));
+    dim3 grid_a(blocks,1,1);
+    dim3 block_a(1024,1,1);
+
     make_analyticRR<<<grid_a,block_a>>>(RR, dmax, bn, size_box, np);
 
     //Waits for the GPU to finish
@@ -625,10 +642,8 @@ int main(int argc, char **argv){
     delete[] DR;
     delete[] RR;
     cudaFree(&DD_A);
-    cudaFree(&RR_A);
     cudaFree(&DR_A);
     cudaFree(&DD_B);
-    cudaFree(&RR_B);
     cudaFree(&DR_B);
 
 
