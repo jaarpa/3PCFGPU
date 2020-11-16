@@ -7,8 +7,9 @@ __global__ void kernel(float XX, float *data) {
     //int bin = 0;
     float sum = 2.4f;
     if (data[threadIdx.x]<15){
+        printf("%f", sum);
         atomicAdd(&XX,sum);
-        printf("%f", XX)
+        printf("%f", XX);
     }
 }
 
