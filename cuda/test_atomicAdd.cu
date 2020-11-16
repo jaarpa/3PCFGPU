@@ -6,19 +6,18 @@
 __global__ void kernel(float *XX, float *data) {
     //int bin = 0;
     float sum = 2.3f;
-    if (data[threadIdx.x]>0){
-        printf("%f \n", sum);
+    int idx = blockIdx.x * blockDim.x + threadIdx.x
+    if (data[idx]>0){
         atomicAdd(&XX[0],sum);
-        printf("%f \n", XX);
     }
 }
 
 int main(){
     float *XX;
     float *data;
-    cudaMallocManaged(&data, 33*sizeof(float));
+    cudaMallocManaged(&data, 3300352*sizeof(float));
     cudaMallocManaged(&XX, 10*sizeof(float));
-    for (int i=0 ; i<33 ;i++){
+    for (int i=0 ; i<3300352 ;i++){
         data[i] = i*0.3;
     }
 
@@ -26,8 +25,7 @@ int main(){
         XX[i] = 0.0;
     }
 
-    kernel<<<1,33>>>(XX, data);
-
+    kernel<<<3223,1024>>>(XX, data);
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
