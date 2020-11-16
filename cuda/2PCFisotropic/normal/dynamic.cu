@@ -335,7 +335,7 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
         dz_nod12*=dz_nod12;
         float dy_nod12 = nodeD[idx][idy][idz].nodepos.y - nodeD[row][col][mom].nodepos.y;
         dy_nod12*=dy_nod12;
-        float dx_nod12 = nodeD[idx][idy][idz].nodepos.y - nodeD[row][col][mom].nodepos.y;
+        float dx_nod12 = nodeD[idx][idy][idz].nodepos.x - nodeD[row][col][mom].nodepos.x;
         dx_nod12*=dx_nod12;
         float dd_nod12 = dz_nod12 + dy_nod12 + dx_nod12;
         if (dd_nod12 <= dd_max_node && nodeD[idx][idy][idz].len>0){
