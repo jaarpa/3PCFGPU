@@ -276,7 +276,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
     size_box:  Size of the whole box
     */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int partitions = (int)(ceil(size_box/size_node))
+    int partitions = (int)(ceil(size_box/size_node));
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
