@@ -273,7 +273,7 @@ __global__ void XYZ_direction_child1(float *XX, Node ***nodeD, int partitions, f
     }
 }
 
-__global__ void XYZ_direction(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
+__global__ void XYZ_direction(float *XX, Node ***nodeD, Node ***nodeR, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
 
     int idx = (row + 1) + blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -335,15 +335,15 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
         int idy = (int) ((id%(partitions*partitions))/partitions);
         int idx = id%partitions;
 
-        float dz_nod12 = nodeD[idx][idy][idz].nodepos.z - nodeD[row][col][mom].nodepos.z;
+        float dz_nod12 = nodeR[idx][idy][idz].nodepos.z - nodeD[row][col][mom].nodepos.z;
         dz_nod12*=dz_nod12;
-        float dy_nod12 = nodeD[idx][idy][idz].nodepos.y - nodeD[row][col][mom].nodepos.y;
+        float dy_nod12 = nodeR[idx][idy][idz].nodepos.y - nodeD[row][col][mom].nodepos.y;
         dy_nod12*=dy_nod12;
-        float dx_nod12 = nodeD[idx][idy][idz].nodepos.x - nodeD[row][col][mom].nodepos.x;
+        float dx_nod12 = nodeR[idx][idy][idz].nodepos.x - nodeD[row][col][mom].nodepos.x;
         dx_nod12*=dx_nod12;
         float dd_nod12 = dz_nod12 + dy_nod12 + dx_nod12;
-        if (dd_nod12 <= dd_max_node && nodeD[idx][idy][idz].len>0){
-            count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[idx][idy][idz].elements, nodeD[idx][idy][idz].len, ds, dd_max, 1);
+        if (dd_nod12 <= dd_max_node && nodeR[idx][idy][idz].len>0){
+            count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[idx][idy][idz].elements, nodeR[idx][idy][idz].len, ds, dd_max, 1);
         }
     }
 }
@@ -366,7 +366,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             int blocks = (int)(ceilf(((float)(partitions*partitions*partitions))/(512.0)));
             dim3 grid(blocks,1,1);
             dim3 block(512,1,1);
-            make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            make_histoXY_child<<<grid,block>>>(XY, nodeD, nodeR, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             /*
             //Second node mobil in XYZ
