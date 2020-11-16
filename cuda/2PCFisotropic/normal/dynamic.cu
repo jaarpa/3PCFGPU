@@ -390,7 +390,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             }
             */
 
-            blocks = (int)(ceil((float)(partitions*partitions*partitions)/(512.0)));
+            int blocks = (int)(ceil((float)(partitions*partitions*partitions)/(512.0)));
             dim3 grid_XY(blocks,1,1);
             dim3 block_XY(512,1,1);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
