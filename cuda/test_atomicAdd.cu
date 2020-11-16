@@ -28,6 +28,19 @@ int main(){
     */
     kernel<<<1,50>>>(XX, data);
 
+    //Waits for the GPU to finish
+    cudaDeviceSynchronize();  
+
+    //Check here for errors
+    cudaError_t error = cudaGetLastError(); 
+    cout << "The error code is " << error << endl;
+    if(error != 0)
+    {
+      // print the CUDA error message and exit
+      printf("CUDA error: %s\n", cudaGetErrorString(error));
+      exit(-1);
+    }
+    
     std::cout << XX << std::endl;
 
     return 0;
