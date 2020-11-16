@@ -149,7 +149,7 @@ __global__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<len-1){
-        printf("The id is: %i . The len: %i \n", idx, len);
+        printf("The id is: %i . The len: %i \n. The blockdim: %i", idx, len, blockDim.x);
         int bin;
         float d, v;
         float x1 = elements[idx].x, y1 = elements[idx].y, z1 = elements[idx].z, w1 = elements[idx].w;
@@ -226,7 +226,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             d_max_node*=d_max_node;
             
             // Counts distances within the same node
-            int blocks = nodeD[row][col][mom].len/32;
+            int blocks = (int)(ceilf(nodeD[row][col][mom].len/32));
             count_distances11<<<blocks,32>>>(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             
             
