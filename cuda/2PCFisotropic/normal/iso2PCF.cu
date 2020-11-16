@@ -226,7 +226,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             d_max_node*=d_max_node;
             
             // Counts distances within the same node
-            int blocks = (int)(ceilf(nodeD[row][col][mom].len/32));
+            int blocks = (int)(ceilf(nodeD[row][col][mom].len/32))+1;
             printf("The n blocks: %i \n. ", blocks);
             count_distances11<<<blocks,32>>>(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             
