@@ -578,7 +578,6 @@ int main(int argc, char **argv){
     //Launch the kernels
     //make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
-    cout << DD_A[0] <<endl;
 
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     
@@ -590,6 +589,8 @@ int main(int argc, char **argv){
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
+    cout << "Size of a node " << size_node << endl;
+    cout << "Nodes considered as boundary: " DD_A[0] <<endl;
 
     //Check here for errors
     cudaError_t error = cudaGetLastError(); 
