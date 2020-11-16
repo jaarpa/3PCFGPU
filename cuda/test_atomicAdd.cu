@@ -6,7 +6,7 @@
 __global__ void kernel(float *XX, float *data) {
     //int bin = 0;
     float sum = 2.3f;
-    int idx = blockIdx.x * blockDim.x + threadIdx.x
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (data[idx]>0){
         atomicAdd(&XX[0],sum);
     }
