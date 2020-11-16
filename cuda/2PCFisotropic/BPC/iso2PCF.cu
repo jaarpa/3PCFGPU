@@ -573,6 +573,14 @@ int main(int argc, char **argv){
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
 
+    //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
+    
+    blocks = (int)(ceil((float)(bn)/512.0));
+    dim3 grid_a(blocks,1,1);
+    dim3 block_a(512,1,1);
+
+    make_analyticRR<<<grid_a,block_a>>>(RR, dmax, bn, size_box, np);
+
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
@@ -585,17 +593,7 @@ int main(int argc, char **argv){
       printf("CUDA error: %s\n", cudaGetErrorString(error));
       exit(-1);
     }
-    //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     
-    blocks = (int)(ceil((float)(bn)/512.0));
-    dim3 grid_a(blocks,1,1);
-    dim3 block_a(512,1,1);
-
-    make_analyticRR<<<grid_a,block_a>>>(RR, dmax, bn, size_box, np);
-
-    //Waits for the GPU to finish
-    cudaDeviceSynchronize();  
-
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("\nSpent time = %.4f seg.\n", time_spent );
