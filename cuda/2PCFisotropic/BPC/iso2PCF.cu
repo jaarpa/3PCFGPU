@@ -571,6 +571,9 @@ int main(int argc, char **argv){
     clock_t begin = clock();
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
+
+    BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
+    
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
@@ -583,8 +586,6 @@ int main(int argc, char **argv){
       printf("CUDA error: %s\n", cudaGetErrorString(error));
       exit(-1);
     }
-
-    BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     
     blocks = (int)(ceil((float)(bn)/1024.0));
