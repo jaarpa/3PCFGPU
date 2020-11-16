@@ -477,12 +477,12 @@ int main(int argc, char **argv){
     blocks = (int)(ceil((float)(partitions)/16.0));
     dim3 grid_XY(blocks,1,1);
     dim3 block_XY(8,8,8);
-    cout << "Numero de particiones: " << partitions << endl;
     make_histoXY<<<grid_XY,block_XY>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
     make_histoXY<<<grid_XY,block_XY>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
+    cout << "Numero de particiones: " << partitions << endl;
 
     //Check here for errors
     cudaError_t error = cudaGetLastError(); 
