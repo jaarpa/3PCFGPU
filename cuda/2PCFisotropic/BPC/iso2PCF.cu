@@ -286,7 +286,7 @@ __global__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
 
         //This may see redundant but with this these often checked values are upgraded to device memory
         float dd_max = d_max*d_max;
-        int did_max = (int)((d_max+size_node*sqrt(3))/size_node) + ((d_max+size_node*sqrt(3))%size_node != 0);
+        int did_max = (int)((d_max+size_node*sqrt(3.0))/size_node) + ((d_max+size_node*sqrt(3.0))%size_node != 0);
         
         if (nodeD[row][col][mom].len > 0 && (row<did_max-1 || partitions-row<did_max || col<did_max-1 || partitions-col<did_max || mom<did_max-1 || partitions-mom<did_max)){
             //Only if the current node has elements and it is near to any border does the thread will be active
@@ -355,7 +355,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
             
             //This may see redundant but with this these often checked values are upgraded to device memory
             float dd_max = d_max*d_max;
-            int did_max = (int)((d_max+size_node*sqrt(3))/size_node) + ((d_max+size_node*sqrt(3))%size_node != 0);
+            int did_max = (int)((d_max+size_node*sqrt(3.0))/size_node) + ((d_max+size_node*sqrt(3.0))%size_node != 0);
             int did_max2 = did_max*did_max;
 
             // Counts distances betweeen the same node
@@ -430,7 +430,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             
             //This may see redundant but with this these often checked values are upgraded to device memory
             float dd_max = d_max*d_max;
-            int did_max = (int)((d_max+size_node*sqrt(3))/size_node) + ((d_max+size_node*sqrt(3))%size_node != 0);
+            int did_max = (int)((d_max+size_node*sqrt(3.0))/size_node) + ((d_max+size_node*sqrt(3.0))%size_node != 0);
             int did_max2 = did_max*did_max;
             
             int u,v,w; //Position of the second node
