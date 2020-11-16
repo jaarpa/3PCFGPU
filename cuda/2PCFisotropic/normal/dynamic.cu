@@ -347,9 +347,9 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
 __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at){
     int row, col, mom;
 
-    row = blockIdx.x*blockDim.x + threadIdx.x;
-    col = blockIdx.x*blockDim.y + threadIdx.y;
-    mom = blockIdx.x*blockDim.z + threadIdx.z;
+    row = 2*(blockIdx.x*blockDim.x + threadIdx.x)+start_at;
+    col = 2*(blockIdx.x*blockDim.y + threadIdx.y)+start_at;
+    mom = 2*(blockIdx.x*blockDim.z + threadIdx.z)+start_at;
     
     //int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
     //if (idx<(partitions*partitions*partitions)){
@@ -366,7 +366,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             float dd_max_node = dmax + size_node*sqrt(3.0);
             dd_max_node*=dd_max_node;
 
-            //Second node mobil in XYZ
+            /*
             int u,v,w;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
             float dx_nod12,dy_nod12,dz_nod12,dd_nod12;
@@ -383,11 +383,11 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
                     }
                 }
             }
-            /*
+            */
+
             dim3 grid(gridDim.x ,1,1);
             dim3 block(blockDim.x,blockDim.x,blockDim.x);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
-            */
             
         }
     }
@@ -472,7 +472,7 @@ int main(int argc, char **argv){
     make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
     make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
 
-    blocks = (int)(ceil((float)(partitions)/8.0));
+    blocks = (int)(ceil((float)(partitions)/16.0));
     dim3 grid_XY(blocks,1,1);
     dim3 block_XY(8,8,8);
     make_histoXY<<<grid_XY,block_XY>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
