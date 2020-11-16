@@ -6,7 +6,7 @@
 __global__ void kernel(float *XX, float *data) {
     //int bin = 0;
     float sum = 2.3f;
-    if (data[threadIdx.x]<15){
+    if (data[threadIdx.x]>0){
         printf("%f \n", sum);
         atomicAdd(&XX[0],sum);
         printf("%f \n", XX);
