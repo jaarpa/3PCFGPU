@@ -161,7 +161,45 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     }
 }
 
-__device__ void BPC_loop(float *XX, Node ***nodeD, int row, int col, int mom, int partitions, int did_max, float dd_max, int sum, float size_box, bool x_border, bool y_border, bool z_border, bool x_upperborder, bool y_upperborder, bool z_upperborder, bool x_lowerborder, bool y_lowerborder, bool z_lowerborder){
+__device__ void count_distances12(float *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max, int sum){
+    /*
+    This device function counts the distances betweeen points between two different nodes.
+
+    Args:
+    XX: The histogram where the distances are counted in
+    elements1:  Array of PointW3D points inside the first node
+    len1: lenght of the first elements array
+    elements2:  Array of PointW3D points inside the second node
+    len2: lenght of the second elements array
+    ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
+    dd_max: The maximum distance of interest.
+    */
+
+    int bin;
+    float d, v;
+    float x1,y1,z1,w1,x2,y2,z2,w2;
+
+    for (int i=0; i<len1; ++i){
+        x1 = elements1[i].x;
+        y1 = elements1[i].y;
+        z1 = elements1[i].z;
+        w1 = elements1[i].w;
+        for (int j=0; j<len2; ++j){
+            x2 = elements2[j].x;
+            y2 = elements2[j].y;
+            z2 = elements2[j].z;
+            w2 = elements2[j].w;
+            d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+            if (d<=dd_max+1){
+                bin = (int)(sqrt(d)*ds);
+                v = 2*w1*w2;
+                atomicAdd(&XX[bin],sum);
+            }
+        }
+    }
+}
+
+__device__ void BPC_loop(float *XX, Node ***nodeD, int row, int col, int mom, int partitions, int did_max, float dd_max, float ds, int sum, float size_box, bool x_border, bool y_border, bool z_border, bool x_upperborder, bool y_upperborder, bool z_upperborder, bool x_lowerborder, bool y_lowerborder, bool z_lowerborder){
     /*
     This device function counts the distances betweeen points between two different nodes from periodic boundary conditiojns.
 
@@ -223,7 +261,7 @@ __device__ void BPC_loop(float *XX, Node ***nodeD, int row, int col, int mom, in
         }
     }
 }
-__device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, float ds, float d_max, float size_node, float size_box){
+__device__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float d_max, float size_node, float size_box){
     /*
     This device function counts the distances betweeen points between a node and a node reproduction in the border.
 
@@ -238,6 +276,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
     size_box:  Size of the whole box
     */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int partitions = (int)(ceil(size_box/size_node))
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -248,7 +287,6 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
         //This may see redundant but with this these often checked values are upgraded to device memory
         float dd_max = d_max*d_max;
         int did_max = (int)(ceil((d_max+size_node*sqrt(3))/size_node));
-        int partitions = (int)(ceil(size_box/size_node));
         
         if (nodeD[row][col][mom].len > 0 && (row<did_max-1 || partitions-row<did_max || col<did_max-1 || partitions-col<did_max || mom<did_max-1 || partitions-mom<did_max)){
             //Only if the current node has elements and it is near to any border does the thread will be active
@@ -258,7 +296,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
             if (x_border){
                 x_upperborder=partitions-row<did_max;
                 x_lowerborder=row<did_max-1;
-                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, false, false, x_upperborder, false, false, x_lowerborder, false, false);
+                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, false, false, x_upperborder, false, false, x_lowerborder, false, false);
             }
             
             y_border=(col<did_max-1 || partitions-col<did_max);
@@ -267,10 +305,10 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
                 y_lowerborder=col<did_max-1;
 
                 //Only Y boundaries
-                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, false, y_border, false, false, y_upperborder, false, false, y_lowerborder, false); 
+                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, y_border, false, false, y_upperborder, false, false, y_lowerborder, false); 
                 if (x_border){
                     //Boundaries in the XY walls
-                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, y_border, false, x_upperborder, y_upperborder, false, x_lowerborder, y_lowerborder, false);
+                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, y_border, false, x_upperborder, y_upperborder, false, x_lowerborder, y_lowerborder, false);
                 }
             }
             
@@ -280,20 +318,20 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
                 z_lowerborder=mom<did_max-1;
                 
                 //Only Z boundaries
-                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, false, false, z_border, false, false, z_upperborder, false, false, z_lowerborder); 
+                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, false, z_border, false, false, z_upperborder, false, false, z_lowerborder); 
                 if (x_border){
                     //For the ZY corner
-                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, false, z_border, x_upperborder, false, z_upperborder, x_lowerborder, false, z_lowerborder); 
+                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, false, z_border, x_upperborder, false, z_upperborder, x_lowerborder, false, z_lowerborder); 
                     if (y_border){
                         //For the XYZ corner
-                        BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, y_border, z_border, x_upperborder, y_upperborder, z_upperborder, x_lowerborder, y_lowerborder, z_lowerborder); 
+                        BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, y_border, z_border, x_upperborder, y_upperborder, z_upperborder, x_lowerborder, y_lowerborder, z_lowerborder); 
                     }
 
                 }
 
                 if (y_border){
                     //For the YZ
-                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, false, y_border, z_border, false, y_upperborder, z_upperborder, false, y_lowerborder, z_lowerborder); 
+                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, y_border, z_border, false, y_upperborder, z_upperborder, false, y_lowerborder, z_lowerborder); 
                 }
             }
 
@@ -305,6 +343,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
 
 __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float d_max, float size_node, float size_box){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int partitions = (int)(ceil(size_box/size_node));
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -317,7 +356,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
             //This may see redundant but with this these often checked values are upgraded to device memory
             float dd_max = d_max*d_max;
             int did_max = (int)(ceil((d_max+size_node*sqrt(3))/size_node));
-            int did_max2 = did_max*did_max2, partitions = (int)(ceil(size_box/size_node));
+            int did_max2 = did_max*did_max, partitions = (int)(ceil(size_box/size_node));
 
             // Counts distances betweeen the same node
             if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
@@ -333,9 +372,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
             //Second node movil in Z direction
             for(w = mom+1; w<partitions && w-row<=did_max; w++){
                 if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
-                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2, size_box, false, false, false);
+                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
                 } else { //If the main index is odd stores the countings in the XX_B subhistogram
-                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2, size_box, false, false, false);
+                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
                 }
             }
 
@@ -347,9 +386,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=did_max2){
                         if (idx%2==0){
-                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2, size_box, false, false, false);
+                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
                         } else {
-                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2, size_box, false, false, false);
+                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
                         }
                     }
                     //}
@@ -366,9 +405,9 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
                             if (idx%2==0){
-                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2, size_box, false, false, false);
+                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                             } else {
-                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2, size_box, false, false, false);
+                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                             }
                         }
                     }
@@ -380,6 +419,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
 }
 __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, float ds, float d_max, float size_node, float size_box){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int partitions = (int)(ceil(size_box/size_node));
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -391,7 +431,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             //This may see redundant but with this these often checked values are upgraded to device memory
             float dd_max = d_max*d_max;
             int did_max = (int)(ceil((d_max+size_node*sqrt(3))/size_node));
-            int did_max2 = did_max*did_max2, partitions = (int)(ceil(size_box/size_node));
+            int did_max2 = did_max*did_max, partitions = (int)(ceil(size_box/size_node));
             
             int u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
@@ -410,9 +450,9 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=did_max2){
                             if (idx%2==0){
-                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1, size_box, false, false, false);
+                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                             } else {
-                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1, size_box, false, false, false);
+                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                             }
                         }
                     }
