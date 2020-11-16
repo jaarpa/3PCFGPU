@@ -149,6 +149,7 @@ __global__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<len-1){
+        printf("The id is: %i \n", idx);
         int bin;
         float d, v;
         float x1 = elements[idx].x, y1 = elements[idx].y, z1 = elements[idx].z, w1 = elements[idx].w;
