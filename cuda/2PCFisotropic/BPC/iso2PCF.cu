@@ -238,10 +238,10 @@ __device__ void BPC_loop(float *XX, Node ***nodeD, int row, int col, int mom, in
 
 
     int x_from = ((row-did_max)*(row>did_max))*(!x_border) + (partitions-(did_max-row))*(x_lowerborder&&!x_upperborder);
-    int x_to = (partitions-1)*((row+did_max>partitions-1 && !x_upperborder)||x_lowerborder) + (row+did_max)*((row+did_max<partitions)&&!x_border) + (!x_lowerborder&&x_upperborder)*(x_from+(did_max-(partitions-1-row)));
+    int x_to = partitions-1; //(partitions-1)*((row+did_max>partitions-1 && !x_upperborder)||x_lowerborder) + (row+did_max)*((row+did_max<partitions)&&!x_border) + (!x_lowerborder&&x_upperborder)*(x_from+(did_max-(partitions-1-row)));
     int y_from = ((col-did_max)*(col>did_max))*(!y_border) + (partitions-(did_max-col))*(y_lowerborder&&!y_upperborder);
-    int y_to = (partitions-1)*((col+did_max>partitions-1 && !y_upperborder)||y_lowerborder) + (col+did_max)*((col+did_max<partitions)&&!y_border) + (!y_lowerborder&&y_upperborder)*(y_from+(did_max-(partitions-1-col)));
-    int z_from = ((mom-did_max)*(mom>did_max))*(!z_border) + (partitions-(did_max-mom))*(z_lowerborder&&!z_upperborder);
+    int y_to = partitions-1; // (partitions-1)*((col+did_max>partitions-1 && !y_upperborder)||y_lowerborder) + (col+did_max)*((col+did_max<partitions)&&!y_border) + (!y_lowerborder&&y_upperborder)*(y_from+(did_max-(partitions-1-col)));
+    int z_from = partitions-1; // ((mom-did_max)*(mom>did_max))*(!z_border) + (partitions-(did_max-mom))*(z_lowerborder&&!z_upperborder);
     int z_to = (partitions-1)*((mom+did_max>partitions-1 && !z_upperborder)||z_lowerborder) + (mom+did_max)*((mom+did_max<partitions)&&!z_border) + (!z_lowerborder&&z_upperborder)*(z_from+(did_max-(partitions-1-mom)));
     //If the z direction is not the nearest border the z index it is 0 if mom<did_max or mom-did-max otherwise.
     //If both z borders or ONLY the upper z border are the nearest borders the z index starts from 0
