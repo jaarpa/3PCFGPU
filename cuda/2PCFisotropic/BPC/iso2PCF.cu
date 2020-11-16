@@ -554,14 +554,14 @@ int main(int argc, char **argv){
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     if (bn<1024){
-        grid(1,1,1);
-        block(bn,1,1);
+        dim3 grid_a(1,1,1);
+        dim3 block_a(bn,1,1);
     } else {
         blocks = (int)(ceil((float)(bn)/1024.0))
-        grid(blocks,1,1);
-        block(1024,1,1);
+        dim3 grid_a(blocks,1,1);
+        dim3 block_a(1024,1,1);
     }
-    make_analyticRR<<<grid,block>>>(RR, dmax, bn, size_box, np);
+    make_analyticRR<<<grid_a,block_a>>>(RR, dmax, bn, size_box, np);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
@@ -584,7 +584,6 @@ int main(int argc, char **argv){
     //THis has to be done in CPU since GPU only allows single precision
     for (int i = 0; i < bn; i++){
         DD[i] = (double)(DD_A[i]+ DD_B[i]);
-        RR[i] = (double)(RR_A[i]+ RR_B[i]);
         DR[i] = (double)(DR_A[i]+ DR_B[i]);
     }
 
