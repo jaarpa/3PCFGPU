@@ -1,4 +1,7 @@
 // nvcc iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
+
+// For dynamic parallelism
+// nvcc -arch=sm_35 -rdc=true iso2PCF.cu -lcudadevrt -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 50
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -226,8 +229,8 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             d_max_node*=d_max_node;
             
             // Counts distances within the same node
-            int blocks = (int)(ceilf(nodeD[row][col][mom].len/32))+1;
-            printf("The n blocks: %i \n. ", blocks);
+            int blocks = (int)(ceilf((float)(nodeD[row][col][mom].len)/32.0));
+            printf("The len: %i \n. The n blocks: %i \n. ",nodeD[row][col][mom].len, blocks);
             count_distances11<<<blocks,32>>>(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             
             
