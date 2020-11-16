@@ -463,7 +463,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
     }
 }
 
-__global__ make_analyticRR(RR, d_max, bn, size_box, n_pts){
+__global__ make_analyticRR(float *RR, float d_max, unsigned int bn, float size_box, int n_pts){
     /*
     Analytic calculation of the RR histogram
 
@@ -503,13 +503,11 @@ int main(int argc, char **argv){
     // Allocate memory for the histogram as double
     // And the subhistograms as simple presision floats
     DD = new double[bn];
-    RR = new double[bn];
+    RR = new float[bn];
     DR = new double[bn];
     cudaMallocManaged(&DD_A, bn*sizeof(float));
-    cudaMallocManaged(&RR_A, bn*sizeof(float));
     cudaMallocManaged(&DR_A, bn*sizeof(float));
     cudaMallocManaged(&DD_B, bn*sizeof(float));
-    cudaMallocManaged(&RR_B, bn*sizeof(float));
     cudaMallocManaged(&DR_B, bn*sizeof(float));
     
     //Initialize the histograms in 0
@@ -518,10 +516,8 @@ int main(int argc, char **argv){
         *(RR+i) = 0;
         *(DR+i) = 0;
         *(DD_A+i) = 0;
-        *(RR_A+i) = 0;
         *(DR_A+i) = 0;
         *(DD_B+i) = 0;
-        *(RR_B+i) = 0;
         *(DR_B+i) = 0;
     }
 	
@@ -556,7 +552,7 @@ int main(int argc, char **argv){
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
-    make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
+    //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     if (bn<1024){
         dim3 grid(1,1,1);
         dim3 block(bn,1,1);
@@ -565,7 +561,7 @@ int main(int argc, char **argv){
         dim3 grid(blocks,1,1);
         dim3 block(1024,1,1);
     }
-    make_analyticRR<<<grid,block>>>(RR_A, RR_B, nodeR, ds, dmax, size_node, size_box);
+    make_analyticRR<<<grid,block>>>(RR, dmax, bn, size_box, np);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
