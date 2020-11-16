@@ -1,7 +1,7 @@
-// nvcc iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
+// nvcc simple.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 180
 
 // For dynamic parallelism
-// nvcc -arch=sm_35 -rdc=true iso2PCF.cu -lcudadevrt -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 50
+// nvcc -arch=sm_35 -rdc=true dynamic.cu -lcudadevrt -o par_d.out && ./par_d.out data_5K.dat rand0_5K.dat 5000 30 50
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -247,7 +247,6 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
                 }
             }
 
-            /*
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
                 dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
@@ -260,6 +259,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
                 }
             }
 
+            /*
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
                 dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;

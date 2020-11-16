@@ -316,7 +316,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             Z_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in YZ
-            //YZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            YZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in XYZ
             //XYZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
