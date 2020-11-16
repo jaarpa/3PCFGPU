@@ -7,17 +7,17 @@ __global__ void kernel(float XX, float *data) {
     //int bin = 0;
     float sum = 2.4f;
     if (data[threadIdx.x]<15){
-        printf("%f", sum);
-        atomicAdd(&XX,sum);
-        printf("%f", XX);
+        printf("%f \n", sum);
+        atomicAdd(&XX[0],sum);
+        printf("%f \n", XX);
     }
 }
 
 int main(){
-    float XX=0;
+    float *XX;
     float *data;
     cudaMallocManaged(&data, 50*sizeof(float));
-    //cudaMallocManaged(&XX, 10*sizeof(float));
+    cudaMallocManaged(&XX, 10*sizeof(float));
     for (int i=0 ; i<50 ;i++){
         data[i] = i*0.5;
     }
@@ -41,7 +41,11 @@ int main(){
       exit(-1);
     }
 
-    std::cout << XX << std::endl;
+    std::cout << XX[0] << std::endl;
+
+
+    cudaFree(&XX);
+    cudaFree(&data);
 
     return 0;
 }
