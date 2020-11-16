@@ -227,7 +227,6 @@ void NODE2P::make_histoXX(float *XX, float *YY, Node ***nodeX){
 			}
 		}
 
-		/*
 		//=========================
 		// N2 movil en ZY
 		//=========================
@@ -314,7 +313,7 @@ void NODE2P::make_histoXX(float *XX, float *YY, Node ***nodeX){
 				}	
 			}
 		}
-		*/
+
 	}
 	}
 	}
