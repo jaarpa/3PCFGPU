@@ -1,3 +1,4 @@
+#include <iostream>
 
 __global__ void kernel(float *XX, float *data) {
     int bin = 0;
@@ -7,7 +8,7 @@ __global__ void kernel(float *XX, float *data) {
     }
 }
 
-void main(){
+int main(){
     float *XX, *data;
     cudaMallocManaged(&data, 50*sizeof(float));
     cudaMallocManaged(&XX, 10*sizeof(float));
@@ -17,5 +18,9 @@ void main(){
     for (int i=0 ; i<10 ;i++){
         XX[i] = 0.0;
     }
-    kernel<<<1,50<<<(XX, data)
+    kernel<<<1,50>>>(XX, data);
+
+    std::cout << XX[0] << endl;
+
+    return 0
 }
