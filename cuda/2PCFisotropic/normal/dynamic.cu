@@ -304,27 +304,22 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
         if (nodeD[row][col][mom].len > 0){
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
             float dd_max_node = dmax + size_node*sqrt(3.0);
             dd_max_node*=dd_max_node;
             
             // Counts distances within the same node
             int blocks = (int)(ceilf((float)(nodeD[row][col][mom].len)/32.0));
             count_distances11<<<blocks,32>>>(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
-            
-            
-            int u=row,v=col,w=mom; // Position index of the second node
-            float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
             blocks = (int)(ceilf((float)(partitions-1)/32.0));
             Z_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in YZ
-            YZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            //YZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in XYZ
-            XYZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            //XYZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
             
         }
     }
@@ -368,13 +363,8 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
         if (nodeD[row][col][mom].len > 0){
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
             float dd_max_node = dmax + size_node*sqrt(3.0);
             dd_max_node*=dd_max_node;
-            
-            int u,v,w; //Position of the second node
-            unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
-
 
             //Second node mobil in XYZ
             dim3 grid(gridDim.x ,1,1);
