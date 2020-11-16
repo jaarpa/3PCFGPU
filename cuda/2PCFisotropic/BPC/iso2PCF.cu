@@ -463,7 +463,7 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
     }
 }
 
-__global__ make_analyticRR(float *RR, float d_max, unsigned int bn, float size_box, int n_pts){
+__global__ void make_analyticRR(float *RR, float d_max, int bn, float size_box, int n_pts){
     /*
     Analytic calculation of the RR histogram
 
@@ -490,8 +490,8 @@ int main(int argc, char **argv){
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
     unsigned int partitions = (int)(ceil(size_box/size_node));
 
-    float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
-    double *DD, *RR, *DR;
+    float *DD_A, *DR_A, *DD_B, *DR_B, *RR;
+    double *DD, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
     cudaMallocManaged(&dataD, np*sizeof(PointW3D));
@@ -554,12 +554,12 @@ int main(int argc, char **argv){
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     if (bn<1024){
-        dim3 grid(1,1,1);
-        dim3 block(bn,1,1);
+        grid(1,1,1);
+        block(bn,1,1);
     } else {
         blocks = (int)(ceil((float)(bn)/1024.0))
-        dim3 grid(blocks,1,1);
-        dim3 block(1024,1,1);
+        grid(blocks,1,1);
+        block(1024,1,1);
     }
     make_analyticRR<<<grid,block>>>(RR, dmax, bn, size_box, np);
 
