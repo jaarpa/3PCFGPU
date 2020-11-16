@@ -1,3 +1,4 @@
+// For simple parallelism
 // nvcc simple.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 50
 
 // For dynamic parallelism
