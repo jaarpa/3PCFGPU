@@ -24,7 +24,7 @@ int main(){
     */
     kernel<<<1,50>>>(XX, data);
 
-    std::cout << XX[0] << std::endl;
+    std::cout << XX << std::endl;
 
     return 0;
 }
