@@ -356,11 +356,13 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 
     if (row<partitions && col<partitions && mom<partitions){
         printf( "The grid dim is : %i . ijk %i, %i, %i \n", gridDim.x, row, col, mom );
+        atomicAdd(&XY[0],1);
         //Get the node positon in this thread
         //int mom = (int) (idx/(partitions*partitions));
         //int col = (int) ((idx%(partitions*partitions))/partitions);
         //int row = idx%partitions;
         
+        /*
         if (nodeD[row][col][mom].len > 0){
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
@@ -385,13 +387,12 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
                 }
             }
 
-            /*
             dim3 grid(gridDim.x ,1,1);
             dim3 block(blockDim.x,blockDim.x,blockDim.x);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
-            */
             
         }
+        */
     }
 }
 
