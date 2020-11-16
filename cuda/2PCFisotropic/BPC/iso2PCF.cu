@@ -557,7 +557,7 @@ int main(int argc, char **argv){
         dim3 grid_a(1,1,1);
         dim3 block_a(bn,1,1);
     } else {
-        blocks = (int)(ceil((float)(bn)/1024.0))
+        blocks = (int)(ceil((float)(bn)/1024.0));
         dim3 grid_a(blocks,1,1);
         dim3 block_a(1024,1,1);
     }
