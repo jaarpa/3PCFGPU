@@ -1,7 +1,7 @@
-// nvcc iso2PCF.cu -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 180
+// nvcc simple.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 50
 
 // For dynamic parallelism
-// nvcc -arch=sm_35 -rdc=true iso2PCF.cu -lcudadevrt -o par.out && ./par.out data_5K.dat rand0_5K.dat 5000 30 50
+// nvcc -arch=sm_35 -rdc=true dynamic.cu -lcudadevrt -o par_d.out && ./par_d.out data_5K.dat rand0_5K.dat 5000 30 50
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -150,7 +150,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
     dd_max: The maximum distance of interest.
     */
-    int idx = blockIdx.x * blockDim.x + threadIdx.x
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (idx<len-1){
 
