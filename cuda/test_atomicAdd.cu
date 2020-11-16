@@ -20,7 +20,7 @@ int main(){
     }
     kernel<<<1,50>>>(XX, data);
 
-    std::cout << XX[0] << endl;
+    std::cout << XX[0] << std::endl;
 
-    return 0
+    return 0;
 }
