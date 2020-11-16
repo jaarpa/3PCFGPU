@@ -355,6 +355,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
     //if (idx<(partitions*partitions*partitions)){
 
     if (row<partitions && col<partitions && mom<partitions){
+        printf( "The grid dim is : %i . ijk %i, %i, %i \n", gridDim.x, row, col, mom );
         //Get the node positon in this thread
         //int mom = (int) (idx/(partitions*partitions));
         //int col = (int) ((idx%(partitions*partitions))/partitions);
@@ -476,6 +477,7 @@ int main(int argc, char **argv){
     blocks = (int)(ceil((float)(partitions)/16.0));
     dim3 grid_XY(blocks,1,1);
     dim3 block_XY(8,8,8);
+    cout << "Numero de particiones: " << partitions << endl;
     make_histoXY<<<grid_XY,block_XY>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
     make_histoXY<<<grid_XY,block_XY>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
 
