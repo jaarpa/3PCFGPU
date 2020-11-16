@@ -15,9 +15,9 @@ __global__ void kernel(float *XX, float *data) {
 int main(){
     float *XX;
     float *data;
-    cudaMallocManaged(&data, 3300352*sizeof(float));
+    cudaMallocManaged(&data, 2048*sizeof(float));
     cudaMallocManaged(&XX, 10*sizeof(float));
-    for (int i=0 ; i<3300352 ;i++){
+    for (int i=0 ; i<2048 ;i++){
         data[i] = i*0.3;
     }
 
@@ -25,7 +25,7 @@ int main(){
         XX[i] = 0.0;
     }
 
-    kernel<<<3223,1024>>>(XX, data);
+    kernel<<<2,1024>>>(XX, data);
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
