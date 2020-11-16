@@ -1,4 +1,6 @@
 #include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
 
 
 __global__ void kernel(float XX, float *data) {
@@ -6,6 +8,7 @@ __global__ void kernel(float XX, float *data) {
     float sum = 2.4f;
     if (data[threadIdx.x]<15){
         atomicAdd(&XX,sum);
+        printf("%f", XX)
     }
 }
 
@@ -24,7 +27,7 @@ int main(){
     */
     kernel<<<1,50>>>(XX, data);
 
-    std::cout << typeid(XX).name() << std::endl;
+    std::cout << XX << std::endl;
 
     return 0;
 }
