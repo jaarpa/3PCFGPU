@@ -330,8 +330,10 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
         
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id<(partitions*partitions*partitions)){
+        atomicAdd(&XY[0],1);
     //if (idz<partitions && idy<partitions && idx<partitions){
 
+        /*
         int idz = (int) (id/(partitions*partitions));
         int idy = (int) ((id%(partitions*partitions))/partitions);
         int idx = id%partitions;
@@ -350,6 +352,7 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
         if (dd_nod12 <= dd_max_node && nodeD[idx][idy][idz].len>0){
             count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[idx][idy][idz].elements, nodeD[idx][idy][idz].len, ds, dd_max, 1);
         }
+        */
     }
 }
 
@@ -371,6 +374,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             float dd_max_node = dmax + size_node*sqrt(3.0);
             dd_max_node*=dd_max_node;
 
+            /*
             int u,v,w;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
             float dx_nod12,dy_nod12,dz_nod12,dd_nod12;
@@ -387,13 +391,12 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
                     }
                 }
             }
+            */
 
-            /*
             int blocks = (int)(ceil((float)(partitions*partitions*partitions)/(512.0)));
             dim3 grid(blocks,1,1);
             dim3 block(512,1,1);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
-            */
         }
     }
 }
