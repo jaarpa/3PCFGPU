@@ -223,7 +223,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
-            float d_max_node = d_max + size_node*sqrt(3.0);
+            float d_max_node = dmax + size_node*sqrt(3.0);
             
             // Counts distances within the same node
             count_distances11(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
@@ -235,7 +235,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
                 dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
-                dis_nod = dz_nod12*dz_nod12;
+                dd_nod12 = dz_nod12*dz_nod12;
                 if (dd_nod12 <= d_max_node){
                     count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
                 }
@@ -283,7 +283,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
-            float d_max_node = d_max + size_node*sqrt(3.0);
+            float d_max_node = dmax + size_node*sqrt(3.0);
             
             int u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
