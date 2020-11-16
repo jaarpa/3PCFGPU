@@ -276,7 +276,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
     size_box:  Size of the whole box
     */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int partitions = (int)(ceil(size_box/size_node));
+    int partitions = (int)(size_box/size_node) + (size_box%size_node != 0);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -286,7 +286,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
 
         //This may see redundant but with this these often checked values are upgraded to device memory
         float dd_max = d_max*d_max;
-        int did_max = (int)(ceil((d_max+size_node*sqrt(3))/size_node));
+        int did_max = (int)((d_max+size_node*sqrt(3))/size_node) + ((d_max+size_node*sqrt(3))%size_node != 0);
         
         if (nodeD[row][col][mom].len > 0 && (row<did_max-1 || partitions-row<did_max || col<did_max-1 || partitions-col<did_max || mom<did_max-1 || partitions-mom<did_max)){
             //Only if the current node has elements and it is near to any border does the thread will be active
@@ -343,7 +343,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
 
 __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float d_max, float size_node, float size_box){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int partitions = (int)(ceil(size_box/size_node));
+    int partitions = (int)(size_box/size_node) + (size_box%size_node != 0);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -355,8 +355,8 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
             
             //This may see redundant but with this these often checked values are upgraded to device memory
             float dd_max = d_max*d_max;
-            int did_max = (int)(ceil((d_max+size_node*sqrt(3))/size_node));
-            int did_max2 = did_max*did_max, partitions = (int)(ceil(size_box/size_node));
+            int did_max = (int)((d_max+size_node*sqrt(3))/size_node) + ((d_max+size_node*sqrt(3))%size_node != 0);
+            int did_max2 = did_max*did_max;
 
             // Counts distances betweeen the same node
             if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
@@ -419,7 +419,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
 }
 __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, float ds, float d_max, float size_node, float size_box){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int partitions = (int)(ceil(size_box/size_node));
+    int partitions = (int)(size_box/size_node) + (size_box%size_node != 0);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -430,8 +430,8 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
             
             //This may see redundant but with this these often checked values are upgraded to device memory
             float dd_max = d_max*d_max;
-            int did_max = (int)(ceil((d_max+size_node*sqrt(3))/size_node));
-            int did_max2 = did_max*did_max, partitions = (int)(ceil(size_box/size_node));
+            int did_max = (int)((d_max+size_node*sqrt(3))/size_node) + ((d_max+size_node*sqrt(3))%size_node != 0);
+            int did_max2 = did_max*did_max;
             
             int u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
@@ -537,10 +537,10 @@ int main(int argc, char **argv){
 
     clock_t begin = clock();
     //Launch the kernels
-    make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, d_max, size_node, size_box);
-    BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, d_max, size_node, size_box);
-    make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, ds, d_max, size_node, size_box);
-    make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, d_max, size_node, size_box);
+    make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
+    BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
+    make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, ds, dmax, size_node, size_box);
+    make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
