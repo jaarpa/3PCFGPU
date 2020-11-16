@@ -590,7 +590,7 @@ int main(int argc, char **argv){
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
     cout << "Size of a node " << size_node << endl;
-    cout << "Nodes considered as boundary: " DD_A[0] <<endl;
+    cout << "Nodes considered as boundary: " << DD_A[0] <<endl;
 
     //Check here for errors
     cudaError_t error = cudaGetLastError(); 
