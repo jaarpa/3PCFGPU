@@ -382,8 +382,8 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
                         dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=dd_max_node && nodeD[u][v][w].len>0){
-                            atomicAdd(&XY[0],1);
-                            //count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
+                            //atomicAdd(&XY[0],1);
+                            count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                         }
                     }
                 }
