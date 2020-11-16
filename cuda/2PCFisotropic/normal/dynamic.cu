@@ -330,17 +330,10 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
         
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id<(partitions*partitions*partitions)){
-        atomicAdd(&XY[0],1);
-    //if (idz<partitions && idy<partitions && idx<partitions){
 
-        /*
         int idz = (int) (id/(partitions*partitions));
         int idy = (int) ((id%(partitions*partitions))/partitions);
         int idx = id%partitions;
-
-        //int idz = blockIdx.x * blockDim.z + threadIdx.z;
-        //int idy = blockIdx.x * blockDim.y + threadIdx.y;
-        //int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
         float dz_nod12 = nodeD[idx][idy][idz].nodepos.z - nodeD[row][col][mom].nodepos.z;
         dz_nod12*=dz_nod12;
@@ -352,7 +345,6 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
         if (dd_nod12 <= dd_max_node && nodeD[idx][idy][idz].len>0){
             count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[idx][idy][idz].elements, nodeD[idx][idy][idz].len, ds, dd_max, 1);
         }
-        */
     }
 }
 
@@ -367,8 +359,6 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
         int row = idx%partitions;
         
         if (nodeD[row][col][mom].len > 0){
-
-            atomicAdd(&XY[1],1);
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float dd_max_node = dmax + size_node*sqrt(3.0);
             dd_max_node*=dd_max_node;
