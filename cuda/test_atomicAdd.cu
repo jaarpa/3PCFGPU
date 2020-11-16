@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 
-__global__ void kernel(float XX, float *data) {
+__global__ void kernel(float *XX, float *data) {
     //int bin = 0;
     float sum = 2.4f;
     if (data[threadIdx.x]<15){
