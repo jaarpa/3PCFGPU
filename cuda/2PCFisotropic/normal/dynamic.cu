@@ -366,17 +366,16 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
         
-        int blocks = (int)(ceilf((float)(partitions*partitions*partitions)/(512.0)));
-        printf("THe blocks: %i x512 \n", blocks);
-        dim3 grid(blocks,1,1);
-        dim3 block(512,1,1);
-        
         if (nodeD[row][col][mom].len > 0){
 
+            atomicAdd(&XY[1],1);
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float dd_max_node = dmax + size_node*sqrt(3.0);
             dd_max_node*=dd_max_node;
 
+            int blocks = (int)(ceilf((float)(partitions*partitions*partitions)/(512.0)));
+            dim3 grid(blocks,1,1);
+            dim3 block(512,1,1);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
         }
     }
