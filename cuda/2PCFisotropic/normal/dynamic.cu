@@ -278,7 +278,7 @@ __global__ void XYZ_direction(float *XX, Node ***nodeD, int partitions, float dd
     int idx = (row + 1) + blockIdx.x * blockDim.x + threadIdx.x;
 
     if (idx<partitions){
-        float dx_nod12 = nodeD[idx][col][mom].nodepos.x - nodeD[row][col][mom].nodepos.y;
+        float dx_nod12 = nodeD[idx][col][mom].nodepos.x - nodeD[row][col][mom].nodepos.x;
         dx_nod12*=dx_nod12;
 
         if (dx_nod12 <= dd_max_node){
@@ -319,7 +319,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             YZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in XYZ
-            //XYZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            XYZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
             
         }
     }

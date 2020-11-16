@@ -259,7 +259,6 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
                 }
             }
 
-            /*
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
                 dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
@@ -274,7 +273,6 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
                     }
                 }
             }
-            */
             
         }
     }
