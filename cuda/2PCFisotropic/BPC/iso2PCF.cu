@@ -564,9 +564,9 @@ int main(int argc, char **argv){
     make_nodos(nodeR, dataR, partitions, size_node, np);
 
     //Get the dimensions of the GPU grid
-    int blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(1024))));
+    int blocks = (int)(ceil((float)((partitions*partitions*partitions)/512.0)));
     dim3 grid(blocks,1,1);
-    dim3 block(1024,1,1);
+    dim3 block(512,1,1);
 
     clock_t begin = clock();
     //Launch the kernels
@@ -587,9 +587,9 @@ int main(int argc, char **argv){
     }
     //make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, ds, dmax, size_node, size_box);
     
-    blocks = (int)(ceil((float)(bn)/1024.0));
+    blocks = (int)(ceil((float)(bn)/512.0));
     dim3 grid_a(blocks,1,1);
-    dim3 block_a(1024,1,1);
+    dim3 block_a(512,1,1);
 
     make_analyticRR<<<grid_a,block_a>>>(RR, dmax, bn, size_box, np);
 
