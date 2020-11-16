@@ -230,7 +230,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             
             // Counts distances within the same node
             int blocks = (int)(ceilf((float)(nodeD[row][col][mom].len)/32.0));
-            if (nodeD[row][col][mom].len<32){
+            if (nodeD[row][col][mom].len>32){
                 printf("The len: %i, Number of blocks is: %i ", nodeD[row][col][mom].len, blocks);
             }
             count_distances11<<<blocks,32>>>(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
