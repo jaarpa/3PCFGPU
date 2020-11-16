@@ -8,6 +8,13 @@
 using namespace std;
 
 //Point with weight value. Structure
+
+struct Point3D{
+	float x;
+	float y; 
+	float z;
+};
+
 struct PointW3D{
     float x;
     float y; 
@@ -16,6 +23,7 @@ struct PointW3D{
 };
 
 struct Node{
+    Point3D nodepos; //Position of the node
     int len;		// Number of points in the node
     PointW3D *elements;	// Points in the node
 };
@@ -106,6 +114,9 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     for (row=0; row<partitions; row++){
         for (col=0; col<partitions; col++){
             for (mom=0; mom<partitions; mom++){
+                nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node));
+                nod[row][col][mom].nodepos.y = ((float)(col)*(size_node));
+                nod[row][col][mom].nodepos.x = ((float)(row)*(size_node));
                 nod[row][col][mom].len = 0;
                 cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D));
             }
@@ -199,84 +210,69 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
-__global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, int partitions, float ds, float dd_max, int did_max, int did_max2){
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+__global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float d_max, int start_at){
+    //If start at is 0 it does every even index, it does every odd index otherwise
+    int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
     if (idx<(partitions*partitions*partitions)){
-        //Get the node positon in this thread
+        //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
-        //printf("%i, %i, %i \n", mom, col,row)
         
         if (nodeD[row][col][mom].len > 0){
-            
-            // Counts distances betweeen the same node
-            if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
-                count_distances11(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
-            } else { //If the main index is odd stores the countings in the XX_B subhistogram
-                count_distances11(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
-            }
-            
-            
-            int u,v,w; // Position index of the second node
-            int dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
-            //Second node movil in Z direction
-            for(w = mom+1; w<partitions && w-row<=did_max; w++){
-                if (idx%2==0){ //If the main index is even stores the countings in the XX_A subhistogram
-                    count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
-                } else { //If the main index is odd stores the countings in the XX_B subhistogram
-                    count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
+            float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
+            float d_max_node = d_max + size_node*sqrt(3);
+            
+            // Counts distances within the same node
+            count_distances11(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
+            
+            
+            int u=row,v=col,w=mom; // Position index of the second node
+            float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
+
+            //Second node mobil in Z direction
+            for(w = mom+1; w<partitions; w++){
+                dz_nod = nodeD[u][v][w].nodepos.z - nz1;
+                dis_nod = dz_nod*dz_nod;
+                if (dis_nod <= ddmax_nod){
+                    count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
                 }
             }
 
-            //Second node movil in YZ
-            for(v=col+1; v<partitions && v-col<=did_max; v++){
-                dy_nod12 = v-col;
-                for(w=(mom-did_max)*(mom>did_max); w<partitions && w-mom<=did_max; w++){
-                    dz_nod12 = w-mom;
+            //Second node mobil in YZ
+            for(v=col+1; v<partitions; v++){
+                dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
+                for(w=0; w<partitions; w++){
+                    dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    if (dd_nod12<=did_max2){
-                        if (idx%2==0){
-                            count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
-                        } else {
-                            count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
-                        }
+                    if (dd_nod12<=ddmax_nod){
+                        count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
                     }
-                    //}
                 }
             }
 
-            //Second node movil in XYZ
-            for(u = row+1; u < partitions && u-row< did_max; u++){
-                dx_nod12 = u-row;
-                for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
-                //for(v=0; v<partitions; v++){
-                    //if (v-col<=did_max){
-                    dy_nod12 = v-col;
-                    for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
-                    //for(w=0; w<partitions; w++){
-                        //if (w-mom<=did_max){
-                        dz_nod12 = w-mom;
+            //Second node mobil in XYZ
+            for(u = row+1; u < partitions; u++){
+                dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
+                for(v = 0; v < partitions; v++){
+                    dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
+                    for(w = 0; w < partition; w++){
+                        dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dd_nod12<=did_max2){
-                            if (idx%2==0){
-                                count_distances12(XX_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
-                            } else {
-                                count_distances12(XX_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
-                            }
+                        if (dd_nod12<=ddmax_nod){
+                            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                         }
-                        //}
                     }
-                    //}
                 }
             }
             
         }
     }
 }
-__global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, int partitions, float ds, float dd_max, int did_max, int did_max2){
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+__global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float d_max, int start_at){
+    int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -284,28 +280,25 @@ __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***no
         int row = idx%partitions;
         
         if (nodeD[row][col][mom].len > 0){
+
+            float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
+            float d_max_node = d_max + size_node*sqrt(3);
             
             int u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
 
 
-            //Second node movil in XYZ
-            //for(u = (row-did_max)*(row>did_max); u < partitions && u-row< did_max; u++){
-            for(u = 0; u < partitions && u-row< did_max; u++){
-                dx_nod12 = u-row;
-                //for(v = (col-did_max)*(col>did_max); v < partitions && v-col< did_max; v++){
-                for(v = 0; v < partitions && v-col< did_max; v++){
-                    dy_nod12 = v-col;
-                    //for(w = (mom-did_max)*(mom>did_max); w < partitions && w-mom< did_max; w++){
-                    for(w = 0; w < partitions && w-mom< did_max; w++){
-                        dz_nod12 = w-mom;
+            //Second node mobil in XYZ
+            for(u = 0; u < partitions; u++){
+                dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
+                for(v = 0; v < partitions; v++){
+                    dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
+                    for(w = 0; w < partitions; w++){
+                        dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dd_nod12<=did_max2){
-                            if (idx%2==0){
-                                count_distances12(XY_A, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
-                            } else {
-                                count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
-                            }
+                        if (dd_nod12<=d_max_node){
+                            count_distances12(XY_B, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                         }
                     }
                 }
@@ -319,10 +312,8 @@ int main(int argc, char **argv){
 	
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
-    float ds = ((float)(bn))/dmax, dd_max=dmax*dmax, size_box = 250.0, alpha = 2.176;
+    float size_box = 250.0, alpha = 2.176;
     float size_node = alpha*(size_box/pow((float)(np),1/3.));
-    int did_max = (int)(ceil((dmax+size_node*sqrt(3))/size_node));
-    int did_max2 = did_max*did_max;
     unsigned int partitions = (int)(ceil(size_box/size_node));
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
@@ -383,15 +374,20 @@ int main(int argc, char **argv){
     make_nodos(nodeR, dataR, partitions, size_node, np);
 
     //Get the dimensions of the GPU grid
-    int blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(1024))));
+    int threads = 512;
+    int blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(2*threads))));
     dim3 grid(blocks,1,1);
-    dim3 block(1024,1,1);
+    dim3 block(threads,1,1);
+    //One thread for each node
 
     clock_t begin = clock();
     //Launch the kernels
-    make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, partitions, ds, dd_max, did_max, did_max2);
-    make_histoXX<<<grid,block>>>(RR_A, RR_B, nodeR, partitions, ds, dd_max, did_max, did_max2);
-    make_histoXY<<<grid,block>>>(DR_A, DR_B, nodeD, nodeR, partitions, ds, dd_max, did_max, did_max2);
+    make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, 0);
+    make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, 1);
+    make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, 0);
+    make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, 1);
+    make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, 0);
+    make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, 1);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
