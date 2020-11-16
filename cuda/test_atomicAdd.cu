@@ -1,5 +1,6 @@
 #include <iostream>
 
+/*
 #if __CUDA_ARCH__ < 600
 __device__ double atomicAdd(double* address, double val)
 {
@@ -19,6 +20,7 @@ __device__ double atomicAdd(double* address, double val)
     return __longlong_as_double(old);
 }
 #endif
+*/
 
 __global__ void kernel(double *XX, float *data) {
     int bin = 0;
@@ -41,6 +43,7 @@ int main(){
     }
     kernel<<<1,50>>>(XX, data);
 
+    std::cout << __CUDA_ARCH__ << std::endl;
     std::cout << XX[0] << std::endl;
 
     return 0;
