@@ -372,6 +372,8 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 
 
             //Second node mobil in XYZ
+            int u, v, w;
+            float dx_nod12, dy_nod12, dz_nod12, dd_nod12, nx1 = nodeD[row][col][mom].nodepos.x, ny1 = nodeD[row][col][mom].nodepos.y, nz1 = nodeD[row][col][mom].nodepos.z;
             for(u = 0; u < partitions; u++){
                 dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
                 for(v = 0; v < partitions; v++){
