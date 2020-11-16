@@ -136,7 +136,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
+__global__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points within one node.
 
@@ -147,16 +147,13 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
     dd_max: The maximum distance of interest.
     */
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx<len-1){
+        int bin;
+        float d, v;
+        float x1 = elements[i].x, y1 = elements[i].y, z1 = elements[i].z, w1 = elements[i].w;
+        float x2,y2,z2,w2;
 
-    int bin;
-    float d, v;
-    float x1,y1,z1,w1,x2,y2,z2,w2;
-
-    for (int i=0; i<len-1; ++i){
-        x1 = elements[i].x;
-        y1 = elements[i].y;
-        z1 = elements[i].z;
-        w1 = elements[i].w;
         for (int j=i+1; j<len; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
@@ -169,6 +166,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 atomicAdd(&XX[bin],v);
             }
         }
+        
     }
 }
 
@@ -227,7 +225,8 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             d_max_node*=d_max_node;
             
             // Counts distances within the same node
-            count_distances11(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
+            int blocks = nodeD[row][col][mom].len/32;
+            count_distances11<<<blocks,32>>>(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             
             
             int u=row,v=col,w=mom; // Position index of the second node
