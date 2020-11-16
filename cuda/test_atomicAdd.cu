@@ -24,7 +24,7 @@ int main(){
     */
     kernel<<<1,50>>>(XX, data);
 
-    std::cout << XX << std::endl;
+    std::cout << typeid(XX).name() << std::endl;
 
     return 0;
 }
