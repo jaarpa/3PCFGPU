@@ -161,7 +161,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     }
 }
 
-__device__ void BPC_loop(float *XX, Node ***nodeD, int row, int col, int mom, int did_max2, float dd_max, int sum, float size_box, bool x_border, bool y_border, bool z_border, bool x_upperborder, bool y_upperborder, bool z_upperborder, bool x_lowerborder, bool y_lowerborder, bool z_lowerborder){
+__device__ void BPC_loop(float *XX, Node ***nodeD, int row, int col, int mom, int partitions, int did_max, float dd_max, int sum, float size_box, bool x_border, bool y_border, bool z_border, bool x_upperborder, bool y_upperborder, bool z_upperborder, bool x_lowerborder, bool y_lowerborder, bool z_lowerborder){
     /*
     This device function counts the distances betweeen points between two different nodes from periodic boundary conditiojns.
 
@@ -174,17 +174,17 @@ __device__ void BPC_loop(float *XX, Node ***nodeD, int row, int col, int mom, in
     ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
     dd_max: The maximum distance of interest.
     */
-    int bin, d_node, u, v, w;
+    int bin, d_node, u, v, w, did_max2=did_max*did_max;
     float d, s;
     float x1,y1,z1,w1,dx12,dy12,dz12,w2;
 
 
     int x_from = ((row-did_max)*(row>did_max))*(!x_border) + (partitions-(did_max-row))*(x_lowerborder&&!x_upperborder);
-    int x_to = (partitions-1)*((row+did_max>partitions-1 && !x_upperborder)||x_lowerborder) + (row+did_max)*((row+did_max<partitions)&&!x_border) + (!x_lowerborder&&x_upperborder)*(x_from+(did_max-(partitions-1-row)))
+    int x_to = (partitions-1)*((row+did_max>partitions-1 && !x_upperborder)||x_lowerborder) + (row+did_max)*((row+did_max<partitions)&&!x_border) + (!x_lowerborder&&x_upperborder)*(x_from+(did_max-(partitions-1-row)));
     int y_from = ((col-did_max)*(col>did_max))*(!y_border) + (partitions-(did_max-col))*(y_lowerborder&&!y_upperborder);
-    int y_to = (partitions-1)*((col+did_max>partitions-1 && !y_upperborder)||y_lowerborder) + (col+did_max)*((col+did_max<partitions)&&!y_border) + (!y_lowerborder&&y_upperborder)*(y_from+(did_max-(partitions-1-col)))
+    int y_to = (partitions-1)*((col+did_max>partitions-1 && !y_upperborder)||y_lowerborder) + (col+did_max)*((col+did_max<partitions)&&!y_border) + (!y_lowerborder&&y_upperborder)*(y_from+(did_max-(partitions-1-col)));
     int z_from = ((mom-did_max)*(mom>did_max))*(!z_border) + (partitions-(did_max-mom))*(z_lowerborder&&!z_upperborder);
-    int z_to = (partitions-1)*((mom+did_max>partitions-1 && !z_upperborder)||z_lowerborder) + (mom+did_max)*((mom+did_max<partitions)&&!z_border) + (!z_lowerborder&&z_upperborder)*(z_from+(did_max-(partitions-1-mom)))
+    int z_to = (partitions-1)*((mom+did_max>partitions-1 && !z_upperborder)||z_lowerborder) + (mom+did_max)*((mom+did_max<partitions)&&!z_border) + (!z_lowerborder&&z_upperborder)*(z_from+(did_max-(partitions-1-mom)));
     //If the z direction is not the nearest border the z index it is 0 if mom<did_max or mom-did-max otherwise.
     //If both z borders or ONLY the upper z border are the nearest borders the z index starts from 0
     //If ONLY the lower z border is the nearest the z index starts from partitions-(did_max-mom)
@@ -248,7 +248,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
         //This may see redundant but with this these often checked values are upgraded to device memory
         float dd_max = d_max*d_max;
         int did_max = (int)(ceil((d_max+size_node*sqrt(3))/size_node));
-        int did_max2 = did_max*did_max, partitions = (int)(ceil(size_box/size_node));
+        int partitions = (int)(ceil(size_box/size_node));
         
         if (nodeD[row][col][mom].len > 0 && (row<did_max-1 || partitions-row<did_max || col<did_max-1 || partitions-col<did_max || mom<did_max-1 || partitions-mom<did_max)){
             //Only if the current node has elements and it is near to any border does the thread will be active
@@ -258,7 +258,7 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
             if (x_border){
                 x_upperborder=partitions-row<did_max;
                 x_lowerborder=row<did_max-1;
-                BPC_loop(XX_A, nodeD, row, col, mom, did_max2, dd_max, 2, size_box, x_border, false, false, x_upperborder, false, false, x_lowerborder, false, false);
+                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, false, false, x_upperborder, false, false, x_lowerborder, false, false);
             }
             
             y_border=(col<did_max-1 || partitions-col<did_max);
@@ -267,10 +267,10 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
                 y_lowerborder=col<did_max-1;
 
                 //Only Y boundaries
-                BPC_loop(XX_A, nodeD, row, col, mom, did_max2, dd_max, 2, size_box, false, y_border, false, false, y_upperborder, false, false, y_lowerborder, false); 
+                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, false, y_border, false, false, y_upperborder, false, false, y_lowerborder, false); 
                 if (x_border){
                     //Boundaries in the XY walls
-                    BPC_loop(XX_A, nodeD, row, col, mom, did_max2, dd_max, 2, size_box, x_border, y_border, false, x_upperborder, y_upperborder, false, x_lowerborder, y_lowerborder, false);
+                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, y_border, false, x_upperborder, y_upperborder, false, x_lowerborder, y_lowerborder, false);
                 }
             }
             
@@ -280,20 +280,20 @@ __device__ void BPC_XX(float *XX_A, float *XX_B, float *XX_B, Node ***nodeD, flo
                 z_lowerborder=mom<did_max-1;
                 
                 //Only Z boundaries
-                BPC_loop(XX_A, nodeD, row, col, mom, did_max2, dd_max, 2, size_box, false, false, z_border, false, false, z_upperborder, false, false, z_lowerborder); 
+                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, false, false, z_border, false, false, z_upperborder, false, false, z_lowerborder); 
                 if (x_border){
                     //For the ZY corner
-                    BPC_loop(XX_A, nodeD, row, col, mom, did_max2, dd_max, 2, size_box, x_border, false, z_border, x_upperborder, false, z_upperborder, x_lowerborder, false, z_lowerborder); 
+                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, false, z_border, x_upperborder, false, z_upperborder, x_lowerborder, false, z_lowerborder); 
                     if (y_border){
                         //For the XYZ corner
-                        BPC_loop(XX_A, nodeD, row, col, mom, did_max2, dd_max, 2, size_box, x_border, y_border, z_border, x_upperborder, y_upperborder, z_upperborder, x_lowerborder, y_lowerborder, z_lowerborder); 
+                        BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, x_border, y_border, z_border, x_upperborder, y_upperborder, z_upperborder, x_lowerborder, y_lowerborder, z_lowerborder); 
                     }
 
                 }
 
                 if (y_border){
                     //For the YZ
-                    BPC_loop(XX_A, nodeD, row, col, mom, did_max2, dd_max, 2, size_box, false, y_border, z_border, false, y_upperborder, z_upperborder, false, y_lowerborder, z_lowerborder); 
+                    BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, 2, size_box, false, y_border, z_border, false, y_upperborder, z_upperborder, false, y_lowerborder, z_lowerborder); 
                 }
             }
 
