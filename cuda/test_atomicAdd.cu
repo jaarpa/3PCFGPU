@@ -19,7 +19,7 @@ int main(){
     cudaMallocManaged(&data, 50*sizeof(float));
     cudaMallocManaged(&XX, 10*sizeof(float));
     for (int i=0 ; i<50 ;i++){
-        data[i] = i*0.5;
+        data[i] = i*0.3;
     }
     /*
     for (int i=0 ; i<10 ;i++){
