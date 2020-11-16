@@ -151,7 +151,7 @@ __global__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     if (idx<len-1){
         int bin;
         float d, v;
-        float x1 = elements[i].x, y1 = elements[i].y, z1 = elements[i].z, w1 = elements[i].w;
+        float x1 = elements[idx].x, y1 = elements[idx].y, z1 = elements[idx].z, w1 = elements[idx].w;
         float x2,y2,z2,w2;
 
         for (int j=i+1; j<len; ++j){
