@@ -276,7 +276,7 @@ __global__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
     size_box:  Size of the whole box
     */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int partitions = (int)(size_box/size_node) + (int)(size_box%size_node != 0);
+    int partitions = (int)(size_box/size_node);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -343,7 +343,7 @@ __global__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
 
 __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float d_max, float size_node, float size_box){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int partitions = (int)(size_box/size_node) + (int)(size_box%size_node != 0);
+    int partitions = (int)(size_box/size_node);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -419,7 +419,7 @@ __global__ void make_histoXX(float *XX_A, float *XX_B, Node ***nodeD, float ds, 
 }
 __global__ void make_histoXY(float *XY_A, float *XY_B, Node ***nodeD, Node ***nodeR, float ds, float d_max, float size_node, float size_box){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int partitions = (int)(size_box/size_node) + (int)(size_box%size_node != 0);
+    int partitions = (int)(size_box/size_node);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
