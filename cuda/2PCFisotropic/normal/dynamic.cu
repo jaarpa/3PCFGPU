@@ -367,9 +367,27 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             dd_max_node*=dd_max_node;
 
             //Second node mobil in XYZ
+            int u,v,w;
+            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
+            float dx_nod12,dy_nod12,dz_nod12,dd_nod12;
+            for(u = 0; u < partitions; u++){
+                dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
+                for(v = 0; v < partitions; v++){
+                    dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
+                    for(w = 0; w < partitions; w++){
+                        dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
+                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
+                        if (dd_nod12<=dd_max_node){
+                            count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
+                        }
+                    }
+                }
+            }
+            /*
             dim3 grid(gridDim.x ,1,1);
             dim3 block(blockDim.x,blockDim.x,blockDim.x);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            */
             
         }
     }
