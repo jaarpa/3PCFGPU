@@ -328,7 +328,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
 __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
 
         
-    int id = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id<(partitions*partitions*partitions)){
     //if (idz<partitions && idy<partitions && idx<partitions){
 
@@ -390,8 +390,9 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
             }
             */
 
-            dim3 grid(gridDim.x ,1,1);
-            dim3 block(blockDim.x,blockDim.y,blockDim.z);
+            blocks = (int)(ceil((float)(partitions*partitions*partitions)/(512.0)));
+            dim3 grid_XY(blocks,1,1);
+            dim3 block_XY(512,1,1);
             make_histoXY_child<<<grid,block>>>(XY, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
             
         }
@@ -477,7 +478,7 @@ int main(int argc, char **argv){
     make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
     make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
 
-    blocks = (int)(ceil((float)(partitions)/(2.0*512.0)));
+    blocks = (int)(ceil((float)(partitions*partitions*partitions)/(2.0*512.0)));
     dim3 grid_XY(blocks,1,1);
     dim3 block_XY(512,1,1);
     make_histoXY<<<grid_XY,block_XY>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
