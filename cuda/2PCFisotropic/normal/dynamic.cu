@@ -212,15 +212,80 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
-__global__ void z_direction(Node ***nodeD, int partitions, float d_max_node, float ds, float dd_max, int row, int col, int mom){
+__global__ void Z_direction(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
 
-    int idx = (mom + 1) + blockIdx.x * blockDim.x + threadIdx.x;
+    int idz = (mom + 1) + blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (idz<partitions){
+        float dz_nod12 = nodeD[row][col][idz].nodepos.z - nodeD[row][col][mom].nodepos.z;
+        float dd_nod12 = dz_nod12*dz_nod12;
+        if (dd_nod12 <= dd_max_node){
+            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
+        }
+
+    }
+
+}
+
+__global__ void YZ_direction_child1(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom, int idy, float dy_nod12){
+    int idz = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idz<partitions){
+        float dz_nod12 = nodeD[row][idy][idz].nodepos.z - nodeD[row][col][mom].nodepos.z;
+        dz_nod12*=dz_nod12;
+        float dd_nod12 = dz_nod12 + dy_nod12;
+        if (dd_nod12 <= dd_max_node){
+            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][idy][idz].elements, nodeD[row][idy][idz].len, ds, dd_max, 2);
+        }
+    }
+}
+
+__global__ void YZ_direction(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
+
+    int idy = (col + 1) + blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (idy<partitions){
+        float dy_nod12 = nodeD[row][idy][mom].nodepos.y - nodeD[row][col][mom].nodepos.y;
+        dy_nod12*=dy_nod12
+
+        if (dy_nod12 <= dd_max_node){
+            int blocks = (int)(ceilf((float)(partitions)/32.0));
+            dim3 grid(blocks,1,1);
+            dim3 block(32,1,1);
+            YZ_direction_child1<<<grid,block>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom, idy, dy_nod12);
+        }
+
+    }
+
+}
+
+__global__ void XYZ_direction_child1(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom, int idx, float dx_nod12){
+    int idz = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.x * blockDim.x + threadIdx.y;
+    if (idz<partitions && idy<partitions){
+        float dz_nod12 = nodeD[idx][idy][idz].nodepos.z - nodeD[row][col][mom].nodepos.z;
+        dz_nod12*=dz_nod12;
+        float dy_nod12 = nodeD[idx][idy][idz].nodepos.y - nodeD[row][col][mom].nodepos.y;
+        dy_nod12*=dy_nod12;
+        float dd_nod12 = dz_nod12 + dy_nod12 + dx_nod12;
+        if (dd_nod12 <= dd_max_node){
+            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[idx][idy][idz].elements, nodeD[idx][idy][idz].len, ds, dd_max, 2);
+        }
+    }
+}
+
+__global__ void XYZ_direction(float *XX, Node ***nodeD, int partitions, float dd_max_node, float ds, float dd_max, int row, int col, int mom){
+
+    int idx = (row + 1) + blockIdx.x * blockDim.x + threadIdx.x;
 
     if (idx<partitions){
-        float dz_nod12 = nodeD[row][col][w].nodepos.z - nodeD[row][col][mom].nodepos.z;
-        float dd_nod12 = dz_nod12*dz_nod12;
-        if (dd_nod12 <= d_max_node){
-            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
+        float dx_nod12 = nodeD[idx][col][mom].nodepos.x - nodeD[row][col][mom].nodepos.y;
+        dx_nod12*=dx_nod12
+
+        if (dx_nod12 <= dd_max_node){
+            int blocks = (int)(ceilf((float)(partitions)/32.0));
+            dim3 grid(blocks,1,1);
+            dim3 block(32,32,1);
+            XYZ_direction_child1<<<grid,block>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom, idx, dx_nod12);
         }
 
     }
@@ -240,8 +305,8 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
-            float d_max_node = dmax + size_node*sqrt(3.0);
-            d_max_node*=d_max_node;
+            float dd_max_node = dmax + size_node*sqrt(3.0);
+            dd_max_node*=dd_max_node;
             
             // Counts distances within the same node
             int blocks = (int)(ceilf((float)(nodeD[row][col][mom].len)/32.0));
@@ -256,34 +321,13 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
 
             //Second node mobil in Z direction
             blocks = (int)(ceilf((float)(partitions-1))/32.0))
-            z_direction<<<blocks,32>>>(nodeD, partitions, d_max_node, ds, dd_max, row, col, mom)
+            Z_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom)
 
             //Second node mobil in YZ
-            for(v=col+1; v<partitions; v++){
-                dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
-                for(w=0; w<partitions; w++){
-                    dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
-                    dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    if (dd_nod12<=d_max_node){
-                        count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][v][w].elements, nodeD[row][v][w].len, ds, dd_max, 2);
-                    }
-                }
-            }
+            YZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom)
 
             //Second node mobil in XYZ
-            for(u = row+1; u < partitions; u++){
-                dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
-                for(v = 0; v < partitions; v++){
-                    dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
-                    for(w = 0; w < partitions; w++){
-                        dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
-                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dd_nod12<=d_max_node){
-                            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
-                        }
-                    }
-                }
-            }
+            XYZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom)
             
         }
     }
@@ -300,8 +344,8 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
-            float d_max_node = dmax + size_node*sqrt(3.0);
-            d_max_node*=d_max_node;
+            float dd_max_node = dmax + size_node*sqrt(3.0);
+            dd_max_node*=dd_max_node;
             
             int u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
@@ -315,7 +359,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
                     for(w = 0; w < partitions; w++){
                         dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dd_nod12<=d_max_node){
+                        if (dd_nod12<=dd_max_node){
                             count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                         }
                     }
