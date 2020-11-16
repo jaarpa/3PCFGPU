@@ -212,6 +212,21 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
+__global__ void z_direction(Node ***nodeD, int partitions, float d_max_node, float ds, float dd_max, int row, int col, int mom){
+
+    int idx = (mom + 1) + blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (idx<partitions){
+        float dz_nod12 = nodeD[row][col][w].nodepos.z - nodeD[row][col][mom].nodepos.z;
+        float dd_nod12 = dz_nod12*dz_nod12;
+        if (dd_nod12 <= d_max_node){
+            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
+        }
+
+    }
+
+}
+
 __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at){
     //If start at is 0 it does every even index, it does every odd index otherwise
     int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
@@ -240,13 +255,8 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
-            for(w = mom+1; w<partitions; w++){
-                dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
-                dd_nod12 = dz_nod12*dz_nod12;
-                if (dd_nod12 <= d_max_node){
-                    count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[row][col][w].elements, nodeD[row][col][w].len, ds, dd_max, 2);
-                }
-            }
+            blocks = (int)(ceilf((float)(partitions-1))/32.0))
+            z_direction<<<blocks,32>>>(nodeD, partitions, d_max_node, ds, dd_max, row, col, mom)
 
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
