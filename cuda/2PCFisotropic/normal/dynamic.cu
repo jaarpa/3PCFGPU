@@ -139,7 +139,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
+__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points within one node.
 
@@ -150,12 +150,13 @@ __global__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
     dd_max: The maximum distance of interest.
     */
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x
+
     if (idx<len-1){
-        //printf("The id is: %i . The len: %i The blockid: %i \n. ", idx, len, blockIdx.x);
+
         int bin;
         float d, v;
-        float x1 = elements[idx].x, y1 = elements[idx].y, z1 = elements[idx].z, w1 = elements[idx].w;
+        float x1 = elements[idx].x, y1 = elements[idx].y, z1 = elements[idx].y, w1 = elements[idx].w;
         float x2,y2,z2,w2;
 
         for (int j=idx+1; j<len; ++j){
@@ -170,7 +171,6 @@ __global__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 atomicAdd(&XX[bin],v);
             }
         }
-        
     }
 }
 
@@ -230,9 +230,6 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             
             // Counts distances within the same node
             int blocks = (int)(ceilf((float)(nodeD[row][col][mom].len)/32.0));
-            if (nodeD[row][col][mom].len>32){
-                printf("The len: %i. The n blocks: %i \n. ",nodeD[row][col][mom].len, blocks);
-            }
             count_distances11<<<blocks,32>>>(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             
             
