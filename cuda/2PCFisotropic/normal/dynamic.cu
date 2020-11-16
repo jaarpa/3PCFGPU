@@ -139,9 +139,9 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
+__global__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
     /*
-    This device function counts the distances betweeen points within one node.
+    This global function counts the distances betweeen points within one node.
 
     Args:
     XX: The histogram where the distances are counted in
