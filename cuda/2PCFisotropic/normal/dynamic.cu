@@ -347,15 +347,15 @@ __global__ void make_histoXY_child(float *XY, Node ***nodeD, int partitions, flo
 __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at){
     int row, col, mom;
 
-    row = 2*(blockIdx.x*blockDim.x + threadIdx.x)+start_at;
-    col = 2*(blockIdx.x*blockDim.y + threadIdx.y)+start_at;
-    mom = 2*(blockIdx.x*blockDim.z + threadIdx.z)+start_at;
+    row = blockIdx.x*blockDim.x + threadIdx.x;
+    col = blockIdx.x*blockDim.y + threadIdx.y;
+    mom = blockIdx.x*blockDim.z + threadIdx.z;
     
     //int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
     //if (idx<(partitions*partitions*partitions)){
 
     if (row<partitions && col<partitions && mom<partitions){
-        printf( "The grid dim is : %i . ijk %i, %i, %i \n", gridDim.x, row, col, mom );
+        printf( "The grid dim is : %i ,%i, %i \n", gridDim.x, gridDim.y, gridDim.z,);
         atomicAdd(&XY[0],1);
         //Get the node positon in this thread
         //int mom = (int) (idx/(partitions*partitions));
@@ -475,11 +475,11 @@ int main(int argc, char **argv){
     make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
     make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
 
-    blocks = (int)(ceil((float)(partitions)/16.0));
+    blocks = (int)(ceil((float)(partitions)/8.0));
     dim3 grid_XY(blocks,1,1);
     dim3 block_XY(8,8,8);
     make_histoXY<<<grid_XY,block_XY>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
-    make_histoXY<<<grid_XY,block_XY>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
+    //make_histoXY<<<grid_XY,block_XY>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
