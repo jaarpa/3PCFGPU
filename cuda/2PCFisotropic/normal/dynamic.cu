@@ -355,7 +355,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
     //if (idx<(partitions*partitions*partitions)){
 
     if (row<partitions && col<partitions && mom<partitions){
-        printf( "The grid dim is : %i ,%i, %i \n", gridDim.x, gridDim.y, gridDim.z,);
+        printf( "The grid dim is : %i ,%i, %i \n", gridDim.x, gridDim.y, gridDim.z);
         atomicAdd(&XY[0],1);
         //Get the node positon in this thread
         //int mom = (int) (idx/(partitions*partitions));
