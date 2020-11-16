@@ -317,7 +317,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
-            blocks = (int)(ceilf((float)(partitions-1))/32.0));
+            blocks = (int)(ceilf((float)(partitions-1)/32.0));
             Z_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in YZ
