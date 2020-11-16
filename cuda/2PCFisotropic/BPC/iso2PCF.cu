@@ -325,7 +325,7 @@ __global__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
                 y_lowerborder=col<did_max-1;
 
                 //Only Y boundaries
-                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, y_border, false, false, y_upperborder, false, false, y_lowerborder, false); 
+                BPC_loop(XX_B, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, y_border, false, false, y_upperborder, false, false, y_lowerborder, false); 
                 if (x_border){
                     //Boundaries in the XY walls
                     BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, y_border, false, x_upperborder, y_upperborder, false, x_lowerborder, y_lowerborder, false);
@@ -338,13 +338,13 @@ __global__ void BPC_XX(float *XX_A, float *XX_B, Node ***nodeD, float ds, float 
                 z_lowerborder=mom<did_max-1;
                 
                 //Only Z boundaries
-                BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, false, z_border, false, false, z_upperborder, false, false, z_lowerborder); 
+                BPC_loop(XX_B, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, false, false, z_border, false, false, z_upperborder, false, false, z_lowerborder); 
                 if (x_border){
                     //For the ZY corner
                     BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, false, z_border, x_upperborder, false, z_upperborder, x_lowerborder, false, z_lowerborder); 
                     if (y_border){
                         //For the XYZ corner
-                        BPC_loop(XX_A, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, y_border, z_border, x_upperborder, y_upperborder, z_upperborder, x_lowerborder, y_lowerborder, z_lowerborder); 
+                        BPC_loop(XX_B, nodeD, row, col, mom, partitions, did_max, dd_max, ds, 2, size_box, x_border, y_border, z_border, x_upperborder, y_upperborder, z_upperborder, x_lowerborder, y_lowerborder, z_lowerborder); 
                     }
 
                 }
@@ -571,9 +571,8 @@ int main(int argc, char **argv){
     clock_t begin = clock();
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
-
     BPC_XX<<<grid,block>>>(DD_A, DD_B, nodeD, ds, dmax, size_node, size_box);
-    
+
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
 
