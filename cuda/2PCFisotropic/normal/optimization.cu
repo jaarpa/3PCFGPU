@@ -379,7 +379,7 @@ int main(int argc, char **argv){
     int partitions;// = (int)(ceil(size_box/size_node));
     ofstream outfile; //To write optimization results
 
-    for (dmax=20; dmax<140; dmax=dmax+10){
+    for (dmax=40; dmax<140; dmax=dmax+10){
         cout << "Computing for a dmax of: "<< dmax <<endl;
 
         for (partitions=10; partitions<100; partitions+=5){
