@@ -370,8 +370,8 @@ int main(int argc, char **argv){
     // Open and read the files to store the data in the arrays
     float size_box = 0; //, dummy_size_box=0; //Will be obtained from the data
     open_files(argv[1], np, dataD, size_box);
-    cout << "Successfully readed the file "<< argv[1] << endl;
-    cout << "Size of the box of " << size_box << endl; 
+    //cout << "Successfully readed the file "<< argv[1] << endl;
+    //cout << "Size of the box of " << size_box << endl; 
     //open_files(argv[2], np, dataR, dummy_size_box);
     
     float size_node;//, prev_time = numeric_limits<double>::infinity();// = 2.176;
@@ -380,11 +380,11 @@ int main(int argc, char **argv){
     ofstream outfile; //To write optimization results
 
     for (dmax=40; dmax<140; dmax=dmax+10){
-        cout << "Computing for a dmax of: "<< dmax <<endl;
+        //cout << "Computing for a dmax of: "<< dmax <<endl;
 
         for (partitions=10; partitions<100; partitions+=5){
             size_node = size_box/((float)(partitions));
-            cout << "Trying with " << partitions << " partitions and a size node of " << size_node << endl;
+            //cout << "Trying with " << partitions << " partitions and a size node of " << size_node << endl;
             //Initialize the histograms in 0
             for (int i = 0; i < bn; i++){
                 *(DD+i) = 0;
@@ -534,9 +534,18 @@ int main(int argc, char **argv){
     cudaFree(DR_B);
 
     cudaError_t error = cudaGetLastError(); 
+    if(error != 0)
+    {
     cout << "The cuda error code is " << error << endl;
+    // print the CUDA error message and exit
+    printf("CUDA error: %s\n", cudaGetErrorString(error));
+    outfile.open("time_results.dat", ios_base::app); // append instead of overwrite
+    outfile << np << ", " << size_box << ", " << dmax << ", " << partitions << ", " << size_node << ", " <<  time_spent <<  cudaGetErrorString(error) << endl;
+    outfile.close();
+    exit(-1);
+    }
 
-    cout << "Programa Terminado..." << endl;
+    //cout << "Programa Terminado..." << endl;
     return 0;
 }
 
