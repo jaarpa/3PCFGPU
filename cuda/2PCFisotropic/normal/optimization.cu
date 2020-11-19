@@ -420,7 +420,7 @@ int main(int argc, char **argv){
             // print the CUDA error message and exit
             printf("CUDA error: %s\n", cudaGetErrorString(error));
             outfile.open("time_results.dat", ios_base::app); // append instead of overwrite
-            outfile << np << ", " << size_box << ", " << dmax << ", " << partitions << ", " << size_node << ", " <<  time_spent <<  cudaGetErrorString(error) << endl;
+            outfile << np << ", " << size_box << ", " << dmax << ", " << partitions << ", " << size_node << ", " <<  "time_spent" <<  cudaGetErrorString(error) << endl;
             outfile.close();
             exit(-1);
             }
@@ -456,7 +456,7 @@ int main(int argc, char **argv){
             // print the CUDA error message and exit
             printf("CUDA error: %s\n", cudaGetErrorString(error));
             outfile.open("time_results.dat", ios_base::app); // append instead of overwrite
-            outfile << np << ", " << size_box << ", " << dmax << ", " << partitions << ", " << size_node << ", " <<  time_spent <<  cudaGetErrorString(error) << endl;
+            outfile << np << ", " << size_box << ", " << dmax << ", " << partitions << ", " << size_node << ", " <<  "time_spent" <<  cudaGetErrorString(error) << endl;
             outfile.close();
             exit(-1);
             }
