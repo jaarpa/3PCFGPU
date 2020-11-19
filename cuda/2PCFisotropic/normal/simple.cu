@@ -47,7 +47,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
     }
 
     double candidate_size_box=0;
-    double max_component=0;
+    double max_component;
     for ( int c = 0; c < pts; c++) //Reads line by line and stores each c line in the c PointW3D element of the array
     {
         file >> datos[c].x >> datos[c].y >> datos[c].z >> datos[c].w;
@@ -71,6 +71,9 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
             candidate_size_box = max_component;
         }
     }
+
+    size_box=ceil(candidate_size_box+1);
+
     file.close();
 }
 
