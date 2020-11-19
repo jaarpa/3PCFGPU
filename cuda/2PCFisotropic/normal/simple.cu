@@ -360,7 +360,7 @@ int main(int argc, char **argv){
 	
 	// Open and read the files to store the data in the arrays
 	open_files(argv[1], np, dataD);
-    open_files(argv[2], np, dataR);
+    //open_files(argv[2], np, dataR);
 
     //Init the nodes arrays
     Node ***nodeD;
@@ -378,7 +378,7 @@ int main(int argc, char **argv){
     
     //Classificate the data into the nodes
     make_nodos(nodeD, dataD, partitions, size_node, np);
-    make_nodos(nodeR, dataR, partitions, size_node, np);
+    //make_nodos(nodeR, dataR, partitions, size_node, np);
 
     //Get the dimensions of the GPU grid
     int threads = 512;
@@ -391,10 +391,10 @@ int main(int argc, char **argv){
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
     make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
-    make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
-    make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
-    make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
-    make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
+    //make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
+    //make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
+    //make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
+    //make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
@@ -422,26 +422,6 @@ int main(int argc, char **argv){
     }
 
     cout << "Termine de hacer todos los histogramas" << endl;
-    /*
-    // Shows the histograms
-    cout << "\nHistograma DD:" << endl;
-    int sum = 0;
-    for (int k = 0; k<bn; k++){
-        cout << DD[k] << "\t";
-        sum += DD[k];
-    }
-    cout << "Total: " << sum << endl;
-
-    cout << "\nHistograma RR:" << endl;
-    for (int k = 0; k<bn; k++){
-        cout << RR[k] << "\t";
-    }
-
-    cout << "\nHistograma DR:" << endl;
-    for (int k = 0; k<bn; k++){
-        cout << DR[k] << "\t";
-    }
-    */
 	
 	// Guardamos los histogramas
 	save_histogram(nameDD, bn, DD);

@@ -62,7 +62,7 @@ int main(int argc, char **argv){
 
 	// Abrimos y trabajamos los datos en los histogramas
 	open_files(argv[1],n_pts,dataD); // guardo los datos en los Struct
-	open_files(argv[2],n_pts,dataR); // guardo los datos en los Struct
+	open_files(argv[1],n_pts,dataR); // guardo los datos en los Struct
 	
 	// inicializamos las mallas
 	int partitions = (int)(ceil(size_box/size_node));
@@ -88,18 +88,12 @@ int main(int argc, char **argv){
 	cout << "Guarde histograma DD..." << endl;
 	delete[] DD;
 	
-	my_hist.make_histoXX(RR, my_hist.meshRand()); 
-	for (int i = 0; i<bn; i++){
-		cout << RR[i] << endl;
-	}
+	//my_hist.make_histoXX(RR, my_hist.meshRand()); 
 	save_histogram(nameRR, bn, RR);
 	cout << "Guarde histograma RR..." << endl;
 	delete[] RR;
 	
-	my_hist.make_histoXY(DR, my_hist.meshData(), my_hist.meshRand());
-	for (int i = 0; i<bn; i++){
-		cout << DR[i] << endl;
-	}
+	//my_hist.make_histoXY(DR, my_hist.meshData(), my_hist.meshRand());
 	save_histogram(nameDR, bn, DR);
 	cout << "Guarde histograma DR..." << endl;
 	delete[] DR;
