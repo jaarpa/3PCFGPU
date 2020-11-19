@@ -379,10 +379,10 @@ int main(int argc, char **argv){
     int partitions;// = (int)(ceil(size_box/size_node));
     ofstream outfile; //To write optimization results
 
-    for (dmax=20; dmax<120; dmax=dmax+10){
+    for (dmax=20; dmax<140; dmax=dmax+10){
         cout << "Computing for a dmax of: "<< dmax <<endl;
 
-        for (partitions=10; partitions<100; partitions+=10){
+        for (partitions=10; partitions<100; partitions+=5){
             size_node = size_box/((float)(partitions));
             cout << "Trying with " << partitions << " partitions and a size node of " << size_node << endl;
             //Initialize the histograms in 0
@@ -496,18 +496,18 @@ int main(int argc, char **argv){
     */
 
     //Free the memory
-    cudaFree(&dataD);
-    cudaFree(&dataR);
+    cudaFree(dataD);
+    cudaFree(dataR);
 
     delete[] DD;
     delete[] DR;
     delete[] RR;
-    cudaFree(&DD_A);
-    cudaFree(&RR_A);
-    cudaFree(&DR_A);
-    cudaFree(&DD_B);
-    cudaFree(&RR_B);
-    cudaFree(&DR_B);
+    cudaFree(DD_A);
+    cudaFree(RR_A);
+    cudaFree(DR_A);
+    cudaFree(DD_B);
+    cudaFree(RR_B);
+    cudaFree(DR_B);
 
     cout << "Programa Terminado..." << endl;
     return 0;
