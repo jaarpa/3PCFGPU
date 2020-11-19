@@ -432,30 +432,33 @@ int main(int argc, char **argv){
 	cout << "Guarde histograma DR..." << endl;
 
     //Free the memory
-    cudaFree(&dataD);
-    cudaFree(&dataR);
+    cudaFree(dataD);
+    cudaFree(dataR);
 
     delete[] DD;
     delete[] DR;
     delete[] RR;
-    cudaFree(&DD_A);
-    cudaFree(&RR_A);
-    cudaFree(&DR_A);
-    cudaFree(&DD_B);
-    cudaFree(&RR_B);
-    cudaFree(&DR_B);
+    cudaFree(DD_A);
+    cudaFree(RR_A);
+    cudaFree(DR_A);
+    cudaFree(DD_B);
+    cudaFree(RR_B);
+    cudaFree(DR_B);
 
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
-            cudaFree(&*(*(nodeR+i)+j));
-            cudaFree(&*(*(nodeD+i)+j));
+            cudaFree(*(*(nodeR+i)+j));
+            cudaFree(*(*(nodeD+i)+j));
         }
-        cudaFree(&*(nodeR+i));
-        cudaFree(&*(nodeD+i));
+        cudaFree(*(nodeR+i));
+        cudaFree(*(nodeD+i));
     }
-    cudaFree(&nodeR);
-    cudaFree(&nodeD);
+    cudaFree(nodeR);
+    cudaFree(nodeD);
+
+    cudaError_t error = cudaGetLastError(); 
+    cout << "The error code is " << error << endl;
 
     cout << "Programa Terminado..." << endl;
     return 0;

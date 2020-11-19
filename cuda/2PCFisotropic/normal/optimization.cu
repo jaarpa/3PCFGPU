@@ -438,7 +438,7 @@ int main(int argc, char **argv){
 
             //Check here for errors
             cudaError_t error = cudaGetLastError(); 
-            cout << "The error code is " << error << endl;
+            cout << "The cuda error code is " << error << endl;
             if(error != 0)
             {
             // print the CUDA error message and exit
@@ -478,7 +478,7 @@ int main(int argc, char **argv){
 
             //Check here for errors
             error = cudaGetLastError(); 
-            cout << "The error code is " << error << endl;
+            cout << "The cuda error code is " << error << endl;
         }
 
     }
@@ -508,6 +508,9 @@ int main(int argc, char **argv){
     cudaFree(DD_B);
     cudaFree(RR_B);
     cudaFree(DR_B);
+
+    error = cudaGetLastError(); 
+    cout << "The cuda error code is " << error << endl;
 
     cout << "Programa Terminado..." << endl;
     return 0;
