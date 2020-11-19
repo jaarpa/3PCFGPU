@@ -47,7 +47,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
     }
 
     double candidate_size_box=0;
-    double max_component;
+    double max_component=0;
     for ( int c = 0; c < pts; c++) //Reads line by line and stores each c line in the c PointW3D element of the array
     {
         file >> datos[c].x >> datos[c].y >> datos[c].z >> datos[c].w;
@@ -340,7 +340,7 @@ int main(int argc, char **argv){
 	
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax = stof(argv[5]);
-    float size_box, r_size_box;
+    float size_box = 0;//, r_size_box;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
@@ -380,7 +380,7 @@ int main(int argc, char **argv){
 	// Open and read the files to store the data in the arrays
 	open_files(argv[1], np, dataD, size_box);
     //open_files(argv[2], np, dataR, r_size_box);
-    cout << size_box << endl;
+    cout << "The size box is "<< size_box << endl;
     float size_node = 2.176*(size_box/pow((float)(np),1/3.));
     unsigned int partitions = (int)(ceil(size_box/size_node));
 
