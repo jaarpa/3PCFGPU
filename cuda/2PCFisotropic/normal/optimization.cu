@@ -414,9 +414,9 @@ int main(int argc, char **argv){
 
             //Check here for errors
             cudaError_t error = cudaGetLastError(); 
-            cout << "The cuda error code is " << error << endl;
             if(error != 0)
             {
+            cout << "The cuda error code is " << error << endl;
             // print the CUDA error message and exit
             printf("CUDA error: %s\n", cudaGetErrorString(error));
             outfile.open("time_results.dat", ios_base::app); // append instead of overwrite
@@ -450,9 +450,9 @@ int main(int argc, char **argv){
 
             //Check here for errors
             error = cudaGetLastError(); 
-            cout << "The cuda error code is " << error << endl;
             if(error != 0)
             {
+            cout << "The cuda error code is " << error << endl;
             // print the CUDA error message and exit
             printf("CUDA error: %s\n", cudaGetErrorString(error));
             outfile.open("time_results.dat", ios_base::app); // append instead of overwrite
@@ -493,9 +493,9 @@ int main(int argc, char **argv){
 
             //Check here for errors
             error = cudaGetLastError(); 
-            cout << "The cuda error code is " << error << endl;
             if(error != 0)
             {
+            cout << "The cuda error code is " << error << endl;
             // print the CUDA error message and exit
             printf("CUDA error: %s\n", cudaGetErrorString(error));
             outfile.open("time_results.dat", ios_base::app); // append instead of overwrite

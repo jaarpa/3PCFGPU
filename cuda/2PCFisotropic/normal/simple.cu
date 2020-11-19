@@ -383,7 +383,6 @@ int main(int argc, char **argv){
 	// Open and read the files to store the data in the arrays
 	open_files(argv[1], np, dataD, size_box);
     //open_files(argv[2], np, dataR, r_size_box);
-    cout << "The size box is "<< size_box << endl;
     float size_node = 2.176*(size_box/pow((float)(np),1/3.));
     unsigned int partitions = (int)(ceil(size_box/size_node));
 
@@ -426,9 +425,9 @@ int main(int argc, char **argv){
 
     //Check here for errors
     cudaError_t error = cudaGetLastError(); 
-    cout << "The error code is " << error << endl;
     if(error != 0)
     {
+    cout << "The error code is " << error << endl;
       // print the CUDA error message and exit
       printf("CUDA error: %s\n", cudaGetErrorString(error));
       exit(-1);
