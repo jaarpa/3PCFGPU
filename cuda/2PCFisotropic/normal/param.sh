@@ -10,15 +10,15 @@ touch time_results.dat
 nvcc optimization.cu -o opt.out
 #c++ main.cpp -o serial.out
 echo "data_2GPc.dat \n" >> time_results.dat
-./par_s.out data_2GPc.dat dummy 3241792 20
+./opt.out data_2GPc.dat dummy 3241792 20
 echo "\n \n" >> time_results.dat
 
 echo "data_1GPc.dat \n" >> time_results.dat
-./par_s.out data_1GPc.dat dummy 405224 20
+./opt.out data_1GPc.dat dummy 405224 20
 echo "\n \n" >> time_results.dat
 
 echo "data_512MPc.dat \n" >> time_results.dat
-./par_s.out data_512MPc.dat dummy 50653 20
+./opt.out data_512MPc.dat dummy 50653 20
 
 # Imprimir en time_results...
 #File
