@@ -368,7 +368,7 @@ int main(int argc, char **argv){
     cudaMallocManaged(&DR_B, bn*sizeof(float));
 	
     // Open and read the files to store the data in the arrays
-    float size_box = 0, dummy_size_box=0; //Will be obtained from the data
+    float size_box = 0; //, dummy_size_box=0; //Will be obtained from the data
     open_files(argv[1], np, dataD, size_box);
     cout << "Successfully readed the file "<< argv[1] << endl;
     cout << "Size of the box of " << size_box << endl; 
@@ -382,7 +382,7 @@ int main(int argc, char **argv){
     for (dmax=20; dmax<120; dmax=dmax+10){
         cout << "Computing for a dmax of: "<< dmax <<endl;
 
-        for (int partitions=10; partitions<100; partitions+=10){
+        for (partitions=10; partitions<100; partitions+=10){
             size_node = size_box/((float)(partitions));
             cout << "Trying with " << partitions << " partitions and a size node of " << size_node << endl;
             //Initialize the histograms in 0
