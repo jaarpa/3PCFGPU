@@ -403,6 +403,11 @@ int main(int argc, char **argv){
             //Node ***nodeR;
             //cudaMallocManaged(&nodeR, partitions*sizeof(Node**));
             cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
+
+            //Check here for errors
+            cudaError_t error = cudaGetLastError(); 
+            cout << "The error code is " << error << endl;
+            
             for (int i=0; i<partitions; i++){
                 //cudaMallocManaged(&*(nodeR+i), partitions*sizeof(Node*));
                 cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*));
@@ -412,10 +417,6 @@ int main(int argc, char **argv){
                 }
             }
 
-
-            //Check here for errors
-            cudaError_t error = cudaGetLastError(); 
-            cout << "The error code is " << error << endl;
             
             //Classificate the data into the nodes
             make_nodos(nodeD, dataD, partitions, size_node, np);
@@ -441,7 +442,7 @@ int main(int argc, char **argv){
             cudaDeviceSynchronize();  
 
             //Check here for errors
-            cudaError_t error = cudaGetLastError(); 
+            error = cudaGetLastError(); 
             cout << "The error code is " << error << endl;
             if(error != 0)
             {
