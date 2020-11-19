@@ -398,16 +398,17 @@ int main(int argc, char **argv){
                 *(DR_B+i) = 0;
             }
 
+
+            //Check here for errors
+            cudaError_t error = cudaGetLastError(); 
+            cout << "The error code is " << error << endl;
+            
             //Init the nodes arrays
             Node ***nodeD;
             //Node ***nodeR;
             //cudaMallocManaged(&nodeR, partitions*sizeof(Node**));
             cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
 
-            //Check here for errors
-            cudaError_t error = cudaGetLastError(); 
-            cout << "The error code is " << error << endl;
-            
             for (int i=0; i<partitions; i++){
                 //cudaMallocManaged(&*(nodeR+i), partitions*sizeof(Node*));
                 cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*));
