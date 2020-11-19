@@ -468,10 +468,10 @@ int main(int argc, char **argv){
             for (int i=0; i<partitions; i++){
                 for (int j=0; j<partitions; j++){
                     //cudaFree(&*(*(nodeR+i)+j));
-                    cudaFree(&*(*(nodeD+i)+j));
+                    cudaFree(&(nodeD[i][j]));
                 }
                 //cudaFree(&*(nodeR+i));
-                cudaFree(&*(nodeD+i));
+                cudaFree(&(nodeD[i]));
             }
             //cudaFree(&nodeR);
             cudaFree(&nodeD);
