@@ -380,7 +380,7 @@ int main(int argc, char **argv){
 	// Open and read the files to store the data in the arrays
 	open_files(argv[1], np, dataD, size_box);
     //open_files(argv[2], np, dataR, r_size_box);
-
+    cout << size_box << endl;
     float size_node = 2.176*(size_box/pow((float)(np),1/3.));
     unsigned int partitions = (int)(ceil(size_box/size_node));
 
