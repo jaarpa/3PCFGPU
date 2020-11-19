@@ -479,7 +479,7 @@ int main(int argc, char **argv){
     cudaFree(nodeR);
     cudaFree(nodeD);
 
-    cudaError_t error = cudaGetLastError(); 
+    error = cudaGetLastError(); 
     cout << "The error code is " << error << endl;
 
     cout << "Programa Terminado..." << endl;
