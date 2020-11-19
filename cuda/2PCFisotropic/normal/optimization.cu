@@ -463,7 +463,7 @@ int main(int argc, char **argv){
 
             clock_t end = clock();
             double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-            printf("\nSpent time = %.4f seg.\n", time_spent );
+            //printf("\nSpent time = %.4f seg.\n", time_spent );
 
             //"time_results.dat"
             //n_points, size_box, dmax, partitions, node_size, time [s]
