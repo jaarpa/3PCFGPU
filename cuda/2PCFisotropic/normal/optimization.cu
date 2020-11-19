@@ -342,7 +342,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 
 int main(int argc, char **argv){
 	
-    unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
+    int np = stoi(argv[3]), bn = stoi(argv[4]);
     float dmax; // = stof(argv[5]);
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
@@ -411,6 +411,11 @@ int main(int argc, char **argv){
                     cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
                 }
             }
+
+
+            //Check here for errors
+            cudaError_t error = cudaGetLastError(); 
+            cout << "The error code is " << error << endl;
             
             //Classificate the data into the nodes
             make_nodos(nodeD, dataD, partitions, size_node, np);
