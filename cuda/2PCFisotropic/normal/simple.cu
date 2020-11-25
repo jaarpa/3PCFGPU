@@ -369,16 +369,19 @@ int main(int argc, char **argv){
     cudaMallocManaged(&DR_B, bn*sizeof(float));
     
     //Initialize the histograms in 0
+    float minfloat = numeric_limits<float>::lowest();
+    cout << "The largest val for a float is: "<< numeric_limits<float>::max() <<endl;
+    //double mindouble = numeric_limits<double>::lowest();
     for (int i = 0; i < bn; i++){
-        *(DD+i) = 0;
-        *(RR+i) = 0;
-        *(DR+i) = 0;
-        *(DD_A+i) = 0;
-        *(RR_A+i) = 0;
-        *(DR_A+i) = 0;
-        *(DD_B+i) = 0;
-        *(RR_B+i) = 0;
-        *(DR_B+i) = 0;
+        *(DD+i) = 0.0;
+        *(RR+i) = 0.0;
+        *(DR+i) = 0.0;
+        *(DD_A+i) = minfloat;
+        *(RR_A+i) = minfloat;
+        *(DR_A+i) = minfloat;
+        *(DD_B+i) = minfloat;
+        *(RR_B+i) = minfloat;
+        *(DR_B+i) = minfloat;
     }
 	
 	// Open and read the files to store the data in the arrays
