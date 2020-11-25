@@ -10,6 +10,27 @@
 
 using namespace std;
 
+/** CUDA check macro */
+#define cucheck(call) \
+	{\
+	cudaError_t res = (call);\
+	if(res != cudaSuccess) {\
+	const char* err_str = cudaGetErrorString(res);\
+	fprintf(stderr, "%s (%d): %s in %s", __FILE__, __LINE__, err_str, #call);	\
+	exit(-1);\
+	}\
+	}
+
+#define cucheck_dev(call) \
+	{\
+	cudaError_t res = (call);\
+	if(res != cudaSuccess) {\
+	const char* err_str = cudaGetErrorString(res);\
+	printf("%s (%d): %s in %s", __FILE__, __LINE__, err_str, #call);	\
+	assert(0);																												\
+	}\
+	}
+
 //Point with weight value. Structure
 
 struct Point3D{
@@ -107,7 +128,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     */
     lon++;
     PointW3D *array_aux;
-    cudaMallocManaged(&array_aux, lon*sizeof(PointW3D)); 
+    cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D))); 
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
         array_aux[i].y = array[i].y;
@@ -115,7 +136,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
         array_aux[i].w = array[i].w;
     }
 
-    cudaFree(array);
+    cucheck(cudaFree(array));
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y;
@@ -145,7 +166,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
                 nod[row][col][mom].nodepos.y = ((float)(col)*(size_node));
                 nod[row][col][mom].nodepos.x = ((float)(row)*(size_node));
                 nod[row][col][mom].len = 0;
-                cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D));
+                cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
             }
         }
     }
@@ -195,7 +216,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
-                //atomicAdd(&XX[bin],v);
+                atomicAdd(&XX[bin],v);
             }
         }
     }
@@ -233,7 +254,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
-                //atomicAdd(&XX[bin],v);
+                atomicAdd(&XX[bin],v);
             }
         }
     }
@@ -349,8 +370,8 @@ int main(int argc, char **argv){
     double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
-    cudaMallocManaged(&dataD, np*sizeof(PointW3D));
-    cudaMallocManaged(&dataR, np*sizeof(PointW3D));
+    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
+    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
@@ -467,8 +488,8 @@ int main(int argc, char **argv){
     cudaFree(DR_A);
     cudaFree(DD_B);
     cudaFree(RR_B);
-    cudaFree(DR_B);
-
+    cucheck(cudaFree(&DR_B));
+    //cudaFree(DR_B);
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
