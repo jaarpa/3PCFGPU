@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <limits>
 
 using namespace std;
 
@@ -440,9 +441,9 @@ int main(int argc, char **argv){
     //Collect the subhistograms data into the double precision main histograms
     //THis has to be done in CPU since GPU only allows single precision
     for (int i = 0; i < bn; i++){
-        DD[i] = (double)(DD_A[i]+ DD_B[i]);
-        RR[i] = (double)(RR_A[i]+ RR_B[i]);
-        DR[i] = (double)(DR_A[i]+ DR_B[i]);
+        DD[i] = (double)(DD_A[i])-(double)(minfloat) + (double)(DD_B[i])-(double)(minfloat);
+        RR[i] = (double)(RR_A[i])-(double)(minfloat) + (double)(RR_B[i])-(double)(minfloat);
+        DR[i] = (double)(DR_A[i])-(double)(minfloat) + (double)(DR_B[i])-(double)(minfloat);
     }
 
     cout << "Termine de hacer todos los histogramas" << endl;
