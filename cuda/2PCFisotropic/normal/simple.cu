@@ -195,7 +195,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
-                atomicAdd(&XX[bin],v);
+                //atomicAdd(&XX[bin],v);
             }
         }
     }
@@ -233,7 +233,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
-                atomicAdd(&XX[bin],v);
+                //atomicAdd(&XX[bin],v);
             }
         }
     }
