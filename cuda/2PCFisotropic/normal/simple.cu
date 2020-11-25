@@ -381,12 +381,12 @@ int main(int argc, char **argv){
     DD = new double[bn];
     RR = new double[bn];
     DR = new double[bn];
-    cudaMallocManaged(&DD_A, bn*sizeof(float));
-    cudaMallocManaged(&RR_A, bn*sizeof(float));
-    cudaMallocManaged(&DR_A, bn*sizeof(float));
-    cudaMallocManaged(&DD_B, bn*sizeof(float));
-    cudaMallocManaged(&RR_B, bn*sizeof(float));
-    cudaMallocManaged(&DR_B, bn*sizeof(float));
+    cucheck(cudaMallocManaged(&DD_A, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&RR_A, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&DR_A, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&DD_B, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&RR_B, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&DR_B, bn*sizeof(float)));
     
     //Initialize the histograms in 0
     for (int i = 0; i < bn; i++){
@@ -410,14 +410,14 @@ int main(int argc, char **argv){
     //Init the nodes arrays
     Node ***nodeD;
     Node ***nodeR;
-    cudaMallocManaged(&nodeR, partitions*sizeof(Node**));
-    cudaMallocManaged(&nodeD, partitions*sizeof(Node**));
+    cucheck(cudaMallocManaged(&nodeR, partitions*sizeof(Node**)));
+    cucheck(cudaMallocManaged(&nodeD, partitions*sizeof(Node**)));
     for (int i=0; i<partitions; i++){
-        cudaMallocManaged(&*(nodeR+i), partitions*sizeof(Node*));
-        cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*));
+        cucheck(cudaMallocManaged(&*(nodeR+i), partitions*sizeof(Node*)));
+        cucheck(cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
-            cudaMallocManaged(&*(*(nodeR+i)+j), partitions*sizeof(Node));
-            cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node));
+            cucheck(cudaMallocManaged(&*(*(nodeR+i)+j), partitions*sizeof(Node)));
+            cucheck(cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node)));
         }
     }
     
@@ -434,25 +434,15 @@ int main(int argc, char **argv){
 
     clock_t begin = clock();
     //Launch the kernels
-    make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
-    make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
-    //make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
-    //make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
-    //make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
-    //make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
+    cucheck(make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0));
+    cucheck(make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1));
+    //cucheck(make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0));
+    //cucheck(make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1));
+    //cucheck(make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0));
+    //cucheck(make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1));
 
     //Waits for the GPU to finish
     cudaDeviceSynchronize();  
-
-    //Check here for errors
-    cudaError_t error = cudaGetLastError(); 
-    if(error != 0)
-    {
-    cout << "The error code is " << error << endl;
-      // print the CUDA error message and exit
-      printf("CUDA error: %s\n", cudaGetErrorString(error));
-      exit(-1);
-    }
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
@@ -477,33 +467,29 @@ int main(int argc, char **argv){
 	cout << "Guarde histograma DR..." << endl;
 
     //Free the memory
-    cudaFree(dataD);
-    cudaFree(dataR);
+    cucheck(cudaFree(dataD));
+    cucheck(cudaFree(dataR));
 
     delete[] DD;
     delete[] DR;
     delete[] RR;
-    cudaFree(DD_A);
-    cudaFree(RR_A);
-    cudaFree(DR_A);
-    cudaFree(DD_B);
-    cudaFree(RR_B);
-    cucheck(cudaFree(&DR_B));
-    //cudaFree(DR_B);
+    cucheck(cudaFree(DD_A));
+    cucheck(cudaFree(RR_A));
+    cucheck(cudaFree(DR_A));
+    cucheck(cudaFree(DD_B));
+    cucheck(cudaFree(RR_B));
+    cucheck(cudaFree(DR_B));
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
-            cudaFree(*(*(nodeR+i)+j));
-            cudaFree(*(*(nodeD+i)+j));
+            cucheck(cudaFree(*(*(nodeR+i)+j)));
+            cucheck(cudaFree(*(*(nodeD+i)+j)));
         }
-        cudaFree(*(nodeR+i));
-        cudaFree(*(nodeD+i));
+        cucheck(cudaFree(*(nodeR+i)));
+        cucheck(cudaFree(*(nodeD+i)));
     }
-    cudaFree(nodeR);
-    cudaFree(nodeD);
-
-    error = cudaGetLastError(); 
-    cout << "The error code is " << error << endl;
+    cucheck(cudaFree(nodeR));
+    cucheck(cudaFree(nodeD));
 
     cout << "Programa Terminado..." << endl;
     return 0;
