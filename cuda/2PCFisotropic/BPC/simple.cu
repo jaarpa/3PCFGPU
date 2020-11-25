@@ -583,6 +583,7 @@ int main(int argc, char **argv){
     
     //Initialize the histograms in 0
     float minfloat = numeric_limits<float>::lowest();
+    cout << "The largest val for a float is: "<< numeric_limits<float>::max() <<endl;
     //double mindouble = numeric_limits<double>::lowest();
     for (int i = 0; i < bn; i++){
         *(DD+i) = 0.0;
