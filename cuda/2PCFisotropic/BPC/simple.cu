@@ -7,7 +7,6 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include <limits>
 
 using namespace std;
 
@@ -582,18 +581,16 @@ int main(int argc, char **argv){
     cudaMallocManaged(&DR_B, bn*sizeof(float));
     
     //Initialize the histograms in 0
-    float minfloat = numeric_limits<float>::lowest();
-    //double mindouble = numeric_limits<double>::lowest();
     for (int i = 0; i < bn; i++){
-        *(DD+i) = 0.0;
-        *(RR+i) = 0.0;
-        *(DR+i) = 0.0;
-        *(DD_A+i) = minfloat;
-        *(RR_A+i) = minfloat;
-        *(DR_A+i) = minfloat;
-        *(DD_B+i) = minfloat;
-        *(RR_B+i) = minfloat;
-        *(DR_B+i) = minfloat;
+        *(DD+i) = 0;
+        *(RR+i) = 0;
+        *(DR+i) = 0;
+        *(DD_A+i) = 0;
+        *(RR_A+i) = 0;
+        *(DR_A+i) = 0;
+        *(DD_B+i) = 0;
+        *(RR_B+i) = 0;
+        *(DR_B+i) = 0;
     }
 	
 	// Open and read the files to store the data in the arrays
@@ -656,9 +653,9 @@ int main(int argc, char **argv){
     //Collect the subhistograms data into the double precision main histograms
     //THis has to be done in CPU since GPU only allows single precision
     for (int i = 0; i < bn; i++){
-        DD[i] = (double)(DD_A[i])-(double)(minfloat) + (double)(DD_B[i])-(double)(minfloat);
-        RR[i] = (double)(RR_A[i])-(double)(minfloat) + (double)(RR_B[i])-(double)(minfloat);
-        DR[i] = (double)(DR_A[i])-(double)(minfloat) + (double)(DR_B[i])-(double)(minfloat);
+        DD[i] = (double)(DD_A[i]+ DD_B[i]);
+        RR[i] = (double)(RR_A[i]+ RR_B[i]);
+        DR[i] = (double)(DR_A[i]+ DR_B[i]);
     }
 
     cout << "Termine de hacer todos los histogramas" << endl;
