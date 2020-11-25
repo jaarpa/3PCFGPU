@@ -383,6 +383,10 @@ int main(int argc, char **argv){
         *(RR_B+i) = minfloat;
         *(DR_B+i) = minfloat;
     }
+	
+    for (int i = 0; i < bn; i++){
+        cout << DD_A[i] << endl;
+    }
 
 	// Open and read the files to store the data in the arrays
 	open_files(argv[1], np, dataD, size_box);
@@ -443,12 +447,6 @@ int main(int argc, char **argv){
 
     //Collect the subhistograms data into the double precision main histograms
     //THis has to be done in CPU since GPU only allows single precision
-
-	
-    for (int i = 0; i < bn; i++){
-        cout << DD_A[i] << endl;
-    }
-
     for (int i = 0; i < bn; i++){
         DD[i] = (double)(DD_A[i])-(double)(minfloat) + (double)(DD_B[i])-(double)(minfloat);
         RR[i] = (double)(RR_A[i])-(double)(minfloat) + (double)(RR_B[i])-(double)(minfloat);
