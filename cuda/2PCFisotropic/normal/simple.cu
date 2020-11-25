@@ -434,15 +434,15 @@ int main(int argc, char **argv){
 
     clock_t begin = clock();
     //Launch the kernels
-    cucheck(make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0));
-    cucheck(make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1));
-    //cucheck(make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0));
-    //cucheck(make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1));
-    //cucheck(make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0));
-    //cucheck(make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1));
+    make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
+    make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
+    //make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
+    //make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
+    //make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
+    //make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
 
     //Waits for the GPU to finish
-    cudaDeviceSynchronize();  
+    cucheck(cudaDeviceSynchronize());
 
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
