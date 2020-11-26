@@ -262,9 +262,9 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
-__global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at){
+__global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
     //If start at is 0 it does every even index, it does every odd index otherwise
-    int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
+    int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -443,9 +443,9 @@ int main(int argc, char **argv){
         dim3 block(threads,1,1);
         //One thread for each node
 
-        for (int j=0; j<2; j++){
+        for (int j=0; j<n_kernel_calls; j++){
             
-            make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j);
+            make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
             cucheck(cudaDeviceSynchronize());
             for (int i = 0; i < bn; i++){
 
