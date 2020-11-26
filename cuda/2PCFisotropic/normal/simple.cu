@@ -441,7 +441,7 @@ int main(int argc, char **argv){
 
     start_timmer = clock();
     //Launch the kernels
-    for (int i=0; i<2; i++){
+    for (int j=0; j<2; j++){
         //Initialize the histograms in 0
         for (int i = 0; i < bn; i++){
             *(DD_A+i) = 0;
@@ -449,7 +449,7 @@ int main(int argc, char **argv){
             *(DR_A+i) = 0;
         }
         
-        make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, i);
+        make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j);
         cucheck(cudaDeviceSynchronize());
         for (int i = 0; i < bn; i++){
             DD[i] = (double)(DD_A[i]) + (double)(DD_B[i]);
