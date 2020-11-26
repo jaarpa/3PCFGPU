@@ -452,10 +452,10 @@ int main(int argc, char **argv){
                 //TEST precision and max float value
                 if (DD_A[i]<=(DD_A[i]+1) || RR_A[i]<=(RR_A[i]+1) || DR_A[i]<=(DR_A[i]+1)){
                     enough_kernels = false;
+                    cout << "Not enough kernels the bin " << i << " exceed the maximum value " << endl;
+                    enough_kernels = true;
                 } else {
                     enough_kernels = true;
-                    cout << "Not enough kernels the bin " << i << " exceed the maximum value " << endl;
-                    enough_kernels = false;
                 }
 
                 DD[i] += (double)(DD_A[i]);
