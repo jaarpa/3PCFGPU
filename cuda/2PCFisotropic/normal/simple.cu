@@ -367,9 +367,9 @@ int main(int argc, char **argv){
 	/* =====================   Var declaration ===============================*/
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
     float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
-    int threads, blocks;
+    int threads, blocks, n_kernel_calls=2;
     clock_t start_timmer, stop_timmer;
-    bool enough_kernels = false;
+    bool enough_kernels = false, stop_kernel_calls;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
@@ -419,30 +419,30 @@ int main(int argc, char **argv){
     make_nodos(nodeD, dataD, partitions, size_node, np);
     //make_nodos(nodeR, dataR, partitions, size_node, np);
     
+    cout << "All set to compute the histograms " endl;
     //Starts loop to ensure the float histograms are not being overfilled.
-
-    //Initialize the histograms in 0
-    for (int i = 0; i < bn; i++){
-        *(DD+i) = 0;
-        *(RR+i) = 0;
-        *(DR+i) = 0;
-        *(DD_A+i) = 0;
-        *(RR_A+i) = 0;
-        *(DR_A+i) = 0;
-        *(DD_B+i) = 0;
-        *(RR_B+i) = 0;
-        *(DR_B+i) = 0;
-    }
-    //Get the dimensions of the GPU grid
-    threads = 512;
-    blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(2*threads))));
-    dim3 grid(blocks,1,1);
-    dim3 block(threads,1,1);
-    //One thread for each node
 
     start_timmer = clock();
     //Launch the kernels
     while (!enough_kernels){
+
+        //Restarts the histograms in 0
+        for (int i = 0; i < bn; i++){
+            *(DD+i) = 0;
+            *(RR+i) = 0;
+            *(DR+i) = 0;
+            *(DD_A+i) = 0;
+            *(RR_A+i) = 0;
+            *(DR_A+i) = 0;
+        }
+
+        //Get the dimensions of the GPU grid
+        threads = 512;
+        blocks = (int)(ceil((float)((float)(partitions*partitions*partitions)/(float)(n_kernel_calls*threads))));
+        dim3 grid(blocks,1,1);
+        dim3 block(threads,1,1);
+        //One thread for each node
+
         for (int j=0; j<2; j++){
             
             make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j);
@@ -452,8 +452,9 @@ int main(int argc, char **argv){
                 //TEST precision and max float value
                 if ((DD_A[i]+1)<=DD_A[i] || (RR_A[i]+1)<=RR_A[i] || (DR_A[i]+1)<=DR_A[i]){
                     enough_kernels = false;
-                    cout << "Not enough kernels the bin " << i << " exceed the maximum value " << endl;
-                    enough_kernels = true;
+                    cout << "Not enough kernels launched the bin " << i << " exceed the maximum value " << endl;
+                    n_kernel_calls++;
+                    break;
                 } else {
                     enough_kernels = true;
                 }
@@ -468,7 +469,13 @@ int main(int argc, char **argv){
                 DR_A[i] = 0.0;
             }
 
+            if (!enough_kernels){
+                break;
+            }
+
         }
+
+        cout << "n_kernel_calls: " << n_kernel_calls << endl;
     }
 
     /*
