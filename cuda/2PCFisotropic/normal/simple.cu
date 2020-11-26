@@ -378,8 +378,8 @@ int main(int argc, char **argv){
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
     float dmax = stof(argv[5]);
     float size_box = 0, size_node;//, r_size_box;
-    int threads, blocks;//, startkernel_at, kernel_calls=2;
-    clock_t start_timmer, end_timmer;
+    int threads, blocks://, startkernel_at, kernel_calls=2;
+    clock_t begin, end;
     double time_spent;
     //bool not_enogh_kernel_calls = true;
 
@@ -456,7 +456,7 @@ int main(int argc, char **argv){
         dim3 block(threads,1,1);
         //One thread for each node
 
-        start_timmer = clock();
+        begin = clock();
         //Launch the kernels
         make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
         make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
@@ -468,7 +468,7 @@ int main(int argc, char **argv){
         //Waits for the GPU to finish
         cucheck(cudaDeviceSynchronize());
 
-        end_timmer = clock();
+        end = clock();
         time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
         printf("\nSpent time = %.4f seg.\n", time_spent );
 
