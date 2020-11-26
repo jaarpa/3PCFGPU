@@ -452,10 +452,12 @@ int main(int argc, char **argv){
         make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j);
         cucheck(cudaDeviceSynchronize());
         for (int i = 0; i < bn; i++){
-            DD[i] = (double)(DD_A[i]) + (double)(DD_B[i]);
-            RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
-            DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
+            DD[i] = (double)(DD_A[i]);
+            RR[i] = (double)(RR_A[i]);
+            DR[i] = (double)(DR_A[i]);
         }
+
+        cout << "iteration: " << j << endl;
 
     }
 
