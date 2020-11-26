@@ -458,7 +458,8 @@ int main(int argc, char **argv){
         DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
     }
     cout << "TEsting precision" << endl;
-    cout << ((DD[2]+2)>DD[2]) << endl;
+    float test_prec = DD[2]+2;
+    cout << (test_prec>DD[2]) << endl;
 
     cout << "Termine de hacer todos los histogramas" << endl;
 	
