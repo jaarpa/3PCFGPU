@@ -378,10 +378,10 @@ int main(int argc, char **argv){
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
     float dmax = stof(argv[5]);
     float size_box = 0, size_node;//, r_size_box;
-    int threads, blocks://, startkernel_at, kernel_calls=2;
+    int threads, blocks, startkernel_at, kernel calls=2;
     clock_t begin, end;
     double time_spent;
-    //bool not_enogh_kernel_calls = true;
+    bool not_enogh_kernel_calls = true;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
