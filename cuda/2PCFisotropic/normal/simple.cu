@@ -446,9 +446,9 @@ int main(int argc, char **argv){
         make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j);
         cucheck(cudaDeviceSynchronize());
         for (int i = 0; i < bn; i++){
-            DD[i] = (double)(DD_A[i]);
-            RR[i] = (double)(RR_A[i]);
-            DR[i] = (double)(DR_A[i]);
+            DD[i] += (double)(DD_A[i]);
+            RR[i] += (double)(RR_A[i]);
+            DR[i] += (double)(DR_A[i]);
 
             //Initialize the histograms in 0
             DD_A[i] = 0.0;
