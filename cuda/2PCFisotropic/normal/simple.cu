@@ -494,13 +494,13 @@ int main(int argc, char **argv){
         cout << "n_kernel_calls: " << n_kernel_calls << endl;
         
         for (int i=0; i<n_kernel_calls; ++i){
-            cucheck(cudaFree(*(subDD+i));
-            cucheck(cudaFree(*(subRR+i));
-            cucheck(cudaFree(*(subDR+i));
+            cucheck(cudaFree(*(subDD+i)));
+            cucheck(cudaFree(*(subRR+i)));
+            cucheck(cudaFree(*(subDR+i)));
         }
-        cucheck(cudaFree(subDD);
-        cucheck(cudaFree(subRR);
-        cucheck(cudaFree(subDR);
+        cucheck(cudaFree(subDD));
+        cucheck(cudaFree(subRR));
+        cucheck(cudaFree(subDR));
 
     }
 
