@@ -441,6 +441,25 @@ int main(int argc, char **argv){
 
     start_timmer = clock();
     //Launch the kernels
+    for (int i=0; i<2; i++){
+        //Initialize the histograms in 0
+        for (int i = 0; i < bn; i++){
+            *(DD_A+i) = 0;
+            *(RR_A+i) = 0;
+            *(DR_A+i) = 0;
+        }
+        
+        make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, i);
+        cucheck(cudaDeviceSynchronize());
+        for (int i = 0; i < bn; i++){
+            DD[i] = (double)(DD_A[i]) + (double)(DD_B[i]);
+            RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
+            DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
+        }
+
+    }
+
+    /*
     make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
     make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
     //make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
@@ -463,6 +482,7 @@ int main(int argc, char **argv){
     cout << "TEsting precision" << endl;
     float test_prec = DD[10]+2;
     cout << (test_prec>DD[10]) << endl;
+    */
 
     stop_timmer = clock();
     double time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
