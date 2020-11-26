@@ -218,7 +218,8 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
-                atomicAdd(&XX[bin],v);
+                //atomicAdd(&XX[bin],v);
+                XX[bin]+=v;
             }
         }
     }
@@ -256,13 +257,14 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             if (d<=dd_max+1){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
-                atomicAdd(&XX[bin],v);
+                //atomicAdd(&XX[bin],v);
+                XX[bin]+=v;
             }
         }
     }
 }
 
-__global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at){
+__global__ void make_histoXX(float *XX_g, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at){
     //If start at is 0 it does every even index, it does every odd index otherwise
     int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
     if (idx<(partitions*partitions*partitions)){
@@ -272,6 +274,11 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
         int row = idx%partitions;
         
         if (nodeD[row][col][mom].len > 0){
+            float *XX;
+            XX = new float[bn];
+            for(int i=0; i<bn; i++){
+                XX[i]=0.0;
+            }
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
@@ -320,7 +327,11 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
                     }
                 }
             }
-            
+
+            for(int i=0; i<bn; i++){
+                atomicAdd(&XX_g[i],XX[i]);
+            }
+            delete[] XX;
         }
     }
 }
@@ -363,21 +374,26 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 }
 
 int main(int argc, char **argv){
-	
-    unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
+	/* Variable declatations */
+    unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
     float dmax = stof(argv[5]);
-    float size_box = 0;//, r_size_box;
+    float size_box = 0, size_node;//, r_size_box;
+    int threads, blocks, startkernel_at, kernel calls=2;
+    clock_t begin, end;
+    double time_spent;
+    bool not_enogh_kernel_calls = true;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
-    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
-    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
+    /* Memory allocation */
+    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
+    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
     // Allocate memory for the histogram as double
     // And the subhistograms as simple presision floats
     DD = new double[bn];
@@ -389,27 +405,16 @@ int main(int argc, char **argv){
     cucheck(cudaMallocManaged(&DD_B, bn*sizeof(float)));
     cucheck(cudaMallocManaged(&RR_B, bn*sizeof(float)));
     cucheck(cudaMallocManaged(&DR_B, bn*sizeof(float)));
-    
-    //Initialize the histograms in 0
-    for (int i = 0; i < bn; i++){
-        *(DD+i) = 0;
-        *(RR+i) = 0;
-        *(DR+i) = 0;
-        *(DD_A+i) = 0;
-        *(RR_A+i) = 0;
-        *(DR_A+i) = 0;
-        *(DD_B+i) = 0;
-        *(RR_B+i) = 0;
-        *(DR_B+i) = 0;
-    }
 	
 	// Open and read the files to store the data in the arrays
-	open_files(argv[1], np, dataD, size_box);
+	open_files(argv[1], np, dataD, size_box); //This function also determines the box size
     //open_files(argv[2], np, dataR, r_size_box);
-    float size_node = 2.176*(size_box/pow((float)(np),1/3.));
-    unsigned int partitions = (int)(ceil(size_box/size_node));
 
-    //Init the nodes arrays
+    //Calculate the nodes partitions
+    size_node = 2.176*(size_box/pow((float)(np),1/3.));
+    partitions = (int)(ceil(size_box/size_node));
+
+    //Allocate memory for the nodes
     Node ***nodeD;
     Node ***nodeR;
     cucheck(cudaMallocManaged(&nodeR, partitions*sizeof(Node**)));
@@ -426,40 +431,58 @@ int main(int argc, char **argv){
     //Classificate the data into the nodes
     make_nodos(nodeD, dataD, partitions, size_node, np);
     //make_nodos(nodeR, dataR, partitions, size_node, np);
+    
+    //Start the loop to ensure enough kernel calls are made to count all the distances
 
-    //Get the dimensions of the GPU grid
-    int threads = 512;
-    int blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(2*threads))));
-    dim3 grid(blocks,1,1);
-    dim3 block(threads,1,1);
-    //One thread for each node
+    //while (not_enogh_kernel_calls){
 
-    clock_t begin = clock();
-    //Launch the kernels
-    make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
-    make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
-    //make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
-    //make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
-    //make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
-    //make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
+        //Initialize the histograms in 0
+        for (int i = 0; i < bn; i++){
+            *(DD+i) = 0;
+            *(RR+i) = 0;
+            *(DR+i) = 0;
+            *(DD_A+i) = 0;
+            *(RR_A+i) = 0;
+            *(DR_A+i) = 0;
+            *(DD_B+i) = 0;
+            *(RR_B+i) = 0;
+            *(DR_B+i) = 0;
+        }
 
-    //Waits for the GPU to finish
-    cucheck(cudaDeviceSynchronize());
+        //Get the dimensions of the GPU grid
+        threads = 512;
+        blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(2*threads))));
+        dim3 grid(blocks,1,1);
+        dim3 block(threads,1,1);
+        //One thread for each node
 
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("\nSpent time = %.4f seg.\n", time_spent );
+        begin = clock();
+        //Launch the kernels
+        make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
+        make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
+        //make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
+        //make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
+        //make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
+        //make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
 
-    //Collect the subhistograms data into the double precision main histograms
-    //THis has to be done in CPU since GPU only allows single precision
-    for (int i = 0; i < bn; i++){
-        DD[i] = (double)(DD_A[i]) + (double)(DD_B[i]);
-        RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
-        DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
-    }
-    cout << "TEsting precision" << endl;
-    float test_prec = DD[10]+2;
-    cout << (test_prec>DD[10]) << endl;
+        //Waits for the GPU to finish
+        cucheck(cudaDeviceSynchronize());
+
+        end = clock();
+        time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+        printf("\nSpent time = %.4f seg.\n", time_spent );
+
+        //Collect the subhistograms data into the double precision main histograms
+        //THis has to be done in CPU since GPU only allows single precision
+        for (int i = 0; i < bn; i++){
+            DD[i] = (double)(DD_A[i]) + (double)(DD_B[i]);
+            RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
+            DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
+        }
+
+        //not_enogh_kernel_calls = False; //Stops if the max value of float has not been reached in any of the bins of any histogram
+    //}
+
 
     cout << "Termine de hacer todos los histogramas" << endl;
 	
