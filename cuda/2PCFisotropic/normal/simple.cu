@@ -371,9 +371,9 @@ int main(int argc, char **argv){
     clock_t start_timmer, stop_timmer;
     bool enough_kernels = false;
 
-    n_kernel_calls = (np==405224)*5 + (np<405224)*2 + (np>405224)*42
+    n_kernel_calls = (np==405224)*5 + (np<405224)*2 + (np>405224)*42;
 
-    float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
+    float *subDD, *subRR, *subDR;
     double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
@@ -452,7 +452,7 @@ int main(int argc, char **argv){
                 if ((subDD[i]+1)<=subDD[i] || (subRR[i]+1)<=subRR[i] || (subDR[i]+1)<=subDR[i]){
                     enough_kernels = false;
                     cout << "Not enough kernels launched the bin " << i << " exceed the maximum value " << endl;
-                    cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+1 << "kernel launches" << << endl;
+                    cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+1 << "kernel launches" << endl;
                     n_kernel_calls++;
                     break;
                 } else {
@@ -503,9 +503,6 @@ int main(int argc, char **argv){
     cucheck(cudaFree(subDD));
     cucheck(cudaFree(subRR));
     cucheck(cudaFree(subDR));
-    cucheck(cudaFree(DD_B));
-    cucheck(cudaFree(RR_B));
-    cucheck(cudaFree(DR_B));
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
