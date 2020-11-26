@@ -469,7 +469,7 @@ int main(int argc, char **argv){
         cucheck(cudaDeviceSynchronize());
 
         end_timmer = clock();
-        time_spent = (double)(end_timmer - start_timmer) / CLOCKS_PER_SEC;
+        time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
         printf("\nSpent time = %.4f seg.\n", time_spent );
 
         //Collect the subhistograms data into the double precision main histograms
