@@ -371,7 +371,7 @@ int main(int argc, char **argv){
     clock_t start_timmer, stop_timmer;
     bool enough_kernels = false;
 
-    n_kernel_calls = (np==405224)*5 + (np<405224)*2 + (np>405224)*42;
+    n_kernel_calls = 2 + (np==405224)*3 + (np>405224)*42; //This should depend of the number of points, its density, and the number of bins
 
     float *subDD, *subRR, *subDR;
     double *DD, *RR, *DR;
