@@ -369,7 +369,7 @@ int main(int argc, char **argv){
     float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
     int threads, blocks, n_kernel_calls=2;
     clock_t start_timmer, stop_timmer;
-    bool enough_kernels = false, stop_kernel_calls;
+    bool enough_kernels = false;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
@@ -419,7 +419,7 @@ int main(int argc, char **argv){
     make_nodos(nodeD, dataD, partitions, size_node, np);
     //make_nodos(nodeR, dataR, partitions, size_node, np);
     
-    cout << "All set to compute the histograms " endl;
+    cout << "All set to compute the histograms " << endl;
     //Starts loop to ensure the float histograms are not being overfilled.
 
     start_timmer = clock();
