@@ -363,21 +363,24 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 }
 
 int main(int argc, char **argv){
-	
-    unsigned int np = stoi(argv[3]), bn = stoi(argv[4]);
-    float dmax = stof(argv[5]);
-    float size_box = 0;//, r_size_box;
+
+	/* =====================   Var declaration ===============================*/
+    unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
+    float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
+    int threads, blocks;
+    clock_t start_timmer, stop_timmer;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
-    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
-    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
+    /* =======================  Memory allocation ============================*/
+    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
+    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
     // Allocate memory for the histogram as double
     // And the subhistograms as simple presision floats
     DD = new double[bn];
@@ -389,27 +392,15 @@ int main(int argc, char **argv){
     cucheck(cudaMallocManaged(&DD_B, bn*sizeof(float)));
     cucheck(cudaMallocManaged(&RR_B, bn*sizeof(float)));
     cucheck(cudaMallocManaged(&DR_B, bn*sizeof(float)));
-    
-    //Initialize the histograms in 0
-    for (int i = 0; i < bn; i++){
-        *(DD+i) = 0;
-        *(RR+i) = 0;
-        *(DR+i) = 0;
-        *(DD_A+i) = 0;
-        *(RR_A+i) = 0;
-        *(DR_A+i) = 0;
-        *(DD_B+i) = 0;
-        *(RR_B+i) = 0;
-        *(DR_B+i) = 0;
-    }
+
 	
 	// Open and read the files to store the data in the arrays
-	open_files(argv[1], np, dataD, size_box);
+	open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
     //open_files(argv[2], np, dataR, r_size_box);
-    float size_node = 2.176*(size_box/pow((float)(np),1/3.));
-    unsigned int partitions = (int)(ceil(size_box/size_node));
+    size_node = 2.176*(size_box/pow((float)(np),1/3.));
+    partitions = (int)(ceil(size_box/size_node));
 
-    //Init the nodes arrays
+    //Allocate memory for the nodes depending of how many partitions there are.
     Node ***nodeD;
     Node ***nodeR;
     cucheck(cudaMallocManaged(&nodeR, partitions*sizeof(Node**)));
@@ -426,15 +417,29 @@ int main(int argc, char **argv){
     //Classificate the data into the nodes
     make_nodos(nodeD, dataD, partitions, size_node, np);
     //make_nodos(nodeR, dataR, partitions, size_node, np);
+    
+    //Starts loop to ensure the float histograms are not being overfilled.
 
+    //Initialize the histograms in 0
+    for (int i = 0; i < bn; i++){
+        *(DD+i) = 0;
+        *(RR+i) = 0;
+        *(DR+i) = 0;
+        *(DD_A+i) = 0;
+        *(RR_A+i) = 0;
+        *(DR_A+i) = 0;
+        *(DD_B+i) = 0;
+        *(RR_B+i) = 0;
+        *(DR_B+i) = 0;
+    }
     //Get the dimensions of the GPU grid
-    int threads = 512;
-    int blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(2*threads))));
+    threads = 512;
+    blocks = (int)(ceil((float)((partitions*partitions*partitions)/(float)(2*threads))));
     dim3 grid(blocks,1,1);
     dim3 block(threads,1,1);
     //One thread for each node
 
-    clock_t begin = clock();
+    start_timmer = clock();
     //Launch the kernels
     make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
     make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
@@ -446,9 +451,6 @@ int main(int argc, char **argv){
     //Waits for the GPU to finish
     cucheck(cudaDeviceSynchronize());
 
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("\nSpent time = %.4f seg.\n", time_spent );
 
     //Collect the subhistograms data into the double precision main histograms
     //THis has to be done in CPU since GPU only allows single precision
@@ -457,9 +459,14 @@ int main(int argc, char **argv){
         RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
         DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
     }
+
     cout << "TEsting precision" << endl;
     float test_prec = DD[10]+2;
     cout << (test_prec>DD[10]) << endl;
+
+    stop_timmer = clock();
+    double time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
+    printf("\nSpent time = %.4f seg.\n", time_spent );
 
     cout << "Termine de hacer todos los histogramas" << endl;
 	
@@ -471,6 +478,7 @@ int main(int argc, char **argv){
 	save_histogram(nameDR, bn, DR);
 	cout << "Guarde histograma DR..." << endl;
 
+    /* =======================  Free memory ============================*/
     //Free the memory
     cucheck(cudaFree(dataD));
     cucheck(cudaFree(dataR));
