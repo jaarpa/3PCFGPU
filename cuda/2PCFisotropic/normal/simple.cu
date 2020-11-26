@@ -324,8 +324,8 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
         }
     }
 }
-__global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at){
-    int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
+__global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
+    int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -367,9 +367,11 @@ int main(int argc, char **argv){
 	/* =====================   Var declaration ===============================*/
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
     float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
-    int threads, blocks, n_kernel_calls=2;
+    int threads, blocks, n_kernel_calls;
     clock_t start_timmer, stop_timmer;
     bool enough_kernels = false;
+
+    n_kernel_calls = (np==405224)*5 + (np<405224)*2 + (np>405224)*42
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
@@ -387,12 +389,9 @@ int main(int argc, char **argv){
     DD = new double[bn];
     RR = new double[bn];
     DR = new double[bn];
-    cucheck(cudaMallocManaged(&DD_A, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&RR_A, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&DR_A, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&DD_B, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&RR_B, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&DR_B, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&subDD, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&subRR, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&subDR, bn*sizeof(float)));
 
 	
 	// Open and read the files to store the data in the arrays
@@ -431,9 +430,9 @@ int main(int argc, char **argv){
             *(DD+i) = 0;
             *(RR+i) = 0;
             *(DR+i) = 0;
-            *(DD_A+i) = 0;
-            *(RR_A+i) = 0;
-            *(DR_A+i) = 0;
+            *(subDD+i) = 0;
+            *(subRR+i) = 0;
+            *(subDR+i) = 0;
         }
 
         //Get the dimensions of the GPU grid
@@ -445,28 +444,29 @@ int main(int argc, char **argv){
 
         for (int j=0; j<n_kernel_calls; j++){
             
-            make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            make_histoXX<<<grid,block>>>(subDD, nodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
             cucheck(cudaDeviceSynchronize());
             for (int i = 0; i < bn; i++){
 
                 //TEST precision and max float value
-                if ((DD_A[i]+1)<=DD_A[i] || (RR_A[i]+1)<=RR_A[i] || (DR_A[i]+1)<=DR_A[i]){
+                if ((subDD[i]+1)<=subDD[i] || (subRR[i]+1)<=subRR[i] || (subDR[i]+1)<=subDR[i]){
                     enough_kernels = false;
                     cout << "Not enough kernels launched the bin " << i << " exceed the maximum value " << endl;
+                    cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+1 << "kernel launches" << << endl;
                     n_kernel_calls++;
                     break;
                 } else {
                     enough_kernels = true;
                 }
 
-                DD[i] += (double)(DD_A[i]);
-                RR[i] += (double)(RR_A[i]);
-                DR[i] += (double)(DR_A[i]);
+                DD[i] += (double)(subDD[i]);
+                RR[i] += (double)(subRR[i]);
+                DR[i] += (double)(subDR[i]);
 
                 //Initialize the histograms in 0
-                DD_A[i] = 0.0;
-                RR_A[i] = 0.0;
-                DR_A[i] = 0.0;
+                subDD[i] = 0.0;
+                subRR[i] = 0.0;
+                subDR[i] = 0.0;
             }
 
             if (!enough_kernels){
@@ -477,27 +477,6 @@ int main(int argc, char **argv){
 
         cout << "n_kernel_calls: " << n_kernel_calls << endl;
     }
-
-    /*
-    make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, 0);
-    make_histoXX<<<grid,block>>>(DD_B, nodeD, partitions, bn, dmax, size_node, 1);
-    //make_histoXX<<<grid,block>>>(RR_A, nodeR, partitions, bn, dmax, size_node, 0);
-    //make_histoXX<<<grid,block>>>(RR_B, nodeR, partitions, bn, dmax, size_node, 1);
-    //make_histoXY<<<grid,block>>>(DR_A, nodeD, nodeR, partitions, bn, dmax, size_node, 0);
-    //make_histoXY<<<grid,block>>>(DR_B, nodeD, nodeR, partitions, bn, dmax, size_node, 1);
-
-    //Waits for the GPU to finish
-    cucheck(cudaDeviceSynchronize());
-
-
-    //Collect the subhistograms data into the double precision main histograms
-    //THis has to be done in CPU since GPU only allows single precision
-    for (int i = 0; i < bn; i++){
-        DD[i] = (double)(DD_A[i]) + (double)(DD_B[i]);
-        RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
-        DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
-    }
-    */
 
     stop_timmer = clock();
     double time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
@@ -521,9 +500,9 @@ int main(int argc, char **argv){
     delete[] DD;
     delete[] DR;
     delete[] RR;
-    cucheck(cudaFree(DD_A));
-    cucheck(cudaFree(RR_A));
-    cucheck(cudaFree(DR_A));
+    cucheck(cudaFree(subDD));
+    cucheck(cudaFree(subRR));
+    cucheck(cudaFree(subDR));
     cucheck(cudaFree(DD_B));
     cucheck(cudaFree(RR_B));
     cucheck(cudaFree(DR_B));
