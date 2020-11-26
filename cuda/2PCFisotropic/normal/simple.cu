@@ -369,11 +369,12 @@ int main(int argc, char **argv){
     float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
     int threads, blocks, n_kernel_calls;
     clock_t start_timmer, stop_timmer;
+    double time_spent;
     bool enough_kernels = false;
 
     n_kernel_calls = 2 + (np==405224)*3 + (np>405224)*42; //This should depend of the number of points, its density, and the number of bins
 
-    float *subDD, *subRR, *subDR;
+    float **subDD, **subRR, **subDR;
     double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
@@ -389,9 +390,9 @@ int main(int argc, char **argv){
     DD = new double[bn];
     RR = new double[bn];
     DR = new double[bn];
-    cucheck(cudaMallocManaged(&subDD, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&subRR, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&subDR, bn*sizeof(float)));
+    //cucheck(cudaMallocManaged(&subDD, bn*sizeof(float)));
+    //cucheck(cudaMallocManaged(&subRR, bn*sizeof(float)));
+    //cucheck(cudaMallocManaged(&subDR, bn*sizeof(float)));
 
 	
 	// Open and read the files to store the data in the arrays
@@ -425,14 +426,27 @@ int main(int argc, char **argv){
     //Launch the kernels
     while (!enough_kernels){
 
+        cucheck(cudaMallocManaged(&subDD, n_kernel_calls*sizeof(float*)));
+        cucheck(cudaMallocManaged(&subRR, n_kernel_calls*sizeof(float*)));
+        cucheck(cudaMallocManaged(&subDR, n_kernel_calls*sizeof(float*)));
+        for (int i=0; i<n_kernel_calls; ++i){
+            cucheck(cudaMallocManaged(&*(subDD+i), bn*sizeof(float)));
+            cucheck(cudaMallocManaged(&*(subRR+i), bn*sizeof(float)));
+            cucheck(cudaMallocManaged(&*(subDR+i), bn*sizeof(float)));
+
+            //Restarts the subhistograms in 0
+            for (int j = 0; j < bn; j++){
+                subDD[i][j] = 0.0;
+                subRR[i][j] = 0.0;
+                subDR[i][j] = 0.0;
+            }
+        }
+
         //Restarts the histograms in 0
         for (int i = 0; i < bn; i++){
             *(DD+i) = 0;
             *(RR+i) = 0;
             *(DR+i) = 0;
-            *(subDD+i) = 0;
-            *(subRR+i) = 0;
-            *(subDR+i) = 0;
         }
 
         //Get the dimensions of the GPU grid
@@ -444,12 +458,16 @@ int main(int argc, char **argv){
 
         for (int j=0; j<n_kernel_calls; j++){
             
-            make_histoXX<<<grid,block>>>(subDD, nodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
-            cucheck(cudaDeviceSynchronize());
+            make_histoXX<<<grid,block>>>(subDD[j], nodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+
+        }
+
+        cucheck(cudaDeviceSynchronize());
+        for (int j=0; j<n_kernel_calls; j++){
             for (int i = 0; i < bn; i++){
 
                 //TEST precision and max float value
-                if ((subDD[i]+1)<=subDD[i] || (subRR[i]+1)<=subRR[i] || (subDR[i]+1)<=subDR[i]){
+                if ((subDD[j][i]+1)<=subDD[j][i] || (subRR[j][i]+1)<=subRR[j][i] || (subDR[j][i]+1)<=subDR[j][i]){
                     enough_kernels = false;
                     cout << "Not enough kernels launched the bin " << i << " exceed the maximum value " << endl;
                     cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+1 << "kernel launches" << endl;
@@ -459,14 +477,10 @@ int main(int argc, char **argv){
                     enough_kernels = true;
                 }
 
-                DD[i] += (double)(subDD[i]);
-                RR[i] += (double)(subRR[i]);
-                DR[i] += (double)(subDR[i]);
+                DD[i] += (double)(subDD[j][i]);
+                RR[i] += (double)(subRR[j][i]);
+                DR[i] += (double)(subDR[j][i]);
 
-                //Initialize the histograms in 0
-                subDD[i] = 0.0;
-                subRR[i] = 0.0;
-                subDR[i] = 0.0;
             }
 
             if (!enough_kernels){
@@ -474,12 +488,23 @@ int main(int argc, char **argv){
             }
 
         }
+        
+        stop_timmer = clock();
 
         cout << "n_kernel_calls: " << n_kernel_calls << endl;
+        
+        for (int i=0; i<n_kernel_calls; ++i){
+            cucheck(cudaFree(*(subDD+i));
+            cucheck(cudaFree(*(subRR+i));
+            cucheck(cudaFree(*(subDR+i));
+        }
+        cucheck(cudaFree(subDD);
+        cucheck(cudaFree(subRR);
+        cucheck(cudaFree(subDR);
+
     }
 
-    stop_timmer = clock();
-    double time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
+    time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
     printf("\nSpent time = %.4f seg.\n", time_spent );
 
     cout << "Termine de hacer todos los histogramas" << endl;
@@ -500,9 +525,9 @@ int main(int argc, char **argv){
     delete[] DD;
     delete[] DR;
     delete[] RR;
-    cucheck(cudaFree(subDD));
-    cucheck(cudaFree(subRR));
-    cucheck(cudaFree(subDR));
+    //cucheck(cudaFree(subDD));
+    //cucheck(cudaFree(subRR));
+    //cucheck(cudaFree(subDR));
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
