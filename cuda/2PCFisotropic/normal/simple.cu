@@ -2,6 +2,8 @@
 
 // For dynamic parallelism
 // nvcc -arch=sm_35 -rdc=true dynamic.cu -lcudadevrt -o par_d.out && ./par_d.out data_5K.dat rand0_5K.dat 5000 30 50
+#include <assert.h>
+#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -451,9 +453,9 @@ int main(int argc, char **argv){
     //Collect the subhistograms data into the double precision main histograms
     //THis has to be done in CPU since GPU only allows single precision
     for (int i = 0; i < bn; i++){
-        DD[i] = (double)(DD_A[i]+ DD_B[i]);
-        RR[i] = (double)(RR_A[i]+ RR_B[i]);
-        DR[i] = (double)(DR_A[i]+ DR_B[i]);
+        DD[i] = (double)(DD_A[i]) + (double)(DD_B[i]);
+        RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
+        DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
     }
 
     cout << "Termine de hacer todos los histogramas" << endl;
