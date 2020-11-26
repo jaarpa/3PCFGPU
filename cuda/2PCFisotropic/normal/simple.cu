@@ -369,6 +369,7 @@ int main(int argc, char **argv){
     float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
     int threads, blocks;
     clock_t start_timmer, stop_timmer;
+    bool enough_kernels = false;
 
     float *DD_A, *RR_A, *DR_A, *DD_B, *RR_B, *DR_B;
     double *DD, *RR, *DR;
@@ -441,23 +442,33 @@ int main(int argc, char **argv){
 
     start_timmer = clock();
     //Launch the kernels
-    for (int j=0; j<2; j++){
-        
-        make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j);
-        cucheck(cudaDeviceSynchronize());
-        for (int i = 0; i < bn; i++){
-            DD[i] += (double)(DD_A[i]);
-            RR[i] += (double)(RR_A[i]);
-            DR[i] += (double)(DR_A[i]);
+    while (!enough_kernels){
+        for (int j=0; j<2; j++){
+            
+            make_histoXX<<<grid,block>>>(DD_A, nodeD, partitions, bn, dmax, size_node, j);
+            cucheck(cudaDeviceSynchronize());
+            for (int i = 0; i < bn; i++){
 
-            //Initialize the histograms in 0
-            DD_A[i] = 0.0;
-            RR_A[i] = 0.0;
-            DR_A[i] = 0.0;
+                //TEST precision and max float value
+                if (DD_A[i]<=(DD_A[i]+1) || RR_A[i]<=(RR_A[i]+1) || DR_A[i]<=(DR_A[i]+1)){
+                    enough_kernels = false;
+                } else {
+                    enough_kernels = true;
+                    cout << "Not enough kernels the bin " << i << " exceed the maximum value " << endl;
+                    enough_kernels = false;
+                }
+
+                DD[i] += (double)(DD_A[i]);
+                RR[i] += (double)(RR_A[i]);
+                DR[i] += (double)(DR_A[i]);
+
+                //Initialize the histograms in 0
+                DD_A[i] = 0.0;
+                RR_A[i] = 0.0;
+                DR_A[i] = 0.0;
+            }
+
         }
-
-        cout << "iteration: " << j << endl;
-
     }
 
     /*
@@ -479,10 +490,6 @@ int main(int argc, char **argv){
         RR[i] = (double)(RR_A[i]) + (double)(RR_B[i]);
         DR[i] = (double)(DR_A[i]) + (double)(DR_B[i]);
     }
-
-    cout << "TEsting precision" << endl;
-    float test_prec = DD[10]+2;
-    cout << (test_prec>DD[10]) << endl;
     */
 
     stop_timmer = clock();
