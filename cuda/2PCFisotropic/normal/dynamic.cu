@@ -170,7 +170,6 @@ __global__ void count_distances11(float *XX, PointW3D *elements, int len, float 
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
                 atomicAdd(&XX[bin],v);
-                //XX[bin] += v
             }
         }
     }
@@ -209,7 +208,6 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
                 atomicAdd(&XX[bin],v);
-                //XX[bin] += v
             }
         }
     }
@@ -295,7 +293,7 @@ __global__ void XYZ_direction(float *XX, Node ***nodeD, int partitions, float dd
 
 }
 
-__global__ void make_histoXX(float *XX_g, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at){
+__global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at){
     //If start at is 0 it does every even index, it does every odd index otherwise
     int idx = 2*(blockIdx.x * blockDim.x + threadIdx.x) + start_at;
     if (idx<(partitions*partitions*partitions)){
@@ -305,19 +303,6 @@ __global__ void make_histoXX(float *XX_g, Node ***nodeD, int partitions, int bn,
         int row = idx%partitions;
         
         if (nodeD[row][col][mom].len > 0){
-
-            float subXX_sum = 0;
-            float *XX,*XX_z,*XX_yz,*XX_xyz;
-            XX = new float[bn];
-            XX_z = new float[bn];
-            XX_yz = new float[bn];
-            XX_xyz = new float[bn];
-            for(int i=0; i<bn; i++){
-                XX[i]=0.0;
-                XX_z[i]=0.0;
-                XX_yz[i]=0.0;
-                XX_xyz[i]=0.0;
-            }
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float dd_max_node = dmax + size_node*sqrt(3.0);
@@ -329,22 +314,13 @@ __global__ void make_histoXX(float *XX_g, Node ***nodeD, int partitions, int bn,
 
             //Second node mobil in Z direction
             blocks = (int)(ceilf((float)(partitions-1)/32.0));
-            Z_direction<<<blocks,32>>>(XX_z, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            Z_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in YZ
-            YZ_direction<<<blocks,32>>>(XX_yz, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
+            YZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
 
             //Second node mobil in XYZ
-            XYZ_direction<<<blocks,32>>>(XX_xyz, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
-
-            for(int i=0; i<bn; i++){
-                subXX_sum = XX[i] + XX_z[i] + XX_yz[i] + XX_xyz[i];
-                atomicAdd(&XX_g[i],subXX_sum);
-            }
-            delete[] XX;
-            delete[] XX_z;
-            delete[] XX_yz;
-            delete[] XX_xyz;
+            XYZ_direction<<<blocks,32>>>(XX, nodeD, partitions, dd_max_node, ds, dd_max, row, col, mom);
             
         }
     }
