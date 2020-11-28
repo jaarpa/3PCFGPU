@@ -165,32 +165,31 @@ int main(int argc, char **argv){
     //Allocate memory for the nodes depending of how many partitions there are.
     Node ***hnodeD, ***dnodeD;
     hnodeD = new Node**[partitions];
-    //cucheck(cudaMalloc((void**)&dnodeD, partitions*sizeof(Node**))); 
-    //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
+    cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
     for (int i=0; i<partitions; i++){
         *(hnodeD+i) = new Node*[partitions];
-        //cucheck(cudaMalloc((void**)&*(dnodeD+i), partitions*sizeof(Node*)));
-        //cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
+        cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
             *(*(hnodeD+i)+j) = new Node[partitions];
-            //cucheck(cudaMalloc((void**)&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
-            //cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
+            cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
         }
     }
 
     make_nodos(hnodeD, dataD, size_node, size_box, np);
 
+    
     //Copy to device memory
     cucheck(cudaMalloc((void**)&dnodeD, partitions*partitions*partitions*sizeof(Node**))); //1D array
     int idx;
     PointW3D *d_node_elements;	// Points in the node
     for(int row=0; row<partitions; row++) { for(int col=0; col<partitions; col++) { for(int mom=0; mom<partitions; mom++) {
-        cucheck(cudaMalloc((void**)&d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D))); //1D array
+        //cucheck(cudaMalloc((void**)&d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D))); //1D array
         idx = mom*partitions*partitions+ col*partitions +row;
-        cucheck(cudaMemcpy(dnodeD[idx], hnodeD[row][col][mom], sizeof(Node), cudaMemcpyHostToDevice));
-        cucheck(cudaMemcpy(d_node_elements, hnodeD[row][col][mom]->elements,  hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyHostToDevice));
-        cucheck(cudaMemcpy(&(dnodeD[idx]->elements), &d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyDeviceToDevice));
-        cucheck(cudaFree(d_node_elements))
+        dnodeD[idx]=hnodeD[row][col][mom];
+        //cucheck(cudaMemcpy(dnodeD[idx], hnodeD[row][col][mom], sizeof(Node), cudaMemcpyHostToDevice));
+        //cucheck(cudaMemcpy(d_node_elements, hnodeD[row][col][mom]->elements,  hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyHostToDevice));
+        //cucheck(cudaMemcpy(&(dnodeD[idx]->elements), &d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyDeviceToDevice));
+        //cucheck(cudaFree(d_node_elements))
     }}}
 
 
