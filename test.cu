@@ -98,19 +98,27 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
     file.close();
 }
 
-
 //=================================================================== 
-
 void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
+    /*
+    This function manages adding points to an specific Node. It receives the previous array, longitude and point to add
+    and updates the previous array and length with the same array with the new point at the end and adds +1 to the length +1
+
+    It manages the memory allocation and free of the previous and new elements.
+    */
+
     lon++;
-    PointW3D *array_aux = new PointW3D[lon];
+    PointW3D *array_aux;
+    cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D))); 
+    //array_aux = new PointW3D[lon];
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
         array_aux[i].y = array[i].y;
         array_aux[i].z = array[i].z;
         array_aux[i].w = array[i].w;
     }
-    delete[] array;
+    cucheck(cudaFree(array));
+    //delete[] array;
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y; 
@@ -138,7 +146,8 @@ void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, uns
         nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+p_med;
         nod[row][col][mom].nodepos.x = ((float)(row)*(size_node))+p_med;
         nod[row][col][mom].len = 0;
-        nod[row][col][mom].elements = new PointW3D[0];
+        cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
+        //nod[row][col][mom].elements = new PointW3D[0];
     }
     }
     }
