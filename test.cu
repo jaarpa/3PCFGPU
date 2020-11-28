@@ -126,7 +126,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].w = _w; 
 }
 
-void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, unsigned int n_pts){
+void make_nodos(Node *nod, PointW3D *dat, float size_node, float size_box, unsigned int n_pts){
     /*
     Función para crear los nodos con los datos y puntos random
 
@@ -135,6 +135,7 @@ void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, uns
     dat: datos a dividir en nodos.
 
     */
+    int idx;
     int i, row, col, mom, partitions = (int)((size_box/size_node)+1);
     float p_med = size_node/2;
 
@@ -142,21 +143,23 @@ void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, uns
     for (row=0; row<partitions; row++){
     for (col=0; col<partitions; col++){
     for (mom=0; mom<partitions; mom++){
-        nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node))+p_med;
-        nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+p_med;
-        nod[row][col][mom].nodepos.x = ((float)(row)*(size_node))+p_med;
-        nod[row][col][mom].len = 0;
-        //cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
-        nod[row][col][mom].elements = new PointW3D[0];
+        idx = mom*partitions*partitions + col*partitions + partitions;
+        nod[idx].nodepos.z = ((float)(mom)*(size_node))+p_med;
+        nod[idx].nodepos.y = ((float)(col)*(size_node))+p_med;
+        nod[idx].nodepos.x = ((float)(row)*(size_node))+p_med;
+        nod[idx].len = 0;
+        //cucheck(cudaMallocManaged(&nod[idx].elements, sizeof(PointW3D)));
+        nod[idx].elements = new PointW3D[0];
     }
     }
     }
     // Llenamos los nodos con los puntos de dat:
     for (i=0; i<n_pts; ++i){
         row = (int)(dat[i].x/size_node);
-            col = (int)(dat[i].y/size_node);
-            mom = (int)(dat[i].z/size_node);
-        add( nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
+        col = (int)(dat[i].y/size_node);
+        mom = (int)(dat[i].z/size_node);
+        idx = mom*partitions*partitions + col*partitions + partitions;
+        add( nod[idx].elements, nod[idx].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
     }
 }
 
@@ -167,7 +170,8 @@ int main(int argc, char **argv){
     double time_spent;
 
     PointW3D *dataD;
-    dataD = new PointW3D[np];
+    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
+    //dataD = new PointW3D[np];
     
     open_files(argv[1], np, dataD, size_box);
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
@@ -175,18 +179,18 @@ int main(int argc, char **argv){
 
 
     //Allocate memory for the nodes depending of how many partitions there are.
-    Node ***hnodeD;
+    Node *hnodeD;
     //Node ***dnodeD;
-    hnodeD = new Node**[partitions];
+    hnodeD = new Node[partitions*partitions*partitions];
     //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
-    for (int i=0; i<partitions; i++){
-        *(hnodeD+i) = new Node*[partitions];
+    //for (int i=0; i<partitions; i++){
+        //*(hnodeD+i) = new Node*[partitions];
         //cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
-        for (int j=0; j<partitions; j++){
-            *(*(hnodeD+i)+j) = new Node[partitions];
+        //for (int j=0; j<partitions; j++){
+            //*(*(hnodeD+i)+j) = new Node[partitions];
             //cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
-        }
-    }
+        //}
+    //}
 
     Node *dnodeD;
     cucheck(cudaMalloc(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
@@ -197,51 +201,50 @@ int main(int argc, char **argv){
     make_nodos(hnodeD, dataD, size_node, size_box, np);
 
     //Copy to device memory
-    int idx;
-    for(int row=0;row<partitions;row++){for(int col=0; col<partitions; col++){for(int mom=0; mom<partitions; mom++){
-        idx = mom*partitions*partitions + col*partitions*partitions + row;
-        cudaMemcpy(dnodeD[idx], hnodeD[row][col][mom], sizeof(Node), cudaMemcpyHostToDevice);
-    }}}
+    cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
 
     stop_timmer = clock();
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
     printf("\nSpent time = %.4f seg.\n", time_spent );
 
-
+    int idx;
     int px=1,py=2,pz=3;
-    cout << "Node 1,2,3 " << "len: " << hnodeD[px][py][pz].len << "Position: " << hnodeD[px][py][pz].nodepos.x << ", " << hnodeD[px][py][pz].nodepos.y << ", " << hnodeD[px][py][pz].nodepos.z << endl;
+    idx = pz*partitions*partitions + py*partitions + px;
+    cout << "Node 1,2,3 " << "len: " << hnodeD[idx].len << "Position: " << hnodeD[idx].nodepos.x << ", " << hnodeD[idx].nodepos.y << ", " << hnodeD[idx].nodepos.z << endl;
     cout << "Elements: " << endl;
-    for (int i=0; i<hnodeD[px][py][pz].len; i++){
-        cout << hnodeD[px][py][pz].elements[i].x << ", " << hnodeD[px][py][pz].elements[i].y << ", " << hnodeD[px][py][pz].elements[i].z << endl;
+    for (int i=0; i<hnodeD[idx].len; i++){
+        cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
     }
 
     px=3,py=3,pz=3;
-    cout << "Node 3,3,3 " << "len: " << hnodeD[px][py][pz].len << "Position: " << hnodeD[px][py][pz].nodepos.x << ", " << hnodeD[px][py][pz].nodepos.y << ", " << hnodeD[px][py][pz].nodepos.z << endl;
+    idx = pz*partitions*partitions + py*partitions + px;
+    cout << "Node 3,3,3 " << "len: " << hnodeD[idx].len << "Position: " << hnodeD[idx].nodepos.x << ", " << hnodeD[idx].nodepos.y << ", " << hnodeD[idx].nodepos.z << endl;
     cout << "Elements: " << endl;
-    for (int i=0; i<hnodeD[px][py][pz].len; i++){
-        cout << hnodeD[px][py][pz].elements[i].x << ", " << hnodeD[px][py][pz].elements[i].y << ", " << hnodeD[px][py][pz].elements[i].z << endl;
+    for (int i=0; i<hnodeD[idx].len; i++){
+        cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
     }
     
     px=3,py=2,pz=1;
-    cout << "Node 3,2,1 " << "len: " << hnodeD[px][py][pz].len << "Position: " << hnodeD[px][py][pz].nodepos.x << ", " << hnodeD[px][py][pz].nodepos.y << ", " << hnodeD[px][py][pz].nodepos.z << endl;
+    idx = pz*partitions*partitions + py*partitions + px;
+    cout << "Node 3,2,1 " << "len: " << hnodeD[idx].len << "Position: " << hnodeD[idx].nodepos.x << ", " << hnodeD[idx].nodepos.y << ", " << hnodeD[idx].nodepos.z << endl;
     cout << "Elements: " << endl;
-    for (int i=0; i<hnodeD[px][py][pz].len; i++){
-        cout << hnodeD[px][py][pz].elements[i].x << ", " << hnodeD[px][py][pz].elements[i].y << ", " << hnodeD[px][py][pz].elements[i].z << endl;
+    for (int i=0; i<hnodeD[idx].len; i++){
+        cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
     }
 
-    for (int i=0; i<partitions; i++){
-        for (int j=0; j<partitions; j++){
-            delete[] hnodeD[i][j];
+    //for (int i=0; i<partitions; i++){
+        //for (int j=0; j<partitions; j++){
+            //delete[] hnodeD[i][j];
             //cucheck(cudaFree(*(*(dnodeD+i)+j)));
-        }
-        delete[] hnodeD[i];
+        //}
+        //delete[] hnodeD[i];
         //cucheck(cudaFree(*(dnodeD+i)));
-    }
+    //}
     delete[] hnodeD;
+    cucheck(cudaFree(dnodeD));
     
-    //cucheck(cudaFree(dnodeD));
-
-    delete[] dataD;
+    cucheck(cudaFree(dataD));
+    //delete[] dataD;
     
     cout << "Finished" << endl;
     return 0;
