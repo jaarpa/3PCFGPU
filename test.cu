@@ -1,4 +1,5 @@
-//nvcc test.cu -o t.out && ./t.out data_5K.dat 5000 20
+//nvcc test.cu -o t.out && ./t.out data_5K.dat 5000
+//nvcc test.cu -o t.out && ./t.out data_1GPc.dat 405224
 #include <assert.h>
 #include <stdio.h>
 #include <iostream>
@@ -151,7 +152,7 @@ void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, uns
 }
 
 int main(int argc, char **argv){
-    unsigned int np = stoi(argv[2]), bn = stoi(argv[3]), partitions;
+    unsigned int np = stoi(argv[2]), partitions;
     float size_node, size_box = 0;//, r_size_box;
     PointW3D *dataD;
     dataD = new PointW3D[np];
@@ -165,19 +166,33 @@ int main(int argc, char **argv){
     Node ***hnodeD, ***dnodeD;
     hnodeD = new Node**[partitions];
     //cucheck(cudaMalloc((void**)&dnodeD, partitions*sizeof(Node**))); 
-    cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
+    //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
     for (int i=0; i<partitions; i++){
         *(hnodeD+i) = new Node*[partitions];
         //cucheck(cudaMalloc((void**)&*(dnodeD+i), partitions*sizeof(Node*)));
-        cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
+        //cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
             *(*(hnodeD+i)+j) = new Node[partitions];
             //cucheck(cudaMalloc((void**)&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
-            cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
+            //cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
         }
     }
 
     make_nodos(hnodeD, dataD, size_node, size_box, np);
+
+    //Copy to device memory
+    cucheck(cudaMalloc((void**)&dnodeD, partitions*partitions*partitions*sizeof(Node**))); //1D array
+    int idx;
+    PointW3D *d_node_elements;	// Points in the node
+    for(int row=0; row<partitions; row++) { for(int col=0; col<partitions; col++) { for(int mom=0; mom<partitions; mom++) {
+        cucheck(cudaMalloc((void**)&d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D))); //1D array
+        idx = mom*partitions*partitions+ col*partitions +row;
+        cucheck(cudaMemcpy(dnodeD[idx], hnodeD[row][col][mom], sizeof(Node), cudaMemcpyHostToDevice));
+        cucheck(cudaMemcpy(d_node_elements, hnodeD[row][col][mom]->elements,  hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyHostToDevice));
+        cucheck(cudaMemcpy(&(dnodeD[idx]->elements), &d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyDeviceToDevice));
+        cucheck(cudaFree(d_node_elements))
+    }}}
+
 
     int px=1,py=2,pz=3;
     cout << "Node 1,2,3 " << "len: " << hnodeD[px][py][pz].len << "Position: " << hnodeD[px][py][pz].nodepos.x << ", " << hnodeD[px][py][pz].nodepos.y << ", " << hnodeD[px][py][pz].nodepos.z << endl;
@@ -203,12 +218,13 @@ int main(int argc, char **argv){
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
             delete[] hnodeD[i][j];
-            cucheck(cudaFree(*(*(dnodeD+i)+j)));
+            //cucheck(cudaFree(*(*(dnodeD+i)+j)));
         }
         delete[] hnodeD[i];
-        cucheck(cudaFree(*(dnodeD+i)));
+        //cucheck(cudaFree(*(dnodeD+i)));
     }
     delete[] hnodeD;
+    
     cucheck(cudaFree(dnodeD));
 
     delete[] dataD;
