@@ -154,9 +154,7 @@ int main(int argc, char **argv){
     unsigned int np = stoi(argv[2]), bn = stoi(argv[3]), partitions;
     float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
     PointW3D *dataD;
-    PointW3D *dataR;
-    dataD = new PointW3D[n_pts];
-    dataR = new PointW3D[n_pts];
+    dataD = new PointW3D[np];
     
     open_files(argv[1], np, dataD, size_box);
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
@@ -210,7 +208,9 @@ int main(int argc, char **argv){
     delete[] hnodeD;
     cucheck(cudaFree(dnodeD));
 
+    delete[] dataD;
+    
     cout << "Finished" << endl;
-    return 0
+    return 0;
 
 }
