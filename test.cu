@@ -154,6 +154,9 @@ void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, uns
 int main(int argc, char **argv){
     unsigned int np = stoi(argv[2]), partitions;
     float size_node, size_box = 0;//, r_size_box;
+    clock_t start_timmer, stop_timmer;
+    double time_spent;
+
     PointW3D *dataD;
     dataD = new PointW3D[np];
     
@@ -163,35 +166,25 @@ int main(int argc, char **argv){
 
 
     //Allocate memory for the nodes depending of how many partitions there are.
-    Node ***hnodeD, ***dnodeD;
+    Node ***hnodeD;//, ***dnodeD;
     hnodeD = new Node**[partitions];
-    cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
+    //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
     for (int i=0; i<partitions; i++){
         *(hnodeD+i) = new Node*[partitions];
-        cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
+        //cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
             *(*(hnodeD+i)+j) = new Node[partitions];
-            cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
+            //cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
         }
     }
-
+    start_timmer = clock();
     make_nodos(hnodeD, dataD, size_node, size_box, np);
 
-    
-    //Copy to device memory
-    cucheck(cudaMalloc((void**)&dnodeD, partitions*partitions*partitions*sizeof(Node**))); //1D array
-    int idx;
-    PointW3D *d_node_elements;	// Points in the node
-    for(int row=0; row<partitions; row++) { for(int col=0; col<partitions; col++) { for(int mom=0; mom<partitions; mom++) {
-        //cucheck(cudaMalloc((void**)&d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D))); //1D array
-        idx = mom*partitions*partitions+ col*partitions +row;
-        dnodeD[idx]=hnodeD[row][col][mom];
-        //cucheck(cudaMemcpy(dnodeD[idx], hnodeD[row][col][mom], sizeof(Node), cudaMemcpyHostToDevice));
-        //cucheck(cudaMemcpy(d_node_elements, hnodeD[row][col][mom]->elements,  hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyHostToDevice));
-        //cucheck(cudaMemcpy(&(dnodeD[idx]->elements), &d_node_elements, hnodeD[row][col][mom].len*sizeof(PointW3D), cudaMemcpyDeviceToDevice));
-        //cucheck(cudaFree(d_node_elements))
-    }}}
+    stop_timmer = clock();
+    time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
+    printf("\nSpent time = %.4f seg.\n", time_spent );
 
+    //Copy to device memory
 
     int px=1,py=2,pz=3;
     cout << "Node 1,2,3 " << "len: " << hnodeD[px][py][pz].len << "Position: " << hnodeD[px][py][pz].nodepos.x << ", " << hnodeD[px][py][pz].nodepos.y << ", " << hnodeD[px][py][pz].nodepos.z << endl;
@@ -224,7 +217,7 @@ int main(int argc, char **argv){
     }
     delete[] hnodeD;
     
-    cucheck(cudaFree(dnodeD));
+    //cucheck(cudaFree(dnodeD));
 
     delete[] dataD;
     
