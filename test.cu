@@ -56,7 +56,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
     /* Opens the daya files. Receives the file location, number of points to read and the array of points where the data is stored */
     ifstream file;
 
-    string mypathto_files = "../../../fake_DATA/DATOS/";
+    string mypathto_files = "fake_DATA/DATOS/";
     //This creates the full path to where I have my data files
     name_file.insert(0,mypathto_files);
 
@@ -152,7 +152,7 @@ void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, uns
 
 int main(int argc, char **argv){
     unsigned int np = stoi(argv[2]), bn = stoi(argv[3]), partitions;
-    float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
+    float size_node, size_box = 0;//, r_size_box;
     PointW3D *dataD;
     dataD = new PointW3D[np];
     
@@ -164,13 +164,16 @@ int main(int argc, char **argv){
     //Allocate memory for the nodes depending of how many partitions there are.
     Node ***hnodeD, ***dnodeD;
     hnodeD = new Node**[partitions];
-    cucheck(cudaMalloc((void**)&dnodeD, partitions*sizeof(Node**))); //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
+    //cucheck(cudaMalloc((void**)&dnodeD, partitions*sizeof(Node**))); 
+    cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
     for (int i=0; i<partitions; i++){
         *(hnodeD+i) = new Node*[partitions];
-        cucheck(cudaMalloc((void**)&*(dnodeD+i), partitions*sizeof(Node*)));  //cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
+        //cucheck(cudaMalloc((void**)&*(dnodeD+i), partitions*sizeof(Node*)));
+        cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
             *(*(hnodeD+i)+j) = new Node[partitions];
-            cucheck(cudaMalloc((void**)&*(*(dnodeD+i)+j), partitions*sizeof(Node)));  //cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
+            //cucheck(cudaMalloc((void**)&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
+            cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
         }
     }
 
