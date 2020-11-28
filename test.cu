@@ -117,7 +117,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].w = _w; 
 }
 
-void make_nodos(Node ***nod, PointW3D *dat){
+void make_nodos(Node ***nod, PointW3D *dat, float size_node, float size_box, unsigned int n_pts){
     /*
     Función para crear los nodos con los datos y puntos random
 
@@ -166,17 +166,17 @@ int main(int argc, char **argv){
     //Allocate memory for the nodes depending of how many partitions there are.
     Node ***hnodeD, ***dnodeD;
     hnodeD = new Node**[partitions];
-    cudaMalloc((void**)&x, N*sizeof(double)); //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
+    cucheck(cudaMalloc((void**)&dnodeD, partitions*sizeof(Node**))); //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
     for (int i=0; i<partitions; i++){
         *(hnodeD+i) = new Node*[partitions];
-        cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
+        cucheck(cudaMalloc((void**)&*(dnodeD+i), partitions*sizeof(Node*)));  //cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
             *(*(hnodeD+i)+j) = new Node[partitions];
-            cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
+            cucheck(cudaMalloc((void**)&*(*(dnodeD+i)+j), partitions*sizeof(Node)));  //cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
         }
     }
 
-    make_nodos(hnodeD, dataD, partitions, size_node, np);
+    make_nodos(hnodeD, dataD, size_node, size_box, np);
 
     int px=1,py=2,pz=3;
     cout << "Node 1,2,3 " << "len: " << hnodeD[px][py][pz].len << "Position: " << hnodeD[px][py][pz].nodepos.x << ", " << hnodeD[px][py][pz].nodepos.y << ", " << hnodeD[px][py][pz].nodepos.z << endl;
