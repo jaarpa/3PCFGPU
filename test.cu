@@ -1,3 +1,4 @@
+//nvcc test.cu -o t.out && ./t.out data_5K.dat 5000 20
 #include <assert.h>
 #include <stdio.h>
 #include <iostream>
@@ -99,7 +100,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
 
 //=================================================================== 
 
-void NODE2P::add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
+void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     lon++;
     PointW3D *array_aux = new PointW3D[lon];
     for (int i=0; i<lon-1; i++){
@@ -116,7 +117,7 @@ void NODE2P::add(PointW3D *&array, int &lon, float _x, float _y, float _z, float
     array[lon-1].w = _w; 
 }
 
-void NODE2P::make_nodos(Node ***nod, PointW3D *dat){
+void make_nodos(Node ***nod, PointW3D *dat){
     /*
     Función para crear los nodos con los datos y puntos random
 
