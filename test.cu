@@ -224,7 +224,7 @@ int main(int argc, char **argv){
     //}
 
     Node *dnodeD;
-    cucheck(cudaMalloc(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
+    cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
     cout << "Allocated the memory" << endl;
 
 
