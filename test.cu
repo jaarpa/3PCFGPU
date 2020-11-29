@@ -203,8 +203,8 @@ int main(int argc, char **argv){
     double time_spent;
 
     PointW3D *dataD;
-    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
-    //dataD = new PointW3D[np];
+    //cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
+    dataD = new PointW3D[np];
     
     open_files(argv[1], np, dataD, size_box);
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
@@ -283,8 +283,8 @@ int main(int argc, char **argv){
     delete[] hnodeD;
     cucheck(cudaFree(dnodeD));
     
-    cucheck(cudaFree(dataD));
-    //delete[] dataD;
+    //cucheck(cudaFree(dataD));
+    delete[] dataD;
     
     cout << "Finished" << endl;
     return 0;
