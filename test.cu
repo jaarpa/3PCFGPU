@@ -139,6 +139,8 @@ void make_nodos(Node *nod, PointW3D *dat, float size_node, float size_box, unsig
     int i, row, col, mom, partitions = (int)((size_box/size_node)+1);
     float p_med = size_node/2;
 
+    cout << "Partitions: "<< partitions << endl;
+    
     // Inicializamos los nodos vacíos:
     for (row=0; row<partitions; row++){
     for (col=0; col<partitions; col++){
@@ -183,12 +185,13 @@ int main(int argc, char **argv){
     open_files(argv[1], np, dataD, size_box);
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
     partitions = (int)(ceil(size_box/size_node));
+    int partitions3 = partitions*partitions*partitions;
 
     cout << "Partitions: "<< partitions << endl;
     //Allocate memory for the nodes depending of how many partitions there are.
     Node *hnodeD;
     //Node ***dnodeD;
-    hnodeD = new Node[partitions*partitions*partitions];
+    hnodeD = new Node[partitions3];
     //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
     //for (int i=0; i<partitions; i++){
         //*(hnodeD+i) = new Node*[partitions];
