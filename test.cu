@@ -142,7 +142,7 @@ void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, uns
     for (mom=0; mom<partitions; mom++){
     for (col=0; col<partitions; col++){
     for (row=0; row<partitions; row++){
-        idx = mom*partitions*partitions + col*partitions + partitions;
+        idx = mom*partitions*partitions + col*partitions + row;
         cout << "Idx: "<< idx << endl;
         if (idx>partitions*partitions*partitions){
             cout << "Got idx out of range " << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
@@ -164,7 +164,7 @@ void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, uns
         mom = (int)(dat[i].z/size_node);
         idx = mom*partitions*partitions + col*partitions + partitions;
         if (idx>partitions*partitions*partitions){
-            cout << "FOr point " << i << endl;
+            cout << "For point " << i << endl;
             cout << "Got idx out of range " << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
         }
         add( nod[idx].elements, nod[idx].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
