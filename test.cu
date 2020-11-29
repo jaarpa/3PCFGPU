@@ -232,9 +232,11 @@ int main(int argc, char **argv){
     Node *dnodeD;
     cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
     for (int i=0; i<partitions3; i++){
-        cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
         dnodeD[i] = hnodeD[i];
-        dnodeD[i].elements = hnodeD[i].elements;
+        if (hnodeD[i].len>0){
+            cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
+            dnodeD[i].elements = hnodeD[i].elements;
+        }
     }
 
     stop_timmer = clock();
