@@ -143,9 +143,8 @@ void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, uns
     for (col=0; col<partitions; col++){
     for (row=0; row<partitions; row++){
         idx = mom*partitions*partitions + col*partitions + row;
-        cout << "Idx: "<< idx << endl;
         if (idx>partitions*partitions*partitions){
-            cout << "Got idx out of range " << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
+            cout << "Got idx out of range in the nodes initialization" << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
         }
         nod[idx].nodepos.z = ((float)(mom)*(size_node));
         nod[idx].nodepos.y = ((float)(col)*(size_node));
@@ -183,7 +182,7 @@ int main(int argc, char **argv){
     
     open_files(argv[1], np, dataD, size_box);
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
-    partitions = 5;//(int)(ceil(size_box/size_node));
+    partitions = (int)(ceil(size_box/size_node));
     int partitions3 = partitions*partitions*partitions;
 
     cout << "Partitions: "<< partitions << endl;
