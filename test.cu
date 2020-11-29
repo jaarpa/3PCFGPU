@@ -192,8 +192,8 @@ int main(int argc, char **argv){
         //}
     //}
 
-    Node *dnodeD;
-    cucheck(cudaMalloc(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
+    //Node *dnodeD;
+    //cucheck(cudaMalloc(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
     cout << "Allocated the memory" << endl;
 
 
@@ -201,7 +201,7 @@ int main(int argc, char **argv){
     make_nodos(hnodeD, dataD, size_node, size_box, np);
 
     //Copy to device memory
-    cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
+    //cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
 
     stop_timmer = clock();
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
@@ -241,7 +241,7 @@ int main(int argc, char **argv){
         //cucheck(cudaFree(*(dnodeD+i)));
     //}
     delete[] hnodeD;
-    cucheck(cudaFree(dnodeD));
+    //cucheck(cudaFree(dnodeD));
     
     cucheck(cudaFree(dataD));
     //delete[] dataD;
