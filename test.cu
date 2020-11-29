@@ -126,7 +126,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].w = _w; 
 }
 
-void make_nodos(Node *nod, PointW3D *dat, float size_node, float size_box, unsigned int n_pts){
+void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, unsigned int n_pts){
     /*
     Función para crear los nodos con los datos y puntos random
 
@@ -136,23 +136,22 @@ void make_nodos(Node *nod, PointW3D *dat, float size_node, float size_box, unsig
 
     */
     int idx;
-    int i, row, col, mom, partitions = (int)((size_box/size_node)+1);
-    float p_med = size_node/2;
+    int i, row, col, mom;
 
-    cout << "Partitions: "<< partitions << endl;
-    
     // Inicializamos los nodos vacíos:
-    for (row=0; row<partitions; row++){
-    for (col=0; col<partitions; col++){
     for (mom=0; mom<partitions; mom++){
+    for (col=0; col<partitions; col++){
+    for (row=0; row<partitions; row++){
         idx = mom*partitions*partitions + col*partitions + partitions;
-        nod[idx].nodepos.z = ((float)(mom)*(size_node))+p_med;
-        nod[idx].nodepos.y = ((float)(col)*(size_node))+p_med;
-        nod[idx].nodepos.x = ((float)(row)*(size_node))+p_med;
-        nod[idx].len = 0;
+        cout << "Idx: "<< idx << endl;
         if (idx>partitions*partitions*partitions){
             cout << "Got idx out of range " << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
         }
+        nod[idx].nodepos.z = ((float)(mom)*(size_node));
+        nod[idx].nodepos.y = ((float)(col)*(size_node));
+        nod[idx].nodepos.x = ((float)(row)*(size_node));
+        nod[idx].len = 0;
+        
         //cucheck(cudaMallocManaged(&nod[idx].elements, sizeof(PointW3D)));
         nod[idx].elements = new PointW3D[0];
     }
@@ -184,7 +183,7 @@ int main(int argc, char **argv){
     
     open_files(argv[1], np, dataD, size_box);
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
-    partitions = (int)(ceil(size_box/size_node));
+    partitions = 5;//(int)(ceil(size_box/size_node));
     int partitions3 = partitions*partitions*partitions;
 
     cout << "Partitions: "<< partitions << endl;
@@ -208,7 +207,7 @@ int main(int argc, char **argv){
 
 
     start_timmer = clock();
-    make_nodos(hnodeD, dataD, size_node, size_box, np);
+    make_nodos(hnodeD, dataD, size_node, partitions, np);
 
     //Copy to device memory
     //cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
