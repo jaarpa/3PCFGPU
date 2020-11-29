@@ -184,7 +184,7 @@ int main(int argc, char **argv){
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
     partitions = (int)(ceil(size_box/size_node));
 
-
+    cout << "Partitions: "<< partitions << endl;
     //Allocate memory for the nodes depending of how many partitions there are.
     Node *hnodeD;
     //Node ***dnodeD;
