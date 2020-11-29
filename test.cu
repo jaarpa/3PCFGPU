@@ -208,7 +208,7 @@ int main(int argc, char **argv){
     partitions = (int)(ceil(size_box/size_node));
     int partitions3 = partitions*partitions*partitions;
 
-    cout << "Partitions: "<< partitions << endl;
+    start_timmer = clock();
     //Allocate memory for the nodes depending of how many partitions there are.
     Node *hnodeD;
     //Node ***dnodeD;
@@ -223,16 +223,12 @@ int main(int argc, char **argv){
         //}
     //}
 
-    Node *dnodeD;
-    cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
-    cout << "Allocated the memory" << endl;
-
-
-    start_timmer = clock();
     make_nodos(hnodeD, dataD, size_node, partitions, np);
 
     //Copy to device memory
-    cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
+    //Node *dnodeD;
+    //cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
+    //cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
 
     stop_timmer = clock();
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
@@ -263,7 +259,7 @@ int main(int argc, char **argv){
         cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
     }
 
-    pnodestest<<<1,32>>>(dnodeD, partitions);
+    //pnodestest<<<1,32>>>(dnodeD, partitions);
     //for (int i=0; i<partitions; i++){
         //for (int j=0; j<partitions; j++){
             //delete[] hnodeD[i][j];
@@ -273,7 +269,7 @@ int main(int argc, char **argv){
         //cucheck(cudaFree(*(dnodeD+i)));
     //}
     delete[] hnodeD;
-    cucheck(cudaFree(dnodeD));
+    //cucheck(cudaFree(dnodeD));
     
     cucheck(cudaFree(dataD));
     //delete[] dataD;
