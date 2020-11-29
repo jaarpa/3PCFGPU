@@ -126,6 +126,32 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].w = _w; 
 }
 
+__global__ pnodestest(Node *nod){
+    int i = blockIdx.x + threadIdx.x;
+    if (i==0){
+        int px=1,py=2,pz=3;
+        int idx = pz*partitions*partitions + py*partitions + px;
+        printf("In GPU... \n Node 1,2,3 len: %i Position %f, %f, %f \n Elements:\n", hnodeD[idx].len, hnodeD[idx].nodepos.x, hnodeD[idx].nodepos.y, hnodeD[idx].nodepos.z)
+        for (int i=0; i<hnodeD[idx].len; i++){
+            printf("%f,%f,%f", hnodeD[idx].elements[i].x, hnodeD[idx].elements[i].y, hnodeD[idx].elements[i].z);
+        }
+
+        px=3,py=3,pz=3;
+        idx = pz*partitions*partitions + py*partitions + px;
+        printf("In GPU... \n Node 3,3,3 len: %i Position %f, %f, %f \n Elements:\n", hnodeD[idx].len, hnodeD[idx].nodepos.x, hnodeD[idx].nodepos.y, hnodeD[idx].nodepos.z)
+        for (int i=0; i<hnodeD[idx].len; i++){
+            printf("%f,%f,%f", hnodeD[idx].elements[i].x, hnodeD[idx].elements[i].y, hnodeD[idx].elements[i].z);
+        }
+
+        px=3,py=2,pz=1;
+        idx = pz*partitions*partitions + py*partitions + px;
+        printf("In GPU... \n Node 3,2,1 len: %i Position %f, %f, %f \n Elements:\n", hnodeD[idx].len, hnodeD[idx].nodepos.x, hnodeD[idx].nodepos.y, hnodeD[idx].nodepos.z)
+        for (int i=0; i<hnodeD[idx].len; i++){
+            printf("%f,%f,%f", hnodeD[idx].elements[i].x, hnodeD[idx].elements[i].y, hnodeD[idx].elements[i].z);
+        }
+    }
+}
+
 void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, unsigned int n_pts){
     /*
     Función para crear los nodos con los datos y puntos random
@@ -237,6 +263,7 @@ int main(int argc, char **argv){
         cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
     }
 
+    pnodestest<<<1,32>>>(dnodeD);
     //for (int i=0; i<partitions; i++){
         //for (int j=0; j<partitions; j++){
             //delete[] hnodeD[i][j];
@@ -246,7 +273,7 @@ int main(int argc, char **argv){
         //cucheck(cudaFree(*(dnodeD+i)));
     //}
     delete[] hnodeD;
-    //cucheck(cudaFree(dnodeD));
+    cucheck(cudaFree(dnodeD));
     
     cucheck(cudaFree(dataD));
     //delete[] dataD;
