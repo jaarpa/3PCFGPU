@@ -143,9 +143,6 @@ void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, uns
     for (col=0; col<partitions; col++){
     for (row=0; row<partitions; row++){
         idx = mom*partitions*partitions + col*partitions + row;
-        if (idx>partitions*partitions*partitions){
-            cout << "Got idx out of range in the nodes initialization" << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
-        }
         nod[idx].nodepos.z = ((float)(mom)*(size_node));
         nod[idx].nodepos.y = ((float)(col)*(size_node));
         nod[idx].nodepos.x = ((float)(row)*(size_node));
@@ -200,8 +197,8 @@ int main(int argc, char **argv){
         //}
     //}
 
-    //Node *dnodeD;
-    //cucheck(cudaMalloc(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
+    Node *dnodeD;
+    cucheck(cudaMalloc(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
     cout << "Allocated the memory" << endl;
 
 
@@ -209,7 +206,7 @@ int main(int argc, char **argv){
     make_nodos(hnodeD, dataD, size_node, partitions, np);
 
     //Copy to device memory
-    //cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
+    cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
 
     stop_timmer = clock();
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
