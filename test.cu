@@ -269,6 +269,7 @@ int main(int argc, char **argv){
     }
 
     pnodestest<<<1,32>>>(dnodeD, partitions);
+    cucheck(cudaDeviceSynchronize());
     //for (int i=0; i<partitions; i++){
         //for (int j=0; j<partitions; j++){
             //delete[] hnodeD[i][j];
