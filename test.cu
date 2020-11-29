@@ -136,21 +136,21 @@ __global__ void pnodestest(Node *dnodeD, int partitions){
         int idx = pz*partitions*partitions + py*partitions + px;
         printf("In GPU... \n Node 1,2,3 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
         for (int i=0; i<dnodeD[idx].len; i++){
-            printf("%f,%f,%f", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
+            printf("%f,%f,%f \n", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
         }
 
         px=3,py=3,pz=3;
         idx = pz*partitions*partitions + py*partitions + px;
         printf("In GPU... \n Node 3,3,3 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
         for (int i=0; i<dnodeD[idx].len; i++){
-            printf("%f,%f,%f", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
+            printf("%f,%f,%f \n", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
         }
 
         px=3,py=2,pz=1;
         idx = pz*partitions*partitions + py*partitions + px;
         printf("In GPU... \n Node 3,2,1 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
         for (int i=0; i<dnodeD[idx].len; i++){
-            printf("%f,%f,%f", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
+            printf("%f,%f,%f \n", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
         }
     }
 }
@@ -236,9 +236,9 @@ int main(int argc, char **argv){
         if (hnodeD[i].len>0){
             cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
             for (int j=0; j<hnodeD[i].len; j++){
-                dnodeD[i].elements[j].x = j;
-                dnodeD[i].elements[j].y = j;
-                dnodeD[i].elements[j].z = j;
+                dnodeD[i].elements[j].x = hnodeD[i].elements[j].x;
+                dnodeD[i].elements[j].y = hnodeD[i].elements[j].y;
+                dnodeD[i].elements[j].z = hnodeD[i].elements[j].z;
             }
         }
     }
