@@ -236,9 +236,7 @@ int main(int argc, char **argv){
         if (hnodeD[i].len>0){
             cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
             for (int j=0; j<hnodeD[i].len; j++){
-                dnodeD[i].elements[j].x = hnodeD[i].elements[j].x;
-                dnodeD[i].elements[j].y = hnodeD[i].elements[j].y;
-                dnodeD[i].elements[j].z = hnodeD[i].elements[j].z;
+                dnodeD[i].elements[j] = hnodeD[i].elements[j];
             }
         }
     }
