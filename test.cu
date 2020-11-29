@@ -162,7 +162,7 @@ void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, uns
         row = (int)(dat[i].x/size_node);
         col = (int)(dat[i].y/size_node);
         mom = (int)(dat[i].z/size_node);
-        idx = mom*partitions*partitions + col*partitions + partitions;
+        idx = mom*partitions*partitions + col*partitions + row;
         if (idx>partitions*partitions*partitions){
             cout << "For point " << i << endl;
             cout << "Got idx out of range " << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
