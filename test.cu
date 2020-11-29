@@ -126,28 +126,28 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].w = _w; 
 }
 
-__global__ pnodestest(Node *nod){
+__global__ void pnodestest(Node *dnodeD, int partitions){
     int i = blockIdx.x + threadIdx.x;
     if (i==0){
         int px=1,py=2,pz=3;
         int idx = pz*partitions*partitions + py*partitions + px;
-        printf("In GPU... \n Node 1,2,3 len: %i Position %f, %f, %f \n Elements:\n", hnodeD[idx].len, hnodeD[idx].nodepos.x, hnodeD[idx].nodepos.y, hnodeD[idx].nodepos.z)
-        for (int i=0; i<hnodeD[idx].len; i++){
-            printf("%f,%f,%f", hnodeD[idx].elements[i].x, hnodeD[idx].elements[i].y, hnodeD[idx].elements[i].z);
+        printf("In GPU... \n Node 1,2,3 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
+        for (int i=0; i<dnodeD[idx].len; i++){
+            printf("%f,%f,%f", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
         }
 
         px=3,py=3,pz=3;
         idx = pz*partitions*partitions + py*partitions + px;
-        printf("In GPU... \n Node 3,3,3 len: %i Position %f, %f, %f \n Elements:\n", hnodeD[idx].len, hnodeD[idx].nodepos.x, hnodeD[idx].nodepos.y, hnodeD[idx].nodepos.z)
-        for (int i=0; i<hnodeD[idx].len; i++){
-            printf("%f,%f,%f", hnodeD[idx].elements[i].x, hnodeD[idx].elements[i].y, hnodeD[idx].elements[i].z);
+        printf("In GPU... \n Node 3,3,3 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
+        for (int i=0; i<dnodeD[idx].len; i++){
+            printf("%f,%f,%f", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
         }
 
         px=3,py=2,pz=1;
         idx = pz*partitions*partitions + py*partitions + px;
-        printf("In GPU... \n Node 3,2,1 len: %i Position %f, %f, %f \n Elements:\n", hnodeD[idx].len, hnodeD[idx].nodepos.x, hnodeD[idx].nodepos.y, hnodeD[idx].nodepos.z)
-        for (int i=0; i<hnodeD[idx].len; i++){
-            printf("%f,%f,%f", hnodeD[idx].elements[i].x, hnodeD[idx].elements[i].y, hnodeD[idx].elements[i].z);
+        printf("In GPU... \n Node 3,2,1 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
+        for (int i=0; i<dnodeD[idx].len; i++){
+            printf("%f,%f,%f", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
         }
     }
 }
