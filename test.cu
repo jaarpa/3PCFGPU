@@ -231,7 +231,7 @@ int main(int argc, char **argv){
     //Copy to device memory
     Node *dnodeD;
     cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
-    for (int i; i<partitions3; i++){
+    for (int i=0; i<partitions3; i++){
         cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
         dnodeD[i] = hnodeD[i];
         dnodeD[i].elements = hnodeD[i].elements;
