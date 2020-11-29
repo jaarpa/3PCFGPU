@@ -1,5 +1,8 @@
 //nvcc test.cu -o t.out && ./t.out data_5K.dat 5000
-//nvcc test.cu -o t.out && ./t.out data_1GPc.dat 405224
+
+//nvcc test.cu -o t.out && ./t.out data_1GPc.dat 405224 
+//Spent time = 0.0334 seg (ONly host. Nodes allocation and calculation. dataD in globalmemory )
+
 #include <assert.h>
 #include <stdio.h>
 #include <iostream>
@@ -226,9 +229,13 @@ int main(int argc, char **argv){
     make_nodos(hnodeD, dataD, size_node, partitions, np);
 
     //Copy to device memory
-    //Node *dnodeD;
-    //cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
-    //cudaMemcpy(dnodeD, hnodeD, partitions*sizeof(Node), cudaMemcpyHostToDevice);
+    Node *dnodeD;
+    cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node)));
+    for (int i; i<partitions3; i++){
+        cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
+        dnodeD[i] = hnodeD[i];
+        dnodeD[i].elements = hnodeD[i].elements;
+    }
 
     stop_timmer = clock();
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
