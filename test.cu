@@ -268,7 +268,7 @@ int main(int argc, char **argv){
         cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
     }
 
-    //pnodestest<<<1,32>>>(dnodeD, partitions);
+    pnodestest<<<1,32>>>(dnodeD, partitions);
     //for (int i=0; i<partitions; i++){
         //for (int j=0; j<partitions; j++){
             //delete[] hnodeD[i][j];
@@ -278,7 +278,7 @@ int main(int argc, char **argv){
         //cucheck(cudaFree(*(dnodeD+i)));
     //}
     delete[] hnodeD;
-    //cucheck(cudaFree(dnodeD));
+    cucheck(cudaFree(dnodeD));
     
     cucheck(cudaFree(dataD));
     //delete[] dataD;
