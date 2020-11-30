@@ -577,13 +577,14 @@ int main(int argc, char **argv){
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
 
-    cucheck(cudaFree(dataD));
-    cucheck(cudaFree(dataR));
+    delete[] dataD;
+    delete[] dataR;
 
     delete[] DD;
     delete[] DR;
     delete[] RR;
 
+    /*
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
             delete[] hnodeD[i][j];
@@ -598,6 +599,8 @@ int main(int argc, char **argv){
         cucheck(cudaFree(*(dnodeD+i)));
         //cucheck(cudaFree(*(dnodeR+i)));
     }
+    */
+    
     delete[] hnodeD;
     //delete[] hnodeR;
 
