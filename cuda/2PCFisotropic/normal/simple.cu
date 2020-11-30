@@ -131,7 +131,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     */
     lon++;
     PointW3D *array_aux;
-    cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D))); 
+    array_aux = new PointW3D[lon];
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
         array_aux[i].y = array[i].y;
@@ -139,7 +139,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
         array_aux[i].w = array[i].w;
     }
 
-    cucheck(cudaFree(array));
+    delete[] array;
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y;
@@ -159,17 +159,18 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     np: number of points in the dat array
     */
 
-    int row, col, mom;
+    int row, col, mom, idx;
 
     // First allocate memory as an empty node:
     for (row=0; row<partitions; row++){
         for (col=0; col<partitions; col++){
             for (mom=0; mom<partitions; mom++){
-                nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node));
-                nod[row][col][mom].nodepos.y = ((float)(col)*(size_node));
-                nod[row][col][mom].nodepos.x = ((float)(row)*(size_node));
-                nod[row][col][mom].len = 0;
-                cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
+                idx = mom*partitions*partitions + col*partitions + row;
+                nod[idx].nodepos.z = ((float)(mom)*(size_node));
+                nod[idx].nodepos.y = ((float)(col)*(size_node));
+                nod[idx].nodepos.x = ((float)(row)*(size_node));
+                nod[idx].len = 0;
+                nod[idx].elements = new PointW3D[0];
             }
         }
     }
@@ -179,7 +180,8 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
         row = (int)(dat[i].x/size_node);
         col = (int)(dat[i].y/size_node);
         mom = (int)(dat[i].z/size_node);
-        add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
+        idx = mom*partitions*partitions + col*partitions + row;
+        add(nod[idx].elements, nod[idx].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
     }
 }
 
@@ -365,68 +367,102 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
 
 int main(int argc, char **argv){
 
-	/* =====================   Var declaration ===============================*/
+    /* =======================================================================*/
+    /* =====================   Var declaration ===============================*/
+    /* =======================================================================*/
+
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
+
     float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
-    int threads, blocks, n_kernel_calls;
-    clock_t start_timmer, stop_timmer;
+    float **subDD, **subRR, **subDR;
+
     double time_spent;
+    double *DD, *RR, *DR;
+
+    //n_kernel_calls should depend of the number of points, its density, and the number of bins
+    int threads_perblock, blocks, n_kernel_calls = 2 + (np==405224)*3 + (np>405224)*42;
+
+    cudaEvent_t start_timmer, stop_timmer; // GPU timmer
+    cucheck(cudaEventCreate(&start_timmer));
+    cucheck(cudaEventCreate(&stop_timmer));
+
     bool enough_kernels = false;
 
-    n_kernel_calls = 2 + (np==405224)*3 + (np>405224)*42; //This should depend of the number of points, its density, and the number of bins
-
-    float **subDD, **subRR, **subDR;
-    double *DD, *RR, *DR;
     PointW3D *dataD;
     PointW3D *dataR;
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
+    /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
-    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
-    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
+    /* =======================================================================*/
+
+    //Allocate memory to read the data
+    dataD = new PointW3D[n_pts];
+    dataR = new PointW3D[n_pts];
+    // Open and read the files to store the data in the arrays
+    open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
+    open_files(argv[2], np, dataR, r_size_box);
+
     // Allocate memory for the histogram as double
-    // And the subhistograms as simple presision floats
     DD = new double[bn];
     RR = new double[bn];
     DR = new double[bn];
-    //cucheck(cudaMallocManaged(&subDD, bn*sizeof(float)));
-    //cucheck(cudaMallocManaged(&subRR, bn*sizeof(float)));
-    //cucheck(cudaMallocManaged(&subDR, bn*sizeof(float)));
-
-	
-	// Open and read the files to store the data in the arrays
-	open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
-    //open_files(argv[2], np, dataR, r_size_box);
+    
+    //Sets the number of partitions of the box and the size of each node
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
     partitions = (int)(ceil(size_box/size_node));
 
     //Allocate memory for the nodes depending of how many partitions there are.
-    Node ***nodeD;
-    Node ***nodeR;
-    cucheck(cudaMallocManaged(&nodeR, partitions*sizeof(Node**)));
-    cucheck(cudaMallocManaged(&nodeD, partitions*sizeof(Node**)));
-    for (int i=0; i<partitions; i++){
-        cucheck(cudaMallocManaged(&*(nodeR+i), partitions*sizeof(Node*)));
-        cucheck(cudaMallocManaged(&*(nodeD+i), partitions*sizeof(Node*)));
-        for (int j=0; j<partitions; j++){
-            cucheck(cudaMallocManaged(&*(*(nodeR+i)+j), partitions*sizeof(Node)));
-            cucheck(cudaMallocManaged(&*(*(nodeD+i)+j), partitions*sizeof(Node)));
+    //Flatened 3D Node arrays
+    Node *hnodeD, *dnodeD;
+    //Node *hnodeR, *dnodeR;
+    hnodeD = new Node[partitions*partitions*partitions];
+    //hnodeR = new Node[partitions*partitions*partitions];
+    cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node**)));
+    //cucheck(cudaMallocManaged(&dnodeR, partitions*partitions*partitions*sizeof(Node**)));
+    
+    //Classificate the data into the nodes in the host side
+    //The node classification is made in the host
+    make_nodos(hnodeD, dataD, partitions, size_node, np);
+    //make_nodos(hnodeR, dataR, partitions, size_node, np);
+
+    //Copy nodes to global memory
+    for (int i=0; i<partitions*partitions*partitions; i++){
+        dnodeD[i] = hnodeD[i];
+        //dnodeR[i] = hnodeR[i];
+        if (hnodeD[i].len>0){
+            //Deep copy for the Node elements. If the node has no elements no memory is allocated!!!
+            cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
+            for (int j=0; j<hnodeD[i].len; j++){
+                dnodeD[i].elements[j] = hnodeD[i].elements[j];
+            }
         }
+
+        /*
+        if (hnodeR[i].len>0){
+            //Deep copy for the Node elements. If the node has no elements no memory is allocated!!!
+            cucheck(cudaMallocManaged(&dnodeR[i].elements, hnodeR[i].len*sizeof(PointW3D)));
+            for (int j=0; j<hnodeR[i].len; j++){
+                dnodeR[i].elements[j] = hnodeR[i].elements[j];
+            }
+        }
+        */
     }
     
-    //Classificate the data into the nodes
-    make_nodos(nodeD, dataD, partitions, size_node, np);
-    //make_nodos(nodeR, dataR, partitions, size_node, np);
-    
-    cout << "All set to compute the histograms " << endl;
-    //Starts loop to ensure the float histograms are not being overfilled.
+    cout << "Succesfully readed the data" << endl;
+    cout << "All set to compute the histograms" << endl;
 
-    start_timmer = clock();
-    //Launch the kernels
+
+    /* =======================================================================*/
+    /* ====================== Starts kernel Launches  ========================*/
+    /* =======================================================================*/
+
+    //Starts loop to ensure the float histograms are not being overfilled.
     while (!enough_kernels){
 
+        //Allocate an array of histograms to a different histogram to each kernel launch
         cucheck(cudaMallocManaged(&subDD, n_kernel_calls*sizeof(float*)));
         cucheck(cudaMallocManaged(&subRR, n_kernel_calls*sizeof(float*)));
         cucheck(cudaMallocManaged(&subDR, n_kernel_calls*sizeof(float*)));
@@ -441,38 +477,40 @@ int main(int argc, char **argv){
                 subRR[i][j] = 0.0;
                 subDR[i][j] = 0.0;
             }
-        }
 
-        //Restarts the histograms in 0
-        for (int i = 0; i < bn; i++){
+            //Restarts the main histograms in host to zero
             *(DD+i) = 0;
             *(RR+i) = 0;
             *(DR+i) = 0;
         }
 
-        //Get the dimensions of the GPU grid
-        threads = 512;
-        blocks = (int)(ceil((float)((float)(partitions*partitions*partitions)/(float)(n_kernel_calls*threads))));
-        dim3 grid(blocks,1,1);
-        dim3 block(threads,1,1);
+        //Compute the dimensions of the GPU grid
         //One thread for each node
+        threads_perblock = 512;
+        blocks = (int)(ceil((float)((float)(partitions*partitions*partitions)/(float)(n_kernel_calls*threads_perblock))));
 
+        //Launch the kernels
+        time_spent=0; //Restarts timmer
+        cudaEventRecord(start_timmer);
         for (int j=0; j<n_kernel_calls; j++){
-            
-            make_histoXX<<<grid,block>>>(subDD[j], nodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
-
+            make_histoXX<<<blocks,threads_perblock>>>(subDD[j], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            //make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            //make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
         }
 
+        //Waits for all the kernels to complete
         cucheck(cudaDeviceSynchronize());
+
+        //Sums all the subhistograms in CPU and tests if any of the subhistograms reached the maximum posible value of a float type data
         for (int j=0; j<n_kernel_calls; j++){
             for (int i = 0; i < bn; i++){
 
-                //TEST precision and max float value
+                //Test precision and max float value
                 if ((subDD[j][i]+1)<=subDD[j][i] || (subRR[j][i]+1)<=subRR[j][i] || (subDR[j][i]+1)<=subDR[j][i]){
                     enough_kernels = false;
-                    cout << "Not enough kernels launched the bin " << i << " exceed the maximum value " << endl;
-                    cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+1 << "kernel launches" << endl;
-                    n_kernel_calls++;
+                    cout << "Not enough kernels launched the bin " << i << " exceeds the maximum value " << endl;
+                    cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+2 << "kernel launches" << endl;
+                    n_kernel_calls=n_kernel_calls+2;
                     break;
                 } else {
                     enough_kernels = true;
@@ -489,46 +527,55 @@ int main(int argc, char **argv){
             }
 
         }
-        
-        stop_timmer = clock();
 
-        cout << "n_kernel_calls: " << n_kernel_calls << endl;
+        cudaEventRecord(stop_timmer);
+        cudaEventSynchronize(stop_timmer);
+        cudaEventElapsedTime(&time_spent, start, stop);
+        cout << "Took "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
         
-        /*for (int i=0; i<n_kernel_calls; ++i){
-            cucheck(cudaFree(*(subDD+i)));
-            cucheck(cudaFree(*(subRR+i)));
-            cucheck(cudaFree(*(subDR+i)));
-        }*/
+        //Free the subhistograms
+        //If there were not enough kernel launches the subhistograms will be allocated again.
+        for (int i=0; i<n_kernel_calls; ++i){
+            cucheck(cudaFree(subDD[i]));
+            cucheck(cudaFree(subRR[i]));
+            cucheck(cudaFree(subDR[i]));
+        }
         cucheck(cudaFree(subDD));
         cucheck(cudaFree(subRR));
         cucheck(cudaFree(subDR));
 
     }
 
-    time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
-    printf("\nSpent time = %.4f seg.\n", time_spent );
+    cout << "Spent "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
+    
+    /* =======================================================================*/
+    /* =======================  Save the results =============================*/
+    /* =======================================================================*/
 
-    cout << "Termine de hacer todos los histogramas" << endl;
-	
+    cout << "Saving results" << endl;
 	// Guardamos los histogramas
 	save_histogram(nameDD, bn, DD);
-	cout << "Guarde histograma DD..." << endl;
+	cout << "DD histogram saved" << endl;
 	save_histogram(nameRR, bn, RR);
-	cout << "Guarde histograma RR..." << endl;
+	cout << "RR histogram saved" << endl;
 	save_histogram(nameDR, bn, DR);
-	cout << "Guarde histograma DR..." << endl;
+    cout << "DR histogram saved" << endl;
+    
+    /* =======================================================================*/
+    /* ==========================  Free memory ===============================*/
+    /* =======================================================================*/
 
-    /* =======================  Free memory ============================*/
     //Free the memory
+
+    cucheck(cudaEventDestroy(start_timmer));
+    cucheck(cudaEventDestroy(stop_timmer));
+
     cucheck(cudaFree(dataD));
     cucheck(cudaFree(dataR));
 
     delete[] DD;
     delete[] DR;
     delete[] RR;
-    //cucheck(cudaFree(subDD));
-    //cucheck(cudaFree(subRR));
-    //cucheck(cudaFree(subDR));
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){

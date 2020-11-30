@@ -112,7 +112,6 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
 
     lon++;
     PointW3D *array_aux;
-    //cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D))); 
     array_aux = new PointW3D[lon];
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
@@ -120,13 +119,52 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
         array_aux[i].z = array[i].z;
         array_aux[i].w = array[i].w;
     }
-    //cucheck(cudaFree(array));
     delete[] array;
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y; 
     array[lon-1].z = _z;
     array[lon-1].w = _w; 
+}
+
+void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, unsigned int n_pts){
+    /*
+    Función para crear los nodos con los datos y puntos random
+
+    Argumentos
+    nod: arreglo donde se crean los nodos.
+    dat: datos a dividir en nodos.
+
+    */
+    int idx;
+    int i, row, col, mom;
+
+    // Inicializamos los nodos vacíos:
+    for (mom=0; mom<partitions; mom++){
+    for (col=0; col<partitions; col++){
+    for (row=0; row<partitions; row++){
+        idx = mom*partitions*partitions + col*partitions + row;
+        nod[idx].nodepos.z = ((float)(mom)*(size_node));
+        nod[idx].nodepos.y = ((float)(col)*(size_node));
+        nod[idx].nodepos.x = ((float)(row)*(size_node));
+        nod[idx].len = 0;
+        
+        nod[idx].elements = new PointW3D[0];
+    }
+    }
+    }
+    // Llenamos los nodos con los puntos de dat:
+    for (i=0; i<n_pts; ++i){
+        row = (int)(dat[i].x/size_node);
+        col = (int)(dat[i].y/size_node);
+        mom = (int)(dat[i].z/size_node);
+        idx = mom*partitions*partitions + col*partitions + row;
+        if (idx>partitions*partitions*partitions){
+            cout << "For point " << i << endl;
+            cout << "Got idx out of range " << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
+        }
+        add( nod[idx].elements, nod[idx].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
+    }
 }
 
 __global__ void pnodestest(Node *dnodeD, int partitions){
@@ -155,55 +193,13 @@ __global__ void pnodestest(Node *dnodeD, int partitions){
     }
 }
 
-void make_nodos(Node *nod, PointW3D *dat, float size_node, float partitions, unsigned int n_pts){
-    /*
-    Función para crear los nodos con los datos y puntos random
-
-    Argumentos
-    nod: arreglo donde se crean los nodos.
-    dat: datos a dividir en nodos.
-
-    */
-    int idx;
-    int i, row, col, mom;
-
-    // Inicializamos los nodos vacíos:
-    for (mom=0; mom<partitions; mom++){
-    for (col=0; col<partitions; col++){
-    for (row=0; row<partitions; row++){
-        idx = mom*partitions*partitions + col*partitions + row;
-        nod[idx].nodepos.z = ((float)(mom)*(size_node));
-        nod[idx].nodepos.y = ((float)(col)*(size_node));
-        nod[idx].nodepos.x = ((float)(row)*(size_node));
-        nod[idx].len = 0;
-        
-        //cucheck(cudaMallocManaged(&nod[idx].elements, sizeof(PointW3D)));
-        nod[idx].elements = new PointW3D[0];
-    }
-    }
-    }
-    // Llenamos los nodos con los puntos de dat:
-    for (i=0; i<n_pts; ++i){
-        row = (int)(dat[i].x/size_node);
-        col = (int)(dat[i].y/size_node);
-        mom = (int)(dat[i].z/size_node);
-        idx = mom*partitions*partitions + col*partitions + row;
-        if (idx>partitions*partitions*partitions){
-            cout << "For point " << i << endl;
-            cout << "Got idx out of range " << idx << " with row,col, mom: "<< row <<", " << col << ", "<< mom << endl;
-        }
-        add( nod[idx].elements, nod[idx].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
-    }
-}
-
 int main(int argc, char **argv){
     unsigned int np = stoi(argv[2]), partitions;
-    float size_node, size_box = 0;//, r_size_box;
+    float size_node, size_box = 0;
     clock_t start_timmer, stop_timmer;
     double time_spent;
 
     PointW3D *dataD;
-    //cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
     dataD = new PointW3D[np];
     
     open_files(argv[1], np, dataD, size_box);
@@ -214,17 +210,7 @@ int main(int argc, char **argv){
     start_timmer = clock();
     //Allocate memory for the nodes depending of how many partitions there are.
     Node *hnodeD;
-    //Node ***dnodeD;
     hnodeD = new Node[partitions3];
-    //cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
-    //for (int i=0; i<partitions; i++){
-        //*(hnodeD+i) = new Node*[partitions];
-        //cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
-        //for (int j=0; j<partitions; j++){
-            //*(*(hnodeD+i)+j) = new Node[partitions];
-            //cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
-        //}
-    //}
 
     make_nodos(hnodeD, dataD, size_node, partitions, np);
 
@@ -272,18 +258,10 @@ int main(int argc, char **argv){
 
     pnodestest<<<1,32>>>(dnodeD, partitions);
     cucheck(cudaDeviceSynchronize());
-    //for (int i=0; i<partitions; i++){
-        //for (int j=0; j<partitions; j++){
-            //delete[] hnodeD[i][j];
-            //cucheck(cudaFree(*(*(dnodeD+i)+j)));
-        //}
-        //delete[] hnodeD[i];
-        //cucheck(cudaFree(*(dnodeD+i)));
-    //}
+
     delete[] hnodeD;
     cucheck(cudaFree(dnodeD));
     
-    //cucheck(cudaFree(dataD));
     delete[] dataD;
     
     cout << "Finished" << endl;
