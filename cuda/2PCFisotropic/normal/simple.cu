@@ -491,6 +491,11 @@ int main(int argc, char **argv){
             *(DR+i) = 0;
         }
 
+        for (int i=0; i<n_kernel_calls; i++){
+            for (int j=0; j<bn; j++){
+                cout << subDD[i][j] << endl;
+            }
+        }
         //Compute the dimensions of the GPU grid
         //One thread for each node
         threads_perblock = 512;
