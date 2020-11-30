@@ -373,6 +373,32 @@ __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions
     }
 }
 
+__global__ void pnodestest(Node *dnodeD, int partitions){
+    int i = blockIdx.x + threadIdx.x;
+    if (i==0){
+        int px=1,py=2,pz=3;
+        int idx = pz*partitions*partitions + py*partitions + px;
+        printf("In GPU... \n Node 1,2,3 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
+        for (int i=0; i<dnodeD[idx].len; i++){
+            printf("%f,%f,%f \n", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
+        }
+
+        px=3,py=3,pz=3;
+        idx = pz*partitions*partitions + py*partitions + px;
+        printf("In GPU... \n Node 3,3,3 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
+        for (int i=0; i<dnodeD[idx].len; i++){
+            printf("%f,%f,%f \n", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
+        }
+
+        px=3,py=2,pz=1;
+        idx = pz*partitions*partitions + py*partitions + px;
+        printf("In GPU... \n Node 3,2,1 len: %i Position %f, %f, %f \n Elements:\n", dnodeD[idx].len, dnodeD[idx].nodepos.x, dnodeD[idx].nodepos.y, dnodeD[idx].nodepos.z);
+        for (int i=0; i<dnodeD[idx].len; i++){
+            printf("%f,%f,%f \n", dnodeD[idx].elements[i].x, dnodeD[idx].elements[i].y, dnodeD[idx].elements[i].z);
+        }
+    }
+}
+
 int main(int argc, char **argv){
 
     /* =======================================================================*/
@@ -457,7 +483,35 @@ int main(int argc, char **argv){
         }
         */
     }
+
+    int idx;
+    int px=1,py=2,pz=3;
+    idx = pz*partitions*partitions + py*partitions + px;
+    cout << "Node 1,2,3 " << "len: " << hnodeD[idx].len << "Position: " << hnodeD[idx].nodepos.x << ", " << hnodeD[idx].nodepos.y << ", " << hnodeD[idx].nodepos.z << endl;
+    cout << "Elements: " << endl;
+    for (int i=0; i<hnodeD[idx].len; i++){
+        cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
+    }
+
+    px=3,py=3,pz=3;
+    idx = pz*partitions*partitions + py*partitions + px;
+    cout << "Node 3,3,3 " << "len: " << hnodeD[idx].len << "Position: " << hnodeD[idx].nodepos.x << ", " << hnodeD[idx].nodepos.y << ", " << hnodeD[idx].nodepos.z << endl;
+    cout << "Elements: " << endl;
+    for (int i=0; i<hnodeD[idx].len; i++){
+        cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
+    }
     
+    px=3,py=2,pz=1;
+    idx = pz*partitions*partitions + py*partitions + px;
+    cout << "Node 3,2,1 " << "len: " << hnodeD[idx].len << "Position: " << hnodeD[idx].nodepos.x << ", " << hnodeD[idx].nodepos.y << ", " << hnodeD[idx].nodepos.z << endl;
+    cout << "Elements: " << endl;
+    for (int i=0; i<hnodeD[idx].len; i++){
+        cout << hnodeD[idx].elements[i].x << ", " << hnodeD[idx].elements[i].y << ", " << hnodeD[idx].elements[i].z << endl;
+    }
+
+    pnodestest<<<1,32>>>(dnodeD, partitions);
+    cucheck(cudaDeviceSynchronize());
+
     cout << "Succesfully readed the data" << endl;
     cout << "All set to compute the histograms" << endl;
 
@@ -465,7 +519,7 @@ int main(int argc, char **argv){
     /* =======================================================================*/
     /* ====================== Starts kernel Launches  ========================*/
     /* =======================================================================*/
-    cout << "Partitions: "<< partitions << endl;
+
     //Starts loop to ensure the float histograms are not being overfilled.
     while (!enough_kernels){
 
@@ -544,7 +598,6 @@ int main(int argc, char **argv){
         cudaEventRecord(stop_timmer);
         cudaEventSynchronize(stop_timmer);
         cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
-        cout << "Took "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
         
         //Free the subhistograms
         //If there were not enough kernel launches the subhistograms will be allocated again.
