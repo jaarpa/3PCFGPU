@@ -269,9 +269,6 @@ __global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, flo
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
-        atomicAdd(&XX[1],1);
-
-        /*
         //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
@@ -289,7 +286,7 @@ __global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, flo
             // Counts distances within the same node
             count_distances11(XX, nodeD[idx].elements, nodeD[idx].len, ds, dd_max, 2);
             
-            
+            /*
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
@@ -331,9 +328,8 @@ __global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, flo
                     }
                 }
             }
-            
+            */
         }
-        */
     }
 }
 __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
