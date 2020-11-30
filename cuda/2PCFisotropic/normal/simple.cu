@@ -560,9 +560,9 @@ int main(int argc, char **argv){
             cucheck(cudaFree(subRR[i]));
             cucheck(cudaFree(subDR[i]));
         }
-        cucheck(cudaFree(subDD));
-        cucheck(cudaFree(subRR));
-        cucheck(cudaFree(subDR));
+        delete[] subDD;
+        delete[] subRR;
+        delete[] subDR;
 
     }
 
