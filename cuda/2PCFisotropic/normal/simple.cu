@@ -339,28 +339,31 @@ __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
+
+        idx = mom*partitions*partitions + col*partitions + row;
         
-        if (nodeD[row][col][mom].len > 0){
+        if (nodeD[idx].len > 0){
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
+            float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
             
-            int u,v,w; //Position of the second node
+            int idx2, u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
 
 
             //Second node mobil in XYZ
             for(u = 0; u < partitions; u++){
-                dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
+                dx_nod12 = nodeD[u].nodepos.x - nx1;
                 for(v = 0; v < partitions; v++){
-                    dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
+                    dy_nod12 = nodeD[v*partitions + u].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
-                        dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
+                        idx2 = w*partitions*partitions + v*partitions + u;
+                        dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
+                            count_distances12(XY, nodeD[idx].elements, nodeD[idx].len, nodeR[idx2].elements, nodeR[idx2].len, ds, dd_max, 1);
                         }
                     }
                 }
