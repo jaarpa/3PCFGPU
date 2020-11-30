@@ -470,9 +470,12 @@ int main(int argc, char **argv){
     while (!enough_kernels){
 
         //Allocate an array of histograms to a different histogram to each kernel launch
-        cucheck(cudaMallocManaged(&subDD, n_kernel_calls*sizeof(float*)));
-        cucheck(cudaMallocManaged(&subRR, n_kernel_calls*sizeof(float*)));
-        cucheck(cudaMallocManaged(&subDR, n_kernel_calls*sizeof(float*)));
+        subDD = new float*[n_kernel_calls];
+        subRR = new float*[n_kernel_calls];
+        subDR = new float*[n_kernel_calls];
+        //cucheck(cudaMallocManaged(&subDD, n_kernel_calls*sizeof(float*)));
+        //cucheck(cudaMallocManaged(&subRR, n_kernel_calls*sizeof(float*)));
+        //cucheck(cudaMallocManaged(&subDR, n_kernel_calls*sizeof(float*)));
         for (int i=0; i<n_kernel_calls; ++i){
             cucheck(cudaMallocManaged(&*(subDD+i), bn*sizeof(float)));
             cucheck(cudaMallocManaged(&*(subRR+i), bn*sizeof(float)));
@@ -485,17 +488,22 @@ int main(int argc, char **argv){
                 subDR[i][j] = 0.0;
             }
 
-            //Restarts the main histograms in host to zero
+        }
+
+        //Restarts the main histograms in host to zero
+        for (int i = 0; i<bn; i++){
             *(DD+i) = 0;
             *(RR+i) = 0;
             *(DR+i) = 0;
         }
 
-        for (int i=0; i<n_kernel_calls; i++){
-            for (int j=0; j<bn; j++){
-                cout << subDD[i][j] << endl;
+
+        for (int i=0; i<n_kernel_calls; ++i){
+            for (int j = 0; j < bn; j++){
+                cout << DD[j] << " " << subDD[i][j] << endl;
             }
         }
+
         //Compute the dimensions of the GPU grid
         //One thread for each node
         threads_perblock = 512;
