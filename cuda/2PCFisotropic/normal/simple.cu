@@ -378,10 +378,9 @@ int main(int argc, char **argv){
 
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
 
-    float size_node, dmax = stof(argv[5]), size_box = 0;//, r_size_box;
+    float time_spent, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
     float **subDD, **subRR, **subDR;
 
-    double time_spent;
     double *DD, *RR, *DR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
@@ -404,8 +403,8 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Allocate memory to read the data
-    dataD = new PointW3D[n_pts];
-    dataR = new PointW3D[n_pts];
+    dataD = new PointW3D[np];
+    dataR = new PointW3D[np];
     // Open and read the files to store the data in the arrays
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
     open_files(argv[2], np, dataR, r_size_box);
@@ -535,7 +534,7 @@ int main(int argc, char **argv){
 
         cudaEventRecord(stop_timmer);
         cudaEventSynchronize(stop_timmer);
-        cudaEventElapsedTime(&time_spent, start, stop);
+        cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
         cout << "Took "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
         
         //Free the subhistograms
@@ -584,14 +583,23 @@ int main(int argc, char **argv){
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
-            cucheck(cudaFree(*(*(nodeR+i)+j)));
-            cucheck(cudaFree(*(*(nodeD+i)+j)));
+            delete[] hnodeD[i][j];
+            //delete[] hnodeR[i][j];
+
+            cucheck(cudaFree(*(*(dnodeD+i)+j)));
+            //cucheck(cudaFree(*(*(dnodeR+i)+j)));
         }
-        cucheck(cudaFree(*(nodeR+i)));
-        cucheck(cudaFree(*(nodeD+i)));
+        delete[] hnodeD[i];
+        //delete[] hnodeR[i];
+
+        cucheck(cudaFree(*(dnodeD+i)));
+        //cucheck(cudaFree(*(dnodeR+i)));
     }
-    cucheck(cudaFree(nodeR));
-    cucheck(cudaFree(nodeD));
+    delete[] hnodeD;
+    //delete[] hnodeR;
+
+    cucheck(cudaFree(dnodeD));
+    //cucheck(cudaFree(dnodeR));
 
     cout << "Programa Terminado..." << endl;
     return 0;
