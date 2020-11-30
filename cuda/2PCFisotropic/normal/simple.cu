@@ -269,13 +269,9 @@ __global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, flo
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
+        atomicAdd(&XX[1],1);
 
-        if (idx==0){
-            for (int i=0; i<bn; i++){
-                printf("%f \n", XX[i]);
-            }
-        }
-
+        /*
         //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
@@ -337,6 +333,7 @@ __global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, flo
             }
             
         }
+        */
     }
 }
 __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
@@ -472,9 +469,8 @@ int main(int argc, char **argv){
     /* =======================================================================*/
     /* ====================== Starts kernel Launches  ========================*/
     /* =======================================================================*/
-
+    cout << "Partitions: "<< partitions << endl;
     //Starts loop to ensure the float histograms are not being overfilled.
-    n_kernel_calls=1;
     while (!enough_kernels){
 
         //Allocate an array of histograms to a different histogram to each kernel launch
