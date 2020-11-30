@@ -269,6 +269,13 @@ __global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, flo
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
+
+        if (idx==0){
+            for (int i=0; i<bn; i++){
+                printf("%f \n", XX[i]);
+            }
+        }
+
         //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
@@ -467,6 +474,7 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Starts loop to ensure the float histograms are not being overfilled.
+    n_kernel_calls=1;
     while (!enough_kernels){
 
         //Allocate an array of histograms to a different histogram to each kernel launch
@@ -495,13 +503,6 @@ int main(int argc, char **argv){
             *(DD+i) = 0;
             *(RR+i) = 0;
             *(DR+i) = 0;
-        }
-
-
-        for (int i=0; i<n_kernel_calls; ++i){
-            for (int j = 0; j < bn; j++){
-                cout << DD[j] << " " << subDD[i][j] << endl;
-            }
         }
 
         //Compute the dimensions of the GPU grid
