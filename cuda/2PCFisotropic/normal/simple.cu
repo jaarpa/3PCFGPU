@@ -276,9 +276,9 @@ __device__ void count_distances12(double *XX, PointW3D *elements1, int len1, Poi
     }
 }
 
-__global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
+__global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node){
     //Distributes all the indexes equitatively into the n_kernelc_calls.
-    int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -343,8 +343,8 @@ __global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, 
     }
 }
 
-__global__ void make_histoXY(double *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
-    int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
+__global__ void make_histoXY(double *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node){
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
         int mom = (int) (idx/(partitions*partitions));
