@@ -484,7 +484,7 @@ int main(int argc, char **argv){
     stop_timmer_host = clock();
     time_spent = ((float)(stop_timmer_host-start_timmer_device))/CLOCKS_PER_SEC;
     cout << "Succesfully readed the data" << endl;
-    cout << "All set to compute the histograms in " << time_spent << " seconds" << endl;
+    cout << "All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
 
 
     /* =======================================================================*/
