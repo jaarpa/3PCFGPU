@@ -570,9 +570,9 @@ int main(int argc, char **argv){
         //Free the subhistograms
         //If there were not enough kernel launches the subhistograms will be allocated again.
         for (int i=0; i<n_kernel_calls; ++i){
-            cucheck(cudaFree(subDD[i]));
-            cucheck(cudaFree(subRR[i]));
-            cucheck(cudaFree(subDR[i]));
+            cucheck(cudaFree(*(subDD+i)));
+            cucheck(cudaFree(*(subRR+i)));
+            cucheck(cudaFree(*(subDR+i)));
         }
         delete[] subDD;
         delete[] subRR;
