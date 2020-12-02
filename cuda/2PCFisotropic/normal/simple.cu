@@ -190,6 +190,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
+/*
 __device__ double atomicAdd(double* address, double val){
     unsigned long long int* address_as_ull = (unsigned long long int*)address;
     unsigned long long int old = *address_as_ull, assumed;
@@ -199,6 +200,7 @@ __device__ double atomicAdd(double* address, double val){
     } while (assumed != old);
     return __longlong_as_double(old);
 }
+*/
 
 __device__ void count_distances11(double *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
     /*
@@ -526,7 +528,7 @@ int main(int argc, char **argv){
     cudaEventSynchronize(stop_timmer);
     cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
 
-    cout << "Spent "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
+    cout << "Spent "<< time_spent << " miliseconds to compute all the distances using " << '1' << " kernel launches" << endl;
     
     /* =======================================================================*/
     /* =======================  Save the results =============================*/
