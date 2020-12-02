@@ -565,7 +565,6 @@ int main(int argc, char **argv){
         
         //Free the subhistograms
         //If there were not enough kernel launches the subhistograms will be allocated again.
-        /*
         for (int i=0; i<n_kernel_calls; ++i){
             cucheck(cudaFree(subDD[i]));
             cucheck(cudaFree(subRR[i]));
@@ -574,10 +573,6 @@ int main(int argc, char **argv){
         delete[] subDD;
         delete[] subRR;
         delete[] subDR;
-        */
-        cucheck(cudaFree(subDD));
-        cucheck(cudaFree(subRR));
-        cucheck(cudaFree(subDR));
     }
 
     cout << "Spent "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
