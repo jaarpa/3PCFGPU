@@ -332,8 +332,8 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
         }
     }
 }
-/*
-__global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
+
+__global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
@@ -343,10 +343,10 @@ __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions
 
         idx = mom*partitions*partitions + col*partitions + row;
         
-        if (nodeD[idx].len > 0){
+        if (nodeD[row][col][mom].len > 0){
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
+            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
             
@@ -356,15 +356,15 @@ __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions
 
             //Second node mobil in XYZ
             for(u = 0; u < partitions; u++){
-                dx_nod12 = nodeD[u].nodepos.x - nx1;
+                dx_nod12 = nodeR[u][0][0].nodepos.x - nx1;
                 for(v = 0; v < partitions; v++){
-                    dy_nod12 = nodeD[v*partitions + u].nodepos.y - ny1;
+                    dy_nod12 = nodeR[u][v][0].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
                         idx2 = w*partitions*partitions + v*partitions + u;
-                        dz_nod12 = nodeD[idx2].nodepos.z - nz1;
+                        dz_nod12 = nodeR[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distances12(XY, nodeD[idx].elements, nodeD[idx].len, nodeR[idx2].elements, nodeR[idx2].len, ds, dd_max, 1);
+                            count_distances12(XY, nodeD[idx].elements, nodeD[idx].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                         }
                     }
                 }
@@ -373,7 +373,6 @@ __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions
         }
     }
 }
-*/
 
 int main(int argc, char **argv){
 
@@ -385,7 +384,6 @@ int main(int argc, char **argv){
 
     float time_spent, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
     float **subDD, **subRR, **subDR;
-    //float *subDD, *subRR, *subDR;
 
     double *DD, *RR, *DR;
 
@@ -404,7 +402,7 @@ int main(int argc, char **argv){
     PointW3D *dataR;
 
     Node ***dnodeD, ***hnodeD;
-    //Node ***dnodeR, ***hnodeR;
+    Node ***dnodeR, ***hnodeR;
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
@@ -432,28 +430,25 @@ int main(int argc, char **argv){
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
     hnodeD = new Node**[partitions];
-
-    //cucheck(cudaMallocManaged(&dnodeR, partitions*sizeof(Node**)));
-    //hnodeR = new Node**[partitions];
+    cucheck(cudaMallocManaged(&dnodeR, partitions*sizeof(Node**)));
+    hnodeR = new Node**[partitions];
     for (int i=0; i<partitions; i++){
         *(hnodeD+i) = new Node*[partitions];
         cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
-
-        //*(hnodeR+i) = new Node*[partitions];
-        //cucheck(cudaMallocManaged(&*(dnodeR+i), partitions*sizeof(Node*)));
+        *(hnodeR+i) = new Node*[partitions];
+        cucheck(cudaMallocManaged(&*(dnodeR+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
             *(*(hnodeD+i)+j) = new Node[partitions];
             cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
-
-            //*(*(hnodeR+i)+j) = new Node[partitions];
-            //cucheck(cudaMallocManaged(&*(*(dnodeR+i)+j), partitions*sizeof(Node)));
+            *(*(hnodeR+i)+j) = new Node[partitions];
+            cucheck(cudaMallocManaged(&*(*(dnodeR+i)+j), partitions*sizeof(Node)));
         }
     }
 
     //Classificate the data into the nodes in the host side
     //The node classification is made in the host
     make_nodos(hnodeD, dataD, partitions, size_node, np);
-    //make_nodos(hnodeR, dataR, partitions, size_node, np);
+    make_nodos(hnodeR, dataR, partitions, size_node, np);
     
     //Copy nodes to unified memory
     for (int row=0; row<partitions; row++){
@@ -472,7 +467,7 @@ int main(int argc, char **argv){
 
                 }
 
-                /*
+                
                 //Copy node of random data
                 dnodeR[row][col][mom] = hnodeR[row][col][mom];
                 if (hnodeR[row][col][mom].len>0){
@@ -482,7 +477,7 @@ int main(int argc, char **argv){
                         dnodeR[row][col][mom].elements[j] = hnodeR[row][col][mom].elements[j];
                     }
                 }
-                */
+                
             }
         }
     }
@@ -534,8 +529,8 @@ int main(int argc, char **argv){
         cudaEventRecord(start_timmer);
         for (int j=0; j<n_kernel_calls; j++){
             make_histoXX<<<blocks,threads_perblock>>>(subDD[j], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
-            //make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
-            //make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
         }
 
         //Waits for all the kernels to complete
@@ -608,8 +603,6 @@ int main(int argc, char **argv){
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
 
-    //cucheck(cudaFree(dataD));
-    //cucheck(cudaFree(dataR));
     delete[] dataD;
     delete[] dataR;
 
@@ -621,22 +614,19 @@ int main(int argc, char **argv){
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
             delete[] hnodeD[i][j];
-            //delete[] hnodeR[i][j];
-
+            delete[] hnodeR[i][j];
             cucheck(cudaFree(*(*(dnodeD+i)+j)));
-            //cucheck(cudaFree(*(*(dnodeR+i)+j)));
+            cucheck(cudaFree(*(*(dnodeR+i)+j)));
         }
         delete[] hnodeD[i];
-        //delete[] hnodeR[i];
-
+        delete[] hnodeR[i];
         cucheck(cudaFree(*(dnodeD+i)));
-        //cucheck(cudaFree(*(dnodeR+i)));
+        cucheck(cudaFree(*(dnodeR+i)));
     }    
     delete[] hnodeD;
-    //delete[] hnodeR;
-
+    delete[] hnodeR;
     cucheck(cudaFree(dnodeD));
-    //cucheck(cudaFree(dnodeR));
+    cucheck(cudaFree(dnodeR));
 
     cout << "Programa Terminado..." << endl;
     return 0;
