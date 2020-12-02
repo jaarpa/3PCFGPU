@@ -544,10 +544,10 @@ int main(int argc, char **argv){
                     enough_kernels = true;
                 }
 
-                DD[i] += (double)(subDD[i]);
-                RR[i] += (double)(subRR[i]);
-                DR[i] += (double)(subDR[i]);
-
+                DD[i] += (double)(subDD[j][i]);
+                RR[i] += (double)(subRR[j][i]);
+                DR[i] += (double)(subDR[j][i]);
+                
             }
 
             if (!enough_kernels){
