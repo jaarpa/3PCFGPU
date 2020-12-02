@@ -611,31 +611,33 @@ int main(int argc, char **argv){
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
 
-    delete[] dataD;
-    delete[] dataR;
+    cucheck(cudaFree(dataD));
+    cucheck(cudaFree(dataR));
+    //delete[] dataD;
+    //delete[] dataR;
 
     delete[] DD;
     delete[] DR;
     delete[] RR;
 
-    /*
+    
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
-            delete[] hnodeD[i][j];
+            //delete[] hnodeD[i][j];
             //delete[] hnodeR[i][j];
 
             cucheck(cudaFree(*(*(dnodeD+i)+j)));
             //cucheck(cudaFree(*(*(dnodeR+i)+j)));
         }
-        delete[] hnodeD[i];
+        //delete[] hnodeD[i];
         //delete[] hnodeR[i];
 
         cucheck(cudaFree(*(dnodeD+i)));
         //cucheck(cudaFree(*(dnodeR+i)));
     }
-    */
     
-    delete[] hnodeD;
+    
+    //delete[] hnodeD;
     //delete[] hnodeR;
 
     cucheck(cudaFree(dnodeD));
