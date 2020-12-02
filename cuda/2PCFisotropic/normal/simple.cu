@@ -510,9 +510,6 @@ int main(int argc, char **argv){
             *(DD+i) = 0.0;
             *(RR+i) = 0.0;
             *(DR+i) = 0.0;
-            *(subDD+i) = 0.0;
-            *(subRR+i) = 0.0;
-            *(subDR+i) = 0.0;
         }
 
         //Compute the dimensions of the GPU grid
