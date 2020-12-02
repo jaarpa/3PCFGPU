@@ -385,8 +385,8 @@ int main(int argc, char **argv){
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
 
     float time_spent, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
-    //float **subDD, **subRR, **subDR;
-    float *subDD, *subRR, *subDR;
+    float **subDD, **subRR, **subDR;
+    //float *subDD, *subRR, *subDR;
 
     double *DD, *RR, *DR;
 
@@ -447,10 +447,6 @@ int main(int argc, char **argv){
         }
     }
 
-    cucheck(cudaMallocManaged(&subDD, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&subRR, bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&subDR, bn*sizeof(float)));
-
     //Classificate the data into the nodes in the host side
     //The node classification is made in the host
     make_nodos(dnodeD, dataD, partitions, size_node, np);
@@ -489,11 +485,9 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Starts loop to ensure the float histograms are not being overfilled.
-    n_kernel_calls =1;
     while (!enough_kernels){
 
         //Allocate an array of histograms to a different histogram to each kernel launch
-        /*
         subDD = new float*[n_kernel_calls];
         subRR = new float*[n_kernel_calls];
         subDR = new float*[n_kernel_calls];
@@ -510,7 +504,6 @@ int main(int argc, char **argv){
             }
 
         }
-        */
 
         //Restarts the main histograms in host to zero
         for (int i = 0; i<bn; i++){
