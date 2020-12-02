@@ -404,7 +404,7 @@ int main(int argc, char **argv){
     PointW3D *dataR;
 
     Node ***dnodeD, ***hnodeD;
-    Node ***dnodeR, ***hnodeR;
+    //Node ***dnodeR, ***hnodeR;
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
@@ -412,7 +412,7 @@ int main(int argc, char **argv){
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
-    start_timmer_device = clock()
+    start_timmer_device = clock();
     dataD = new PointW3D[np];
     dataR = new PointW3D[np];
 
@@ -487,7 +487,7 @@ int main(int argc, char **argv){
         }
     }
     stop_timmer_host = clock();
-    time_spent = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
+    time_spent = ((float)(stop_timmer_host-start_timmer_device))/CLOCKS_PER_SEC;
     cout << "Succesfully readed the data" << endl;
     cout << "All set to compute the histograms in " << time_spent << " seconds" << endl;
 
