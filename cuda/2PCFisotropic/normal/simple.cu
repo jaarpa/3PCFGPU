@@ -364,7 +364,7 @@ __global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partit
                         dz_nod12 = nodeR[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distances12(XY, nodeD[idx].elements, nodeD[idx].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
+                            count_distances12(XY, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeR[u][v][w].elements, nodeR[u][v][w].len, ds, dd_max, 1);
                         }
                     }
                 }
