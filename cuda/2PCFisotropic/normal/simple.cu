@@ -394,7 +394,7 @@ int main(int argc, char **argv){
     cucheck(cudaEventCreate(&start_timmer));
     cucheck(cudaEventCreate(&stop_timmer));
 
-    clock_t stop_timmer_host, start_timmer_device;
+    clock_t stop_timmer_host, start_timmer_host;
 
     bool enough_kernels = false;
 
@@ -410,7 +410,7 @@ int main(int argc, char **argv){
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
-    start_timmer_device = clock();
+    start_timmer_host = clock();
     dataD = new PointW3D[np];
     dataR = new PointW3D[np];
 
@@ -482,7 +482,7 @@ int main(int argc, char **argv){
         }
     }
     stop_timmer_host = clock();
-    time_spent = ((float)(stop_timmer_host-start_timmer_device))/CLOCKS_PER_SEC;
+    time_spent = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
     cout << "Succesfully readed the data" << endl;
     cout << "All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
 
