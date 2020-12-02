@@ -524,7 +524,7 @@ int main(int argc, char **argv){
         time_spent=0; //Restarts timmer
         cudaEventRecord(start_timmer);
         for (int j=0; j<n_kernel_calls; j++){
-            make_histoXX<<<blocks,threads_perblock>>>(subDD, dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            make_histoXX<<<blocks,threads_perblock>>>(subDD[j], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
         }
