@@ -216,7 +216,8 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int len, float
     
     //printf("The id is: %i . The len: %i The blockid: %i \n. ", idx, len, blockIdx.x);
     int bin;
-    float d, v;
+    double v;
+    float d;
     float x1, y1, z1, w1;
     float x2,y2,z2,w2;
 
@@ -255,7 +256,8 @@ __device__ void count_distances12(double *XX, PointW3D *elements1, int len1, Poi
     */
 
     int bin;
-    float d, v;
+    double v;
+    float d;
     float x1,y1,z1,w1,x2,y2,z2,w2;
 
     for (int i=0; i<len1; ++i){
