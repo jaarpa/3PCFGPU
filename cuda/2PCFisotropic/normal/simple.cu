@@ -190,7 +190,17 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count_distances11(float *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
+__device__ double atomicAdd(double* address, double val){
+    unsigned long long int* address_as_ull = (unsigned long long int*)address;
+    unsigned long long int old = *address_as_ull, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
+    } while (assumed != old);
+    return __longlong_as_double(old);
+}
+
+__device__ void count_distances11(double *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points within one node.
 
@@ -228,7 +238,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     }
 }
 
-__device__ void count_distances12(float *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max, int sum){
+__device__ void count_distances12(double *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points between two different nodes.
 
@@ -266,7 +276,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
-__global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
+__global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
@@ -333,7 +343,7 @@ __global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, f
     }
 }
 
-__global__ void make_histoXY(float *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
+__global__ void make_histoXY(double *XY, Node ***nodeD, Node ***nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
@@ -383,20 +393,18 @@ int main(int argc, char **argv){
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
 
     float time_spent, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
-    float **subDD, **subRR, **subDR;
+    //float **subDD, **subRR, **subDR;
 
     double *DD, *RR, *DR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
-    int threads_perblock, blocks, n_kernel_calls = 2 + (np==405224)*3 + (np>405224)*42;
+    int threads_perblock, blocks;
 
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
     cucheck(cudaEventCreate(&stop_timmer));
 
     clock_t stop_timmer_host, start_timmer_host;
-
-    bool enough_kernels = false;
 
     PointW3D *dataD;
     PointW3D *dataR;
@@ -419,10 +427,17 @@ int main(int argc, char **argv){
     open_files(argv[2], np, dataR, r_size_box);
 
     // Allocate memory for the histogram as double
-    DD = new double[bn];
-    RR = new double[bn];
-    DR = new double[bn];
+    cucheck(cudaMallocManaged(&DD, bn*sizeof(double)));
+    cucheck(cudaMallocManaged(&RR, bn*sizeof(double)));
+    cucheck(cudaMallocManaged(&DR, bn*sizeof(double)));
     
+    //Restarts the main histograms in host to zero
+    for (int i = 0; i<bn; i++){
+        *(DD+i) = 0.0;
+        *(RR+i) = 0.0;
+        *(DR+i) = 0.0;
+    }
+
     //Sets the number of partitions of the box and the size of each node
     size_node = 2.176*(size_box/pow((float)(np),1/3.));
     partitions = (int)(ceil(size_box/size_node));
@@ -491,93 +506,25 @@ int main(int argc, char **argv){
     /* ====================== Starts kernel Launches  ========================*/
     /* =======================================================================*/
 
-    //Starts loop to ensure the float histograms are not being overfilled.
-    while (!enough_kernels){
 
-        //Allocate an array of histograms to a different histogram to each kernel launch
-        subDD = new float*[n_kernel_calls];
-        subRR = new float*[n_kernel_calls];
-        subDR = new float*[n_kernel_calls];
-        for (int i=0; i<n_kernel_calls; ++i){
-            cucheck(cudaMallocManaged(&*(subDD+i), bn*sizeof(float)));
-            cucheck(cudaMallocManaged(&*(subRR+i), bn*sizeof(float)));
-            cucheck(cudaMallocManaged(&*(subDR+i), bn*sizeof(float)));
+    //Compute the dimensions of the GPU grid
+    //One thread for each node
+    threads_perblock = 512;
+    blocks = (int)(ceil((float)((float)(partitions*partitions*partitions)/(float)(threads_perblock))));
 
-            //Restarts the subhistograms in 0
-            for (int j = 0; j < bn; j++){
-                subDD[i][j] = 0.0;
-                subRR[i][j] = 0.0;
-                subDR[i][j] = 0.0;
-            }
+    //Launch the kernels
+    time_spent=0; //Restarts timmer
+    cudaEventRecord(start_timmer);
+    make_histoXX<<<blocks,threads_perblock>>>(DD, dnodeD, partitions, bn, dmax, size_node);
+    make_histoXX<<<blocks,threads_perblock>>>(RR, dnodeR, partitions, bn, dmax, size_node);
+    make_histoXY<<<blocks,threads_perblock>>>(DR, dnodeD, dnodeR, partitions, bn, dmax, size_node);
 
-        }
+    //Waits for all the kernels to complete
+    cucheck(cudaDeviceSynchronize());
 
-        //Restarts the main histograms in host to zero
-        for (int i = 0; i<bn; i++){
-            *(DD+i) = 0.0;
-            *(RR+i) = 0.0;
-            *(DR+i) = 0.0;
-        }
-
-        //Compute the dimensions of the GPU grid
-        //One thread for each node
-        threads_perblock = 512;
-        blocks = (int)(ceil((float)((float)(partitions*partitions*partitions)/(float)(n_kernel_calls*threads_perblock))));
-
-        //Launch the kernels
-        time_spent=0; //Restarts timmer
-        cudaEventRecord(start_timmer);
-        for (int j=0; j<n_kernel_calls; j++){
-            make_histoXX<<<blocks,threads_perblock>>>(subDD[j], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
-            make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
-            make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
-        }
-
-        //Waits for all the kernels to complete
-        cucheck(cudaDeviceSynchronize());
-
-        //Sums all the subhistograms in CPU and tests if any of the subhistograms reached the maximum posible value of a float type data
-        for (int j=0; j<n_kernel_calls; j++){
-            for (int i = 0; i < bn; i++){
-
-                //Test precision and max float value
-                if ((subDD[j][i]+1)<=subDD[j][i] || (subRR[j][i]+1)<=subRR[j][i] || (subDR[j][i]+1)<=subDR[j][i]){
-                    enough_kernels = false;
-                    cout << "Not enough kernels launched the bin " << i << " exceeds the maximum value " << endl;
-                    cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+2 << " kernel launches" << endl;
-                    n_kernel_calls=n_kernel_calls+2;
-                    break;
-                } else {
-                    enough_kernels = true;
-                }
-
-                DD[i] += (double)(subDD[j][i]);
-                RR[i] += (double)(subRR[j][i]);
-                DR[i] += (double)(subDR[j][i]);
-                
-            }
-
-            if (!enough_kernels){
-                break;
-            }
-
-        }
-
-        cudaEventRecord(stop_timmer);
-        cudaEventSynchronize(stop_timmer);
-        cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
-        
-        //Free the subhistograms
-        //If there were not enough kernel launches the subhistograms will be allocated again.
-        for (int i=0; i<n_kernel_calls; ++i){
-            cucheck(cudaFree(subDD[i]));
-            cucheck(cudaFree(subRR[i]));
-            cucheck(cudaFree(subDR[i]));
-        }
-        delete[] subDD;
-        delete[] subRR;
-        delete[] subDR;
-    }
+    cudaEventRecord(stop_timmer);
+    cudaEventSynchronize(stop_timmer);
+    cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
 
     cout << "Spent "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
     
@@ -606,9 +553,9 @@ int main(int argc, char **argv){
     delete[] dataD;
     delete[] dataR;
 
-    delete[] DD;
-    delete[] DR;
-    delete[] RR;
+    cucheck(cudaFree(DD));
+    cucheck(cudaFree(RR));
+    cucheck(cudaFree(DR));
 
     
     for (int i=0; i<partitions; i++){
