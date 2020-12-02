@@ -131,15 +131,16 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     */
     lon++;
     PointW3D *array_aux;
-    array_aux = new PointW3D[lon];
+    cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D))); 
+    //array_aux = new PointW3D[lon];
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
         array_aux[i].y = array[i].y;
         array_aux[i].z = array[i].z;
         array_aux[i].w = array[i].w;
     }
-
-    delete[] array;
+    cucheck(cudaFree(array));
+    //delete[] array;
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y;
@@ -147,7 +148,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     array[lon-1].w = _w;
 }
 
-void make_nodos(Node *nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np){
+void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np){
     /*
     This function classifies the data in the nodes
 
@@ -165,12 +166,13 @@ void make_nodos(Node *nod, PointW3D *dat, unsigned int partitions, float size_no
     for (row=0; row<partitions; row++){
         for (col=0; col<partitions; col++){
             for (mom=0; mom<partitions; mom++){
-                idx = mom*partitions*partitions + col*partitions + row;
-                nod[idx].nodepos.z = ((float)(mom)*(size_node));
-                nod[idx].nodepos.y = ((float)(col)*(size_node));
-                nod[idx].nodepos.x = ((float)(row)*(size_node));
-                nod[idx].len = 0;
-                nod[idx].elements = new PointW3D[0];
+                //idx = mom*partitions*partitions + col*partitions + row;
+                nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node));
+                nod[row][col][mom].nodepos.y = ((float)(col)*(size_node));
+                nod[row][col][mom].nodepos.x = ((float)(row)*(size_node));
+                nod[row][col][mom].len = 0;
+                cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
+                //nod[row][col][mom].elements = new PointW3D[0];
             }
         }
     }
@@ -181,7 +183,7 @@ void make_nodos(Node *nod, PointW3D *dat, unsigned int partitions, float size_no
         col = (int)(dat[i].y/size_node);
         mom = (int)(dat[i].z/size_node);
         idx = mom*partitions*partitions + col*partitions + row;
-        add(nod[idx].elements, nod[idx].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
+        add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
     }
 }
 
@@ -207,12 +209,12 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
     float x1, y1, z1, w1;
     float x2,y2,z2,w2;
 
-    for (int idx=0; idx<len-1; ++idx){
-        x1 = elements[idx].x;
-        y1 = elements[idx].y;
-        z1 = elements[idx].z;
-        w1 = elements[idx].w;
-        for (int j=idx+1; j<len; ++j){
+    for (int i=0; i<len-1; ++i){
+        x1 = elements[i].x;
+        y1 = elements[i].y;
+        z1 = elements[i].z;
+        w1 = elements[i].w;
+        for (int j=i+1; j<len; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
             z2 = elements[j].z;
@@ -265,7 +267,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
     }
 }
 
-__global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
+__global__ void make_histoXX(float *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
@@ -276,62 +278,62 @@ __global__ void make_histoXX(float *XX, Node *nodeD, int partitions, int bn, flo
         
         idx = mom*partitions*partitions + col*partitions + row;
 
-        if (nodeD[idx].len > 0){
+        if (nodeD[row][col][mom].len > 0){
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
+            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
             
             // Counts distances within the same node
-            count_distances11(XX, nodeD[idx].elements, nodeD[idx].len, ds, dd_max, 2);
+            count_distances11(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             
-            /*
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
                 idx2 = w*partitions*partitions + v*partitions + u;
-                dz_nod12 = nodeD[idx2].nodepos.z - nz1;
+                dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
                 if (dd_nod12 <= d_max_node){
-                    count_distances12(XX, nodeD[idx].elements, nodeD[idx].len, nodeD[idx2].elements, nodeD[idx2].len, ds, dd_max, 2);
+                    count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                 }
             }
 
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
-                dy_nod12 = nodeD[v*partitions + u].nodepos.y - ny1;
+                dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
                 for(w=0; w<partitions; w++){
                     idx2=w*partitions*partitions + v*partitions + u;
-                    dz_nod12 = nodeD[idx2].nodepos.z - nz1;
+                    dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=d_max_node){
-                        count_distances12(XX, nodeD[idx].elements, nodeD[idx].len, nodeD[idx2].elements, nodeD[idx2].len, ds, dd_max, 2);
+                        count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                     }
                 }
             }
 
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
-                dx_nod12 = nodeD[u].nodepos.x - nx1;
+                dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
                 for(v = 0; v < partitions; v++){
-                    dy_nod12 = nodeD[v*partitions + u].nodepos.y - ny1;
+                    dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
                         idx2=w*partitions*partitions + v*partitions + u;
-                        dz_nod12 = nodeD[idx2].nodepos.z - nz1;
+                        dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distances12(XX, nodeD[idx].elements, nodeD[idx].len, nodeD[idx2].elements, nodeD[idx2].len, ds, dd_max, 2);
+                            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
                         }
                     }
                 }
             }
-            */
+
         }
     }
 }
+/*
 __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions, int bn, float dmax, float size_node, int start_at, int n_kernel_calls){
     int idx = start_at + n_kernel_calls*(blockIdx.x * blockDim.x + threadIdx.x);
     if (idx<(partitions*partitions*partitions)){
@@ -372,6 +374,7 @@ __global__ void make_histoXY(float *XY, Node *nodeD, Node *nodeR, int partitions
         }
     }
 }
+*/
 
 int main(int argc, char **argv){
 
@@ -382,7 +385,8 @@ int main(int argc, char **argv){
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
 
     float time_spent, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
-    float **subDD, **subRR, **subDR;
+    //float **subDD, **subRR, **subDR;
+    float *subDD, *subRR, *subDR;
 
     double *DD, *RR, *DR;
 
@@ -398,6 +402,9 @@ int main(int argc, char **argv){
     PointW3D *dataD;
     PointW3D *dataR;
 
+    //Node *hnodeD, *dnodeD;
+    Node ***dnodeD;
+
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
 
@@ -406,8 +413,11 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Allocate memory to read the data
-    dataD = new PointW3D[np];
-    dataR = new PointW3D[np];
+    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
+    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
+    //dataD = new PointW3D[np];
+    //dataR = new PointW3D[np];
+
     // Open and read the files to store the data in the arrays
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
     open_files(argv[2], np, dataR, r_size_box);
@@ -423,19 +433,31 @@ int main(int argc, char **argv){
 
     //Allocate memory for the nodes depending of how many partitions there are.
     //Flatened 3D Node arrays
-    Node *hnodeD, *dnodeD;
     //Node *hnodeR, *dnodeR;
-    hnodeD = new Node[partitions*partitions*partitions];
+    //hnodeD = new Node[partitions*partitions*partitions];
     //hnodeR = new Node[partitions*partitions*partitions];
-    cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node**)));
+    //cucheck(cudaMallocManaged(&dnodeD, partitions*partitions*partitions*sizeof(Node**)));
     //cucheck(cudaMallocManaged(&dnodeR, partitions*partitions*partitions*sizeof(Node**)));
     
+    cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
+    for (int i=0; i<partitions; i++){
+        cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
+        for (int j=0; j<partitions; j++){
+            cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
+        }
+    }
+
+    cucheck(cudaMallocManaged(&subDD, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&subRR, bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&subDR, bn*sizeof(float)));
+
     //Classificate the data into the nodes in the host side
     //The node classification is made in the host
-    make_nodos(hnodeD, dataD, partitions, size_node, np);
+    make_nodos(dnodeD, dataD, partitions, size_node, np);
     //make_nodos(hnodeR, dataR, partitions, size_node, np);
 
-    //Copy nodes to global memory
+    /*
+    //Copy nodes to unified memory
     for (int i=0; i<partitions*partitions*partitions; i++){
         dnodeD[i] = hnodeD[i];
         //dnodeR[i] = hnodeR[i];
@@ -455,8 +477,8 @@ int main(int argc, char **argv){
                 dnodeR[i].elements[j] = hnodeR[i].elements[j];
             }
         }
-        */
     }
+        */
 
     cout << "Succesfully readed the data" << endl;
     cout << "All set to compute the histograms" << endl;
@@ -467,15 +489,14 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Starts loop to ensure the float histograms are not being overfilled.
+    n_kernel_calls =1;
     while (!enough_kernels){
 
         //Allocate an array of histograms to a different histogram to each kernel launch
+        /*
         subDD = new float*[n_kernel_calls];
         subRR = new float*[n_kernel_calls];
         subDR = new float*[n_kernel_calls];
-        //cucheck(cudaMallocManaged(&subDD, n_kernel_calls*sizeof(float*)));
-        //cucheck(cudaMallocManaged(&subRR, n_kernel_calls*sizeof(float*)));
-        //cucheck(cudaMallocManaged(&subDR, n_kernel_calls*sizeof(float*)));
         for (int i=0; i<n_kernel_calls; ++i){
             cucheck(cudaMallocManaged(&*(subDD+i), bn*sizeof(float)));
             cucheck(cudaMallocManaged(&*(subRR+i), bn*sizeof(float)));
@@ -489,12 +510,16 @@ int main(int argc, char **argv){
             }
 
         }
+        */
 
         //Restarts the main histograms in host to zero
         for (int i = 0; i<bn; i++){
-            *(DD+i) = 0;
-            *(RR+i) = 0;
-            *(DR+i) = 0;
+            *(DD+i) = 0.0;
+            *(RR+i) = 0.0;
+            *(DR+i) = 0.0;
+            *(subDD+i) = 0.0;
+            *(subRR+i) = 0.0;
+            *(subDR+i) = 0.0;
         }
 
         //Compute the dimensions of the GPU grid
@@ -506,7 +531,7 @@ int main(int argc, char **argv){
         time_spent=0; //Restarts timmer
         cudaEventRecord(start_timmer);
         for (int j=0; j<n_kernel_calls; j++){
-            make_histoXX<<<blocks,threads_perblock>>>(subDD[j], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            make_histoXX<<<blocks,threads_perblock>>>(subDD, dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
         }
@@ -519,7 +544,7 @@ int main(int argc, char **argv){
             for (int i = 0; i < bn; i++){
 
                 //Test precision and max float value
-                if ((subDD[j][i]+1)<=subDD[j][i] || (subRR[j][i]+1)<=subRR[j][i] || (subDR[j][i]+1)<=subDR[j][i]){
+                if ((subDD[i]+1)<=subDD[i] || (subRR[i]+1)<=subRR[i] || (subDR[i]+1)<=subDR[i]){
                     enough_kernels = false;
                     cout << "Not enough kernels launched the bin " << i << " exceeds the maximum value " << endl;
                     cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+2 << "kernel launches" << endl;
@@ -529,9 +554,9 @@ int main(int argc, char **argv){
                     enough_kernels = true;
                 }
 
-                DD[i] += (double)(subDD[j][i]);
-                RR[i] += (double)(subRR[j][i]);
-                DR[i] += (double)(subDR[j][i]);
+                DD[i] += (double)(subDD[i]);
+                RR[i] += (double)(subRR[i]);
+                DR[i] += (double)(subDR[i]);
 
             }
 
@@ -547,6 +572,7 @@ int main(int argc, char **argv){
         
         //Free the subhistograms
         //If there were not enough kernel launches the subhistograms will be allocated again.
+        /*
         for (int i=0; i<n_kernel_calls; ++i){
             cucheck(cudaFree(subDD[i]));
             cucheck(cudaFree(subRR[i]));
@@ -555,7 +581,10 @@ int main(int argc, char **argv){
         delete[] subDD;
         delete[] subRR;
         delete[] subDR;
-
+        */
+        cucheck(cudaFree(subDD));
+        cucheck(cudaFree(subRR));
+        cucheck(cudaFree(subDR));
     }
 
     cout << "Spent "<< time_spent << " miliseconds to compute all the distances using " << n_kernel_calls << " kernel launches" << endl;
