@@ -534,7 +534,7 @@ int main(int argc, char **argv){
             for (int i = 0; i < bn; i++){
 
                 //Test precision and max float value
-                if ((subDD[i]+1)<=subDD[i] || (subRR[i]+1)<=subRR[i] || (subDR[i]+1)<=subDR[i]){
+                if ((subDD[j][i]+1)<=subDD[j][i] || (subRR[j][i]+1)<=subRR[j][i] || (subDR[j][i]+1)<=subDR[j][i]){
                     enough_kernels = false;
                     cout << "Not enough kernels launched the bin " << i << " exceeds the maximum value " << endl;
                     cout << "Restarting the hitogram calculations. Now trying with " << n_kernel_calls+2 << "kernel launches" << endl;
