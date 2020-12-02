@@ -220,7 +220,7 @@ __device__ void count_distances11(float *XX, PointW3D *elements, int len, float 
             z2 = elements[j].z;
             w2 = elements[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-            if (d<=dd_max+1){
+            if (d<=dd_max){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
                 atomicAdd(&XX[bin],v);
@@ -258,7 +258,7 @@ __device__ void count_distances12(float *XX, PointW3D *elements1, int len1, Poin
             z2 = elements2[j].z;
             w2 = elements2[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-            if (d<=dd_max+1){
+            if (d<=dd_max){
                 bin = (int)(sqrt(d)*ds);
                 v = sum*w1*w2;
                 atomicAdd(&XX[bin],v);
@@ -520,11 +520,12 @@ int main(int argc, char **argv){
         //Launch the kernels
         time_spent=0; //Restarts timmer
         cudaEventRecord(start_timmer);
-        for (int j=0; j<n_kernel_calls; j++){
-            make_histoXX<<<blocks,threads_perblock>>>(subDD[j], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+        //for (int j=0; j<n_kernel_calls; j++){
+            make_histoXX<<<blocks,threads_perblock>>>(subDD[0], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+            make_histoXX<<<blocks,threads_perblock>>>(subDD[1], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
-        }
+        //}
 
         //Waits for all the kernels to complete
         cucheck(cudaDeviceSynchronize());
