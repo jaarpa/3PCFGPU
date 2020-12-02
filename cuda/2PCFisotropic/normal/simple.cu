@@ -131,14 +131,12 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     */
     lon++;
     PointW3D *array_aux = new PointW3D[lon];
-    //cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D)));
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
         array_aux[i].y = array[i].y;
         array_aux[i].z = array[i].z;
         array_aux[i].w = array[i].w;
     }
-    //cucheck(cudaFree(array));
     delete[] array;
     array = array_aux;
     array[lon-1].x = _x;
@@ -159,18 +157,16 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     np: number of points in the dat array
     */
 
-    int row, col, mom, idx;
+    int row, col, mom;
 
     // First allocate memory as an empty node:
     for (row=0; row<partitions; row++){
         for (col=0; col<partitions; col++){
             for (mom=0; mom<partitions; mom++){
-                //idx = mom*partitions*partitions + col*partitions + row;
                 nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node));
                 nod[row][col][mom].nodepos.y = ((float)(col)*(size_node));
                 nod[row][col][mom].nodepos.x = ((float)(row)*(size_node));
                 nod[row][col][mom].len = 0;
-                //cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
                 nod[row][col][mom].elements = new PointW3D[0];
             }
         }
@@ -190,18 +186,6 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
-/*
-__device__ double atomicAdd(double* address, double val){
-    unsigned long long int* address_as_ull = (unsigned long long int*)address;
-    unsigned long long int old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
-}
-*/
-
 __device__ void count_distances11(double *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points within one node.
@@ -214,7 +198,6 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int len, float
     dd_max: The maximum distance of interest.
     */
     
-    //printf("The id is: %i . The len: %i The blockid: %i \n. ", idx, len, blockIdx.x);
     int bin;
     double v;
     float d;
@@ -288,8 +271,6 @@ __global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, 
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
-        
-        idx = mom*partitions*partitions + col*partitions + row;
 
         if (nodeD[row][col][mom].len > 0){
 
@@ -301,12 +282,11 @@ __global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, 
             // Counts distances within the same node
             count_distances11(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
             
-            int idx2, u=row,v=col,w=mom; // Position index of the second node
+            int u=row,v=col,w=mom; // Position index of the second node
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
-                idx2 = w*partitions*partitions + v*partitions + u;
                 dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
                 if (dd_nod12 <= d_max_node){
@@ -318,7 +298,6 @@ __global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, 
             for(v=col+1; v<partitions; v++){
                 dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
                 for(w=0; w<partitions; w++){
-                    idx2=w*partitions*partitions + v*partitions + u;
                     dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=d_max_node){
@@ -333,7 +312,6 @@ __global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, 
                 for(v = 0; v < partitions; v++){
                     dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
-                        idx2=w*partitions*partitions + v*partitions + u;
                         dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
@@ -354,8 +332,6 @@ __global__ void make_histoXY(double *XY, Node ***nodeD, Node ***nodeR, int parti
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
-
-        idx = mom*partitions*partitions + col*partitions + row;
         
         if (nodeD[row][col][mom].len > 0){
 
@@ -364,7 +340,7 @@ __global__ void make_histoXY(double *XY, Node ***nodeD, Node ***nodeR, int parti
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
             
-            int idx2, u,v,w; //Position of the second node
+            int u,v,w; //Position of the second node
             unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
 
 
@@ -374,7 +350,6 @@ __global__ void make_histoXY(double *XY, Node ***nodeD, Node ***nodeR, int parti
                 for(v = 0; v < partitions; v++){
                     dy_nod12 = nodeR[u][v][0].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
-                        idx2 = w*partitions*partitions + v*partitions + u;
                         dz_nod12 = nodeR[u][v][w].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
@@ -502,8 +477,7 @@ int main(int argc, char **argv){
     }
     stop_timmer_host = clock();
     time_spent = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
-    cout << "Succesfully readed the data" << endl;
-    cout << "All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
+    cout << "Succesfully readed the data. All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
 
 
     /* =======================================================================*/
@@ -530,20 +504,17 @@ int main(int argc, char **argv){
     cudaEventSynchronize(stop_timmer);
     cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
 
-    cout << "Spent "<< time_spent << " miliseconds to compute all the distances using " << '1' << " kernel launches" << endl;
+    cout << "Spent "<< time_spent << " miliseconds to compute all the histograms." << endl;
     
     /* =======================================================================*/
     /* =======================  Save the results =============================*/
     /* =======================================================================*/
 
-    cout << "Saving results" << endl;
 	// Guardamos los histogramas
 	save_histogram(nameDD, bn, DD);
-	cout << "DD histogram saved" << endl;
 	save_histogram(nameRR, bn, RR);
-	cout << "RR histogram saved" << endl;
 	save_histogram(nameDR, bn, DR);
-    cout << "DR histogram saved" << endl;
+    cout << "Saved the histograms" << endl;
     
     /* =======================================================================*/
     /* ==========================  Free memory ===============================*/
