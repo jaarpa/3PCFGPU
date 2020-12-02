@@ -130,17 +130,16 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     It manages the memory allocation and free of the previous and new elements.
     */
     lon++;
-    PointW3D *array_aux;
-    cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D))); 
-    //array_aux = new PointW3D[lon];
+    PointW3D *array_aux = new PointW3D[lon];
+    //cucheck(cudaMallocManaged(&array_aux, lon*sizeof(PointW3D)));
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
         array_aux[i].y = array[i].y;
         array_aux[i].z = array[i].z;
         array_aux[i].w = array[i].w;
     }
-    cucheck(cudaFree(array));
-    //delete[] array;
+    //cucheck(cudaFree(array));
+    delete[] array;
     array = array_aux;
     array[lon-1].x = _x;
     array[lon-1].y = _y;
@@ -171,8 +170,8 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
                 nod[row][col][mom].nodepos.y = ((float)(col)*(size_node));
                 nod[row][col][mom].nodepos.x = ((float)(row)*(size_node));
                 nod[row][col][mom].len = 0;
-                cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
-                //nod[row][col][mom].elements = new PointW3D[0];
+                //cucheck(cudaMallocManaged(&nod[row][col][mom].elements, sizeof(PointW3D)));
+                nod[row][col][mom].elements = new PointW3D[0];
             }
         }
     }
@@ -403,7 +402,7 @@ int main(int argc, char **argv){
     PointW3D *dataR;
 
     //Node *hnodeD, *dnodeD;
-    Node ***dnodeD;
+    Node ***dnodeD, ***hnodeD;
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
@@ -413,10 +412,10 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Allocate memory to read the data
-    cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
-    cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
-    //dataD = new PointW3D[np];
-    //dataR = new PointW3D[np];
+    //cucheck(cudaMallocManaged(&dataD, np*sizeof(PointW3D)));
+    //cucheck(cudaMallocManaged(&dataR, np*sizeof(PointW3D)));
+    dataD = new PointW3D[np];
+    dataR = new PointW3D[np];
 
     // Open and read the files to store the data in the arrays
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
@@ -440,41 +439,50 @@ int main(int argc, char **argv){
     //cucheck(cudaMallocManaged(&dnodeR, partitions*partitions*partitions*sizeof(Node**)));
     
     cucheck(cudaMallocManaged(&dnodeD, partitions*sizeof(Node**)));
+    hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
+        *(hnodeD+i) = new Node*[partitions];
         cucheck(cudaMallocManaged(&*(dnodeD+i), partitions*sizeof(Node*)));
         for (int j=0; j<partitions; j++){
+            *(*(hnodeD+i)+j) = new Node[partitions];
             cucheck(cudaMallocManaged(&*(*(dnodeD+i)+j), partitions*sizeof(Node)));
         }
     }
 
     //Classificate the data into the nodes in the host side
     //The node classification is made in the host
-    make_nodos(dnodeD, dataD, partitions, size_node, np);
+    make_nodos(hnodeD, dataD, partitions, size_node, np);
     //make_nodos(hnodeR, dataR, partitions, size_node, np);
 
-    /*
+    
     //Copy nodes to unified memory
-    for (int i=0; i<partitions*partitions*partitions; i++){
-        dnodeD[i] = hnodeD[i];
-        //dnodeR[i] = hnodeR[i];
-        if (hnodeD[i].len>0){
-            //Deep copy for the Node elements. If the node has no elements no memory is allocated!!!
-            cucheck(cudaMallocManaged(&dnodeD[i].elements, hnodeD[i].len*sizeof(PointW3D)));
-            for (int j=0; j<hnodeD[i].len; j++){
-                dnodeD[i].elements[j] = hnodeD[i].elements[j];
-            }
-        }
+    for (int row=0; row<partitions; row++){
+        for (int col=0; col<partitions; col++){
+            for (int mom=0; mom<partitions; mom++){
 
-        /*
-        if (hnodeR[i].len>0){
-            //Deep copy for the Node elements. If the node has no elements no memory is allocated!!!
-            cucheck(cudaMallocManaged(&dnodeR[i].elements, hnodeR[i].len*sizeof(PointW3D)));
-            for (int j=0; j<hnodeR[i].len; j++){
-                dnodeR[i].elements[j] = hnodeR[i].elements[j];
+                dnodeD[row][col][mom] = hnodeD[row][col][mom];
+                if (hnodeD[row][col][mom].len>0){
+                    //Deep copy for the Node elements. If the node has no elements no memory is allocated!!!
+
+                    cucheck(cudaMallocManaged(&dnodeD[row][col][mom].elements, hnodeD[row][col][mom].len*sizeof(PointW3D)));
+                    for (int j=0; j<hnodeD[row][col][mom].len; j++){
+                        dnodeD[row][col][mom].elements[j] = hnodeD[row][col][mom].elements[j];
+                    }
+
+                }
+
+                /*
+                if (hnodeR[i].len>0){
+                    //Deep copy for the Node elements. If the node has no elements no memory is allocated!!!
+                    cucheck(cudaMallocManaged(&dnodeR[i].elements, hnodeR[i].len*sizeof(PointW3D)));
+                    for (int j=0; j<hnodeR[i].len; j++){
+                        dnodeR[i].elements[j] = hnodeR[i].elements[j];
+                    }
+                }
+                */
             }
         }
     }
-        */
 
     cout << "Succesfully readed the data" << endl;
     cout << "All set to compute the histograms" << endl;
@@ -520,12 +528,11 @@ int main(int argc, char **argv){
         //Launch the kernels
         time_spent=0; //Restarts timmer
         cudaEventRecord(start_timmer);
-        //for (int j=0; j<n_kernel_calls; j++){
-            make_histoXX<<<blocks,threads_perblock>>>(subDD[0], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
-            make_histoXX<<<blocks,threads_perblock>>>(subDD[1], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
+        for (int j=0; j<n_kernel_calls; j++){
+            make_histoXX<<<blocks,threads_perblock>>>(subDD[j], dnodeD, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXX<<<blocks,threads_perblock>>>(subRR[j], dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
             //make_histoXY<<<blocks,threads_perblock>>>(subDR[j], dnodeD, dnodeR, partitions, bn, dmax, size_node, j, n_kernel_calls);
-        //}
+        }
 
         //Waits for all the kernels to complete
         cucheck(cudaDeviceSynchronize());
@@ -597,10 +604,10 @@ int main(int argc, char **argv){
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
 
-    cucheck(cudaFree(dataD));
-    cucheck(cudaFree(dataR));
-    //delete[] dataD;
-    //delete[] dataR;
+    //cucheck(cudaFree(dataD));
+    //cucheck(cudaFree(dataR));
+    delete[] dataD;
+    delete[] dataR;
 
     delete[] DD;
     delete[] DR;
@@ -609,13 +616,13 @@ int main(int argc, char **argv){
     
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
-            //delete[] hnodeD[i][j];
+            delete[] hnodeD[i][j];
             //delete[] hnodeR[i][j];
 
             cucheck(cudaFree(*(*(dnodeD+i)+j)));
             //cucheck(cudaFree(*(*(dnodeR+i)+j)));
         }
-        //delete[] hnodeD[i];
+        delete[] hnodeD[i];
         //delete[] hnodeR[i];
 
         cucheck(cudaFree(*(dnodeD+i)));
@@ -623,7 +630,7 @@ int main(int argc, char **argv){
     }
     
     
-    //delete[] hnodeD;
+    delete[] hnodeD;
     //delete[] hnodeR;
 
     cucheck(cudaFree(dnodeD));
