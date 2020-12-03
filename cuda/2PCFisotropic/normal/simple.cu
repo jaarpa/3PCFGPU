@@ -190,7 +190,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count_distances11(double *XX, PointW3D *elements, int len, float ds, float dd_max, int sum){
+__device__ void count_distances11(double *XX, PointW3D *elements, int start, int end, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points within one node.
 
@@ -208,12 +208,12 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int len, float
     float x1, y1, z1, w1;
     float x2,y2,z2,w2;
 
-    for (int i=0; i<len-1; ++i){
+    for (int i=start; i<end-1; ++i){
         x1 = elements[i].x;
         y1 = elements[i].y;
         z1 = elements[i].z;
         w1 = elements[i].w;
-        for (int j=i+1; j<len; ++j){
+        for (int j=i+1; j<end; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
             z2 = elements[j].z;
@@ -228,7 +228,7 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int len, float
     }
 }
 
-__device__ void count_distances12(double *XX, PointW3D *elements1, int len1, PointW3D *elements2, int len2, float ds, float dd_max, int sum){
+__device__ void count_distances12(double *XX, PointW3D *elements, int start1, int end1, int start2, int end2, float ds, float dd_max, int sum){
     /*
     This device function counts the distances betweeen points between two different nodes.
 
@@ -247,16 +247,16 @@ __device__ void count_distances12(double *XX, PointW3D *elements1, int len1, Poi
     float d;
     float x1,y1,z1,w1,x2,y2,z2,w2;
 
-    for (int i=0; i<len1; ++i){
-        x1 = elements1[i].x;
-        y1 = elements1[i].y;
-        z1 = elements1[i].z;
-        w1 = elements1[i].w;
-        for (int j=0; j<len2; ++j){
-            x2 = elements2[j].x;
-            y2 = elements2[j].y;
-            z2 = elements2[j].z;
-            w2 = elements2[j].w;
+    for (int i=start1; i<end1; ++i){
+        x1 = elements[i].x;
+        y1 = elements[i].y;
+        z1 = elements[i].z;
+        w1 = elements[i].w;
+        for (int j=start2; j<end2; ++j){
+            x2 = elements[j].x;
+            y2 = elements[j].y;
+            z2 = elements[j].z;
+            w2 = elements[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
             if (d<=dd_max){
                 bin = (int)(sqrt(d)*ds);
@@ -267,7 +267,7 @@ __device__ void count_distances12(double *XX, PointW3D *elements1, int len1, Poi
     }
 }
 
-__global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, float dmax, float size_node){
+__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
@@ -276,50 +276,57 @@ __global__ void make_histoXX(double *XX, Node ***nodeD, int partitions, int bn, 
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
 
-        if (nodeD[row][col][mom].len > 0){
+        //idx = row + col*partitions + mom*partitions*partitions;
+
+        if (nodeD[idx].len > 0){
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[row][col][mom].nodepos.x, ny1=nodeD[row][col][mom].nodepos.y, nz1=nodeD[row][col][mom].nodepos.z;
+            float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
             
             // Counts distances within the same node
-            count_distances11(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, ds, dd_max, 2);
+            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, ds, dd_max, 2);
             
-            int u=row,v=col,w=mom; // Position index of the second node
+            int idx2, u=row,v=col,w=mom; // Position index of the second node
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
-                dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
+                idx2 = row + col*partitions + w*partitions*partitions;
+                dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
                 if (dd_nod12 <= d_max_node){
-                    count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
+                    count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, nodeD[idx2].prev_i, nodeD[idx2+1].prev_i, ds, dd_max, 2);
                 }
             }
 
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
-                dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
+                idx2 = row + col*partitions;
+                dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                 for(w=0; w<partitions; w++){
-                    dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
+                    idx2 = row + v*partitions + w*partitions*partitions
+                    dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=d_max_node){
-                        count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
+                        count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, nodeD[idx2].prev_i, nodeD[idx2+1].prev_i, ds, dd_max, 2);
                     }
                 }
             }
 
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
-                dx_nod12 = nodeD[u][0][0].nodepos.x - nx1;
+                dx_nod12 = nodeD[u].nodepos.x - nx1;
                 for(v = 0; v < partitions; v++){
-                    dy_nod12 = nodeD[u][v][0].nodepos.y - ny1;
+                    idx2 = u + v*partitions;
+                    dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
-                        dz_nod12 = nodeD[u][v][w].nodepos.z - nz1;
+                        idx2 = row + col*partitions + mom*partitions*partitions;
+                        dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distances12(XX, nodeD[row][col][mom].elements, nodeD[row][col][mom].len, nodeD[u][v][w].elements, nodeD[u][v][w].len, ds, dd_max, 2);
+                            count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, nodeD[idx2].prev_i, nodeD[idx2+1].prev_i, ds, dd_max, 2);
                         }
                     }
                 }
@@ -527,7 +534,7 @@ int main(int argc, char **argv){
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    make_histoXX<<<blocks,threads_perblock,0,streamDD>>>(DD, d_ordered_pointsD_s1, dnodeD_s1, partitions, bn, dmax, size_node);
+    make_histoXX<<<blocks,threads_perblock,0,streamDD>>>(d_DD, d_ordered_pointsD_s1, dnodeD_s1, partitions, bn, dmax, size_node);
     //make_histoXX<<<blocks,threads_perblock>>>(RR, dnodeR, partitions, bn, dmax, size_node);
     //make_histoXY<<<blocks,threads_perblock>>>(DR, dnodeD, dnodeR, partitions, bn, dmax, size_node);
 
