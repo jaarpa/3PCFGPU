@@ -1,5 +1,6 @@
 // nvcc -arch=sm_75 simple.cu -o par_s.out && ./par_s.out data_1GPc.dat data_1GPc.dat 405224 20 160
 // nvcc -arch=sm_75 simple.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 180
+// nvcc -arch=sm_75 simple.cu -o par_s.out && ./par_s.out data.dat rand0.dat 32768 60 150
 
 #include <assert.h>
 #include <stdio.h>
