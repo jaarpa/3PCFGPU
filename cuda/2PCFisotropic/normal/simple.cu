@@ -306,7 +306,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                 idx2 = row + col*partitions;
                 dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                 for(w=0; w<partitions; w++){
-                    idx2 = row + v*partitions + w*partitions*partitions
+                    idx2 = row + v*partitions + w*partitions*partitions;
                     dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=d_max_node){
@@ -385,7 +385,7 @@ int main(int argc, char **argv){
     float time_spent, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
     //float **subDD, **subRR, **subDR;
 
-    double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR,;
+    double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
     int threads_perblock, blocks;
@@ -480,7 +480,7 @@ int main(int argc, char **argv){
     
     //Deep copy to device memory
 
-    last_pointR = 0;
+    //last_pointR = 0;
     last_pointD = 0;
     for (int idx=0; idx<partitions*partitions*partitions; idx++){
         mom = (int) (idx/(partitions*partitions));
@@ -488,10 +488,10 @@ int main(int argc, char **argv){
         row = idx%partitions;
         
         hnodeD_s[idx].nodepos = hnodeD[row][col][mom].nodepos;
-        hnodeD_s[idx].prev_i = last_pointR;
-        last_pointR = last_pointR + hnodeD[row][col][mom].len;
+        hnodeD_s[idx].prev_i = last_pointD;
+        last_pointD = last_pointD + hnodeD[row][col][mom].len;
         hnodeD_s[idx].len = hnodeD[row][col][mom].len;
-        for (int j=hnodeD_s[idx].prev_i; j<last_pointR; j++){
+        for (int j=hnodeD_s[idx].prev_i; j<last_pointD; j++){
             k_element = j-hnodeD_s[idx].prev_i;
             h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
         }
