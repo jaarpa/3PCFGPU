@@ -131,6 +131,166 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
     }
 }
 
+//=================================================================== 
+// void NODE2P::histo_front_XX(double *PP, Node ***dat, float disn, float dn_x, float dn_y, float dn_z, bool con_in_x, bool con_in_y, bool con_in_z, int row, int col, int mom, int u, int v, int w){
+//     /*
+
+//     Function to add periodic boundary conditions
+
+//     */
+
+//     int i, j;
+//     float dis_f,dis,d_x,d_y,d_z;
+//     float x,y,z,w1;
+//     //======================================================================
+//     if( con_in_x ){
+//     dis_f = disn + ll - 2*dn_x*size_box;
+//     if (dis_f <= ddmax_nod){
+//         for (i=0; i<dat[row][col][mom].len; ++i){
+//         x = dat[row][col][mom].elements[i].x;
+//         y = dat[row][col][mom].elements[i].y;
+//         z = dat[row][col][mom].elements[i].z;
+//         w1 = dat[row][col][mom].elements[i].w;
+//             for (j=0; j<dat[u][v][w].len; ++j){
+//             d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
+//             d_y = y-dat[u][v][w].elements[j].y;
+//             d_z = z-dat[u][v][w].elements[j].z;
+//             dis = d_x*d_x + d_y*d_y + d_z*d_z; 
+//             if (dis < dd_max){
+//             *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
+//             }
+//             }
+//         }
+//     }
+//     }
+//     //======================================================================		
+//     if( con_in_y ){
+//     dis_f = disn + ll - 2*dn_y*size_box;
+//     if (dis_f <= ddmax_nod){
+//         for (i=0; i<dat[row][col][mom].len; ++i){
+//         x = dat[row][col][mom].elements[i].x;
+//         y = dat[row][col][mom].elements[i].y;
+//         z = dat[row][col][mom].elements[i].z;
+//         w1 = dat[row][col][mom].elements[i].w;
+//             for (j=0; j<dat[u][v][w].len; ++j){
+//             d_x = x-dat[u][v][w].elements[j].x;
+//             d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
+//             d_z = z-dat[u][v][w].elements[j].z;
+//             dis = d_x*d_x + d_y*d_y + d_z*d_z; 
+//             if (dis < dd_max){
+//             *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
+//             }
+//             }
+//         }
+//     }
+//     }
+//     //======================================================================
+//     if( con_in_z ){
+//     dis_f = disn + ll - 2*dn_z*size_box;
+//     if (dis_f <= ddmax_nod){
+//         for (i=0; i<dat[row][col][mom].len; ++i){
+//         x = dat[row][col][mom].elements[i].x;
+//         y = dat[row][col][mom].elements[i].y;
+//         z = dat[row][col][mom].elements[i].z;
+//         w1 = dat[row][col][mom].elements[i].w;
+//             for (j=0; j<dat[u][v][w].len; ++j){
+//             d_x = x-dat[u][v][w].elements[j].x;
+//             d_y = y-dat[u][v][w].elements[j].y;
+//             d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
+//             dis = d_x*d_x + d_y*d_y + d_z*d_z; 
+//             if (dis < dd_max){
+//             *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
+//             }
+//             }
+//         }
+//     }
+//     }
+//     //======================================================================	
+//     if( con_in_x && con_in_y ){
+//     dis_f = disn + 2*ll - 2*(dn_x+dn_y)*size_box;
+//     if (dis_f < ddmax_nod){
+//         for (i=0; i<dat[row][col][mom].len; ++i){
+//         x = dat[row][col][mom].elements[i].x;
+//         y = dat[row][col][mom].elements[i].y;
+//         z = dat[row][col][mom].elements[i].z;
+//         w1 = dat[row][col][mom].elements[i].w;
+//             for (j=0; j<dat[u][v][w].len; ++j){
+//             d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
+//             d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
+//             d_z = z-dat[u][v][w].elements[j].z;
+//             dis = d_x*d_x + d_y*d_y + d_z*d_z; 
+//             if (dis < dd_max){
+//             *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
+//             }
+//             }
+//         }
+//     }
+//     }
+//     //======================================================================			
+//     if( con_in_x && con_in_z ){
+//     dis_f = disn + 2*ll - 2*(dn_x+dn_z)*size_box;
+//     if (dis_f <= ddmax_nod){
+//         for ( i=0; i<dat[row][col][mom].len; ++i){
+//         x = dat[row][col][mom].elements[i].x;
+//         y = dat[row][col][mom].elements[i].y;
+//         z = dat[row][col][mom].elements[i].z;
+//         w1 = dat[row][col][mom].elements[i].w;
+//             for (j=0; j<dat[u][v][w].len; ++j){
+//             d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
+//             d_y = y-dat[u][v][w].elements[j].y;
+//             d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
+//             dis = d_x*d_x + d_y*d_y + d_z*d_z; 
+//             if (dis < dd_max){
+//             *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
+//             }
+//             }
+//         }
+//     }
+//     }
+//     //======================================================================		
+//     if( con_in_y && con_in_z ){
+//     dis_f = disn + 2*ll - 2*(dn_y+dn_z)*size_box;
+//     if (dis_f <= ddmax_nod){
+//         for (i=0; i<dat[row][col][mom].len; ++i){
+//         x = dat[row][col][mom].elements[i].x;
+//         y = dat[row][col][mom].elements[i].y;
+//         z = dat[row][col][mom].elements[i].z;
+//         w1 = dat[row][col][mom].elements[i].w;
+//             for (j=0; j<dat[u][v][w].len; ++j){
+//             d_x = x-dat[u][v][w].elements[j].x;
+//             d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
+//             d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
+//             dis = d_x*d_x + d_y*d_y + d_z*d_z; 
+//             if (dis < dd_max){
+//             *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
+//             }
+//             }
+//         }
+//     }
+//     }
+//     //======================================================================		
+//     if( con_in_x && con_in_y && con_in_z ){
+//     dis_f = disn + 3*ll - 2*(dn_x+dn_y+dn_z)*size_box;
+//     if (dis_f <= ddmax_nod){
+//         for (i=0; i<dat[row][col][mom].len; ++i){
+//         x = dat[row][col][mom].elements[i].x;
+//         y = dat[row][col][mom].elements[i].y;
+//         z = dat[row][col][mom].elements[i].z;
+//         w1 = dat[row][col][mom].elements[i].w;
+//             for (j=0; j<dat[u][v][w].len; ++j){
+//             d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
+//             d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
+//             d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
+//             dis = d_x*d_x + d_y*d_y + d_z*d_z;
+//             if (dis < dd_max){
+//             *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
+//             }
+//             }
+//         }
+//     }
+//     }
+// }
+
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
