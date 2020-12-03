@@ -255,6 +255,45 @@ __device__ void count_distances12(double *XX, PointW3D *elements, int start1, in
     }
 }
 
+__device__ void count_distancesXY(double *XX, PointW3D *elements1, int start1, int end1, PointW3D *elements2, int start2, int end2, float ds, float dd_max, int sum){
+    /*
+    This device function counts the distances betweeen points between two different nodes.
+
+    Args:
+    XX: The histogram where the distances are counted in
+    elements1:  Array of PointW3D points inside the first node
+    len1: lenght of the first elements array
+    elements2:  Array of PointW3D points inside the second node
+    len2: lenght of the second elements array
+    ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
+    dd_max: The maximum distance of interest.
+    */
+
+    int bin;
+    double v;
+    float d;
+    float x1,y1,z1,w1,x2,y2,z2,w2;
+
+    for (int i=start1; i<end1; ++i){
+        x1 = elements1[i].x;
+        y1 = elements1[i].y;
+        z1 = elements1[i].z;
+        w1 = elements1[i].w;
+        for (int j=start2; j<end2; ++j){
+            x2 = elements2[j].x;
+            y2 = elements2[j].y;
+            z2 = elements2[j].z;
+            w2 = elements2[j].w;
+            d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+            if (d<=dd_max){
+                bin = (int)(sqrt(d)*ds);
+                v = sum*w1*w2;
+                atomicAdd(&XX[bin],v);
+            }
+        }
+    }
+}
+
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -356,7 +395,7 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
                         dz_nod12 = nodeR[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 1);
+                            count_distancesXY(XY, elementsD, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, elementsR, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 1);
                         }
                     }
                 }
