@@ -1,8 +1,6 @@
 // nvcc -arch=sm_75 simple.cu -o par_s.out && ./par_s.out data_1GPc.dat data_1GPc.dat 405224 20 160
 // nvcc -arch=sm_75 simple.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 180
 
-// For dynamic parallelism
-// nvcc -arch=sm_35 -rdc=true dynamic.cu -lcudadevrt -o par_d.out && ./par_d.out data_5K.dat rand0_5K.dat 5000 30 50
 #include <assert.h>
 #include <stdio.h>
 #include <iostream>
@@ -284,7 +282,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
-            
+
             // Counts distances within the same node
             count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
             
