@@ -2,6 +2,8 @@
 #include <fstream>
 #include <string.h>
 
+using namespace std;
+
 struct Point3D{
 	float x;
 	float y; 
