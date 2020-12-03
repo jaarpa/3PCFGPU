@@ -367,9 +367,9 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
-        int mom = (int) (idx/(partitions*partitions));
-        int col = (int) ((idx%(partitions*partitions))/partitions);
-        int row = idx%partitions;
+        //int mom = (int) (idx/(partitions*partitions));
+        //int col = (int) ((idx%(partitions*partitions))/partitions);
+        //int row = idx%partitions;
         
         //idx = row + col*partitions + mom*partitions*partitions;
 
@@ -427,10 +427,10 @@ int main(int argc, char **argv){
     clock_t stop_timmer_host, start_timmer_host;
 
     PointW3D *dataD;
-    //PointW3D *dataR;
+    PointW3D *dataR;
 
     Node ***hnodeD, ***hnodeR;
-    DNode *hnodeD_s, *hnodeR_s,
+    DNode *hnodeD_s, *hnodeR_s;
     PointW3D *h_ordered_pointsD_s, *h_ordered_pointsR_s;
     cudaStream_t streamDD, streamRR, streamDR;
     cudaStreamCreate(&streamDD);
