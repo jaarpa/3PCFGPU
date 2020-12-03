@@ -177,7 +177,6 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
         row = (int)(dat[i].x/size_node);
         col = (int)(dat[i].y/size_node);
         mom = (int)(dat[i].z/size_node);
-        idx = mom*partitions*partitions + col*partitions + row;
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
     }
 }
