@@ -288,6 +288,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             // Counts distances within the same node
             count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, ds, dd_max, 2);
             
+            /*            
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
@@ -331,9 +332,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     }
                 }
             }
-            if (idx==123){
-                printf("Exit the kernel");
-            }
+            */
         }
     }
 }
