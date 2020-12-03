@@ -476,8 +476,8 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(d_DR, DR, bn*sizeof(double), cudaMemcpyHostToDevice, streamDR));
 
     //Sets the number of partitions of the box and the size of each node
-    size_node = 2.176*(size_box/pow((float)(np),1/3.));
-    partitions = (int)(ceil(size_box/size_node));
+    partitions = 35;
+    size_node = size_box/(float)(partitions);
 
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMalloc(&dnodeD_s1, partitions*partitions*partitions*sizeof(DNode)));
@@ -512,7 +512,7 @@ int main(int argc, char **argv){
     
     //Deep copy to device memory
 
-    //last_pointR = 0;
+    last_pointR = 0;
     last_pointD = 0;
     for (int idx=0; idx<partitions*partitions*partitions; idx++){
         mom = (int) (idx/(partitions*partitions));
@@ -611,7 +611,7 @@ int main(int argc, char **argv){
     cucheck(cudaEventDestroy(stop_timmer));
 
     delete[] dataD;
-    //delete[] dataR;
+    delete[] dataR;
 
     delete[] DD;
     delete[] RR;    
@@ -625,27 +625,27 @@ int main(int argc, char **argv){
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
             delete[] hnodeD[i][j];
-            //delete[] hnodeR[i][j];
+            delete[] hnodeR[i][j];
         }
         delete[] hnodeD[i];
-        //delete[] hnodeR[i];
+        delete[] hnodeR[i];
     }    
     delete[] hnodeD;
-    //delete[] hnodeR;
+    delete[] hnodeR;
 
     cucheck(cudaFree(d_ordered_pointsD_s1));
     cucheck(cudaFree(dnodeD_s1));
-    //cucheck(cudaFree(d_ordered_pointsR_s2));
-    //cucheck(cudaFree(dnodeR_s2));
-    //cucheck(cudaFree(d_ordered_pointsD_s3));
-    //cucheck(cudaFree(dnodeD_s3));
-    //cucheck(cudaFree(d_ordered_pointsR_s3));
-    //cucheck(cudaFree(dnodeR_s3));
+    cucheck(cudaFree(d_ordered_pointsR_s2));
+    cucheck(cudaFree(dnodeR_s2));
+    cucheck(cudaFree(d_ordered_pointsD_s3));
+    cucheck(cudaFree(dnodeD_s3));
+    cucheck(cudaFree(d_ordered_pointsR_s3));
+    cucheck(cudaFree(dnodeR_s3));
     
     delete[] hnodeD_s;
     delete[] h_ordered_pointsD_s;
-    //delete[] hnodeR_s;
-    //delete[] h_ordered_pointsR_s;
+    delete[] hnodeR_s;
+    delete[] h_ordered_pointsR_s;
 
     cout << "Programa Terminado..." << endl;
     return 0;
