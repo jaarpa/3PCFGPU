@@ -3,7 +3,6 @@
 // nvcc -arch=sm_75 simple.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 180
 // nvcc -arch=sm_75 simple.cu -o par_s.out && ./par_s.out data.dat rand0.dat 32768 60 150
 
-#include <assert.h>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -45,7 +44,7 @@ struct Node{
     PointW3D *elements;	// Points in the node
 };
 
-struct DNode{ //Define the node in the device without using elements to avoid deep copy
+struct DNode{ //Defines the node in the device without using elements to avoid deep copy
     Point3D nodepos; //Position of the node
     int len;		// Number of points in the node
     int prev_i; //prev element idx
@@ -182,14 +181,17 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 
 __device__ void count_distances11(double *XX, PointW3D *elements, int start, int end, float ds, float dd_max, int sum){
     /*
-    This device function counts the distances betweeen points within one node.
+    This device function counts the distances betweeen points within the same node. This function is used 
+    to compute the XX histogram
 
     Args:
-    XX: The histogram where the distances are counted in
-    elements:  Array of PointW3D points inside the node
-    len: lenght of the elements array
-    ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
-    dd_max: The maximum distance of interest.
+    XX: (double*) The histogram where the distances are counted in
+    elements: (PointW3D*)  Array of PointW3D points orderered coherently by the nodes
+    start: (int) index at which the nodeA starts to be defined by elements1. Inclusive.
+    end: (int) index at which the nodeA stops being defined by elements1. Non inclusive.
+    ds: (float) number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
+    dd_max: (float) The maximum distance of interest.
+    sum: (int) State if each distance is counted twice or once
     */
     
     int bin;
@@ -220,16 +222,19 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int start, int
 
 __device__ void count_distances12(double *XX, PointW3D *elements, int start1, int end1, int start2, int end2, float ds, float dd_max, int sum){
     /*
-    This device function counts the distances betweeen points between two different nodes.
+    This device function counts the distances betweeen points between two different nodes from the same file. This function is used 
+    to compute the XX histogram
 
     Args:
-    XX: The histogram where the distances are counted in
-    elements1:  Array of PointW3D points inside the first node
-    len1: lenght of the first elements array
-    elements2:  Array of PointW3D points inside the second node
-    len2: lenght of the second elements array
-    ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
-    dd_max: The maximum distance of interest.
+    XX: (double*) The histogram where the distances are counted in
+    elements: (PointW3D*)  Array of PointW3D points orderered coherently by the nodes
+    start1: (int) index at which the nodeA starts to be defined by elements1. Inclusive.
+    end1: (int) index at which the nodeA stops being defined by elements1. Non inclusive.
+    start2: (int) index at which the nodeB starts to be defined by elements1. Inclusive.
+    end2: (int) index at which the nodeB stops being defined by elements1. Non inclusive.
+    ds: (float) number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
+    dd_max: (float) The maximum distance of interest.
+    sum: (int) State if each distance is counted twice or once
     */
 
     int bin;
@@ -259,16 +264,20 @@ __device__ void count_distances12(double *XX, PointW3D *elements, int start1, in
 
 __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, int end1, PointW3D *elements2, int start2, int end2, float ds, float dd_max, int sum){
     /*
-    This device function counts the distances betweeen points between two different nodes.
+    This device function counts the distances betweeen points between two different nodes from two different files. This function is used 
+    to compute the XY histogram
 
     Args:
-    XY: The histogram where the distances are counted in
-    elements1:  Array of PointW3D points inside the first node
-    len1: lenght of the first elements array
-    elements2:  Array of PointW3D points inside the second node
-    len2: lenght of the second elements array
-    ds: number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
-    dd_max: The maximum distance of interest.
+    XY: (double*) The histogram where the distances are counted in
+    elements1: (PointW3D*)  Array of PointW3D points orderered coherently by the nodes
+    start1: (int) index at which the nodeA starts to be defined by elements1. Inclusive.
+    end1: (int) index at which the nodeA stops being defined by elements1. Non inclusive.
+    elements2: (PointW3D*)  Array of PointW3D points orderered coherently by the nodes
+    start2: (int) index at which the nodeB starts to be defined by elements2. Inclusive.
+    end2: (int) index at which the nodeB stops being defined by elements1. Non inclusive.
+    ds: (float) number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
+    dd_max: (float) The maximum distance of interest.
+    sum: (int) State if each distance is counted twice or once
     */
 
     int bin;
@@ -297,6 +306,19 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
 }
 
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
+    /*
+    Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
+
+    args:
+    XX: (double*) The histogram where the distances are counted.
+    elements: (PointW3D*) Array of the points ordered coherently with the nodes.
+    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+    partitions: (int) Number of partitions that are fitted by box side.
+    bn: (int) NUmber of bins in the XY histogram.
+    dmax: (dmax) The maximum distance of interest between points.
+    size_node: (float) Size of the nodes
+    */
+
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
@@ -366,6 +388,20 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
 }
 
 __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, PointW3D *elementsR,  DNode *nodeR, int partitions, int bn, float dmax, float size_node){
+    /*
+    Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
+
+    args:
+    XY: (double*) The histogram where the distances are counted.
+    elementsD: (PointW3D*) Array of the points ordered coherently with the nodes.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of elementD that correspond to that node.
+    elementsR: (PointW3D*) Array of the points ordered coherently with the nodes.
+    nodeR: (DNode) Array of RNodes each of which define a node and the elements of elementR that correspond to that node.
+    partitions: (int) Number of partitions that are fitted by box side.
+    bn: (int) NUmber of bins in the XY histogram.
+    dmax: (dmax) The maximum distance of interest between points.
+    size_node: (float) Size of the nodes
+    */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon in this thread
@@ -407,6 +443,18 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
 }
 
 int main(int argc, char **argv){
+    /*
+    Main function to calculate the isotropic 2 point correlation function. Saves three different histograms in the same location of this script
+    with the names DD.dat DR.dat RR.dat. This program do not consider periodic boundary conditions. The file must contain 4 columns, the first 3 
+    are the x,y,z coordinates and the 4 the weigh of the measurment.
+
+    Args:
+    arg[1]: name or path to the data file relative to ../../../fake_DATA/DATOS/. 
+    arg[2]: name or path to the random file relative to ../../../fake_DATA/DATOS/
+    arg[3]: integer of the number of points in the files.
+    arg[4]: integer. Number of bins where the distances are classified
+    arg[5]: float. Maximum distance of interest. It has to have the same units as the points in the files.
+    */
 
     /* =======================================================================*/
     /* =====================   Var declaration ===============================*/
@@ -593,7 +641,6 @@ int main(int argc, char **argv){
     /* =======================  Save the results =============================*/
     /* =======================================================================*/
 
-	// Guardamos los histogramas
 	save_histogram(nameDD, bn, DD);
 	save_histogram(nameRR, bn, RR);
 	save_histogram(nameDR, bn, DR);
@@ -648,7 +695,7 @@ int main(int argc, char **argv){
     delete[] hnodeR_s;
     delete[] h_ordered_pointsR_s;
 
-    cout << "Programa Terminado..." << endl;
+    cout << "Program terminated..." << endl;
     return 0;
 }
 
