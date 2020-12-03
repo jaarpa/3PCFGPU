@@ -284,11 +284,10 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
-            
+            printf("Im in the kernel")
             // Counts distances within the same node
-            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, ds, dd_max, 2);
+            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
             
-            /*            
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
@@ -298,7 +297,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                 dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
                 if (dd_nod12 <= d_max_node){
-                    count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, nodeD[idx2].prev_i, nodeD[idx2+1].prev_i, ds, dd_max, 2);
+                    count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                 }
             }
 
@@ -311,7 +310,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=d_max_node){
-                        count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, nodeD[idx2].prev_i, nodeD[idx2+1].prev_i, ds, dd_max, 2);
+                        count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                     }
                 }
             }
@@ -323,16 +322,16 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     idx2 = u + v*partitions;
                     dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
-                        idx2 = row + col*partitions + mom*partitions*partitions;
+                        idx2 = u + v*partitions + w*partitions*partitions;
                         dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx+1].prev_i, nodeD[idx2].prev_i, nodeD[idx2+1].prev_i, ds, dd_max, 2);
+                            count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                         }
                     }
                 }
             }
-            */
+            
         }
     }
 }
