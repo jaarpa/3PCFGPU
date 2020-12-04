@@ -163,7 +163,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	#pragma omp parallel num_threads(2) 
 	{
     	
-    // Private variables in threads:
+    	// Private variables in threads:
 	int i, j, row, col, mom, u, v, w;
 	float dis, dis_nod;
 	float x1D, y1D, z1D, x2D, y2D, z2D;
@@ -181,11 +181,6 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	x1D = nodeX[row][0][0].nodepos.x;
 	y1D = nodeX[row][col][0].nodepos.y;
 	z1D = nodeX[row][col][mom].nodepos.z;			
-		if (mom==0&&col==0&row==0){
-			for (i=0; i <nodeX[row][col][mom].len; ++i){
-				std::cout << nodeX[row][col][mom].elements[i].x << ", " << nodeX[row][col][mom].elements[i].y << ", " << nodeX[row][col][mom].elements[i].z << ", " << nodeX[row][col][mom].elements[i].w << std::endl;
-			}
-		}
 		//==================================================
 		// Pairs of points in the same node:
 		//==================================================
@@ -204,7 +199,6 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			}
 			}
 		}
-		
 		//==================================================
 		// Pairs of points at different nodes
 		//==================================================
@@ -238,12 +232,11 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			// Distance of border points XX 
 			// ======================================= 
 			// Boundary node conditions:
-			//con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
-			//if(con_z){
-			//histo_front_XX(XX,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
-			//}
+			con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
+			if(con_z){
+			histo_front_XX(XX,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
+			}
 		}
-		
 		//=========================
 		// N2 mobile in ZY
 		//=========================
@@ -277,14 +270,13 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			// Distance of border points XX 
 			// ======================================= 
 			// Boundary node conditions:
-			//con_y = ((y1D<=d_max_pm)&&(y2D>=front_pm))||((y2D<=d_max_pm)&&(y1D>=front_pm));
-			//con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
-			//if(con_y || con_z){ 
-			//histo_front_XX(XX,nodeX,dis_nod,0.0,sqrt(dy_nod),sqrt(dz_nod),false,con_y,con_z,row,col,mom,u,v,w);
-			//}
+			con_y = ((y1D<=d_max_pm)&&(y2D>=front_pm))||((y2D<=d_max_pm)&&(y1D>=front_pm));
+			con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
+			if(con_y || con_z){ 
+			histo_front_XX(XX,nodeX,dis_nod,0.0,sqrt(dy_nod),sqrt(dz_nod),false,con_y,con_z,row,col,mom,u,v,w);
+			}
 			}
 		}
-
 		//=========================
 		// N2 mobile in  ZYX
 		//=========================
@@ -322,16 +314,15 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				// Distance of border points XX 
 				// ======================================= 
 				// Boundary node conditions:
-				//con_x = ((x1D<=d_max_pm)&&(x2D>=front_pm))||((x2D<=d_max_pm)&&(x1D>=front_pm));
-				//con_y = ((y1D<=d_max_pm)&&(y2D>=front_pm))||((y2D<=d_max_pm)&&(y1D>=front_pm));
-				//con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
-				//if(con_x || con_y || con_z){
-				//histo_front_XX(XX,nodeX,dis_nod,sqrt(dx_nod),sqrt(dy_nod),sqrt(dz_nod),con_x,con_y,con_z,row,col,mom,u,v,w);
-				//}	
+				con_x = ((x1D<=d_max_pm)&&(x2D>=front_pm))||((x2D<=d_max_pm)&&(x1D>=front_pm));
+				con_y = ((y1D<=d_max_pm)&&(y2D>=front_pm))||((y2D<=d_max_pm)&&(y1D>=front_pm));
+				con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
+				if(con_x || con_y || con_z){
+				histo_front_XX(XX,nodeX,dis_nod,sqrt(dx_nod),sqrt(dy_nod),sqrt(dz_nod),con_x,con_y,con_z,row,col,mom,u,v,w);
+				}	
 				}	
 			}
 		}
-		
 	}
 	}
 	}
@@ -415,7 +406,7 @@ void NODE2P::histo_front_XX(double *PP, Node ***dat, float disn, float dn_x, flo
 	//======================================================================	
 	if( con_in_x && con_in_y ){
 	dis_f = disn + 2*ll - 2*(dn_x+dn_y)*size_box;
-	if (dis_f <= ddmax_nod){
+	if (dis_f < ddmax_nod){
 		for (i=0; i<dat[row][col][mom].len; ++i){
 		x = dat[row][col][mom].elements[i].x;
 		y = dat[row][col][mom].elements[i].y;

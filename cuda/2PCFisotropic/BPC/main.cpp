@@ -1,5 +1,3 @@
-//c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
-
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -24,8 +22,8 @@ Node ***nodeR;
 
 int main(int argc, char **argv){
 
-	int n_pts = 32*32*32, bn = 30;
-	float d_max = 150.0, size_box = 250.0, alpha = 2.176;
+	int n_pts = 32*32*32, bn = 400;
+	float d_max = 180.0, size_box = 250.0, alpha = 2.176;
 	float size_node = alpha*(size_box/pow((float)(n_pts),1/3.));
 	dataD = new PointW3D[n_pts]; 
 	dataR = new PointW3D[n_pts]; 
