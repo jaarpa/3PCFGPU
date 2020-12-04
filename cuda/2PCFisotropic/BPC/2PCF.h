@@ -331,7 +331,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				}	
 			}
 		}
-		*/
+		
 	}
 	}
 	}
