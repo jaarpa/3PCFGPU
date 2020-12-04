@@ -26,7 +26,8 @@ int main(int argc, char **argv){
 
 	int n_pts = 32*32*32, bn = 30;
 	float d_max = 180.0, size_box = 250.0, alpha = 2.176;
-	float size_node = alpha*(size_box/pow((float)(n_pts),1/3.));
+	int partitions = 15;
+	float size_node = size_box/(float)(partitions);
 	dataD = new PointW3D[n_pts]; 
 	dataR = new PointW3D[n_pts]; 
 	
@@ -66,7 +67,6 @@ int main(int argc, char **argv){
 	open_files(argv[2],n_pts,dataR);
 	
 	// Initialize the grid
-	int partitions = (int)(ceil(size_box/size_node));
 	nodeD = new Node**[partitions];
 	nodeR = new Node**[partitions];
 	for ( i = 0; i < partitions; ++i){
