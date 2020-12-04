@@ -131,7 +131,42 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
     }
 }
 
-__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
+__device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int end1, int start2, int end2, float disn, float dn_x, float dn_y, float dn_z, bool con_in_x, bool con_in_y, bool con_in_z, float size_box, float ds, float dd_max, float ddmax_nod){
+    /*
+    Function to consider periodic boundary conditions contributions.
+    */
+
+    if (con_in_x || con_in_y || con_in_z){
+        int bin;
+        float dis_f, dis, d_x, d_y, d_z, x, y, z, w1;
+        float ll = size_box*size_box;
+        double v;
+
+
+        dis_f = disn + (con_in_x + con_in_y + con_in_z)*ll - 2*(dn_x*con_in_x+dn_y*con_in_y+dn_z*con_in_z)*size_box;
+        if (dis_f <= ddmax_nod){
+            for (int i=start1; i<end1; ++i){
+                x = elements[i].x;
+                y = elements[i].y;
+                z = elements[i].z;
+                w1 = elements[i].w;
+                for (int j=start2; j<end2; ++j){
+                    d_x = fabs(x-elements[j].x)-(size_box*con_in_x);
+                    d_y = fabs(y-elements[j].y)-(size_box*con_in_y);
+                    d_z = fabs(z-elements[j].z)-(size_box*con_in_z);
+                    dis = d_x*d_x + d_y*d_y + d_z*d_z;
+                    if (dis < dd_max){
+                        bin = (int)(sqrt(dis)*ds);
+                        v = 2*w1*elements[j].w;
+                        atomicAdd(&XX[bin],v);
+                    }
+                }
+            }
+        }
+    }
+}
+
+__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node, float size_box){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
 
@@ -156,9 +191,10 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
         //idx = row + col*partitions + mom*partitions*partitions;
 
         if (nodeD[idx].len > 0){
-
+            bool con_x, con_y, con_z;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
+            float d_front = size_box - dmax -1;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
 
@@ -177,6 +213,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                 dd_nod12 = dz_nod12*dz_nod12;
                 if (dd_nod12 <= d_max_node){
                     count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
+                }
+                // Boundary node conditions:
+                con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
+                if(con_z){
+                    boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, 0.0, dz_nod12, false, false, con_z, size_box, ds, dd_max, d_max_node);
                 }
             }
 
