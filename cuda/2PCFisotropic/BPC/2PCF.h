@@ -171,7 +171,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	float dx, dy, dz, dx_nod, dy_nod, dz_nod;
 	bool con_x, con_y, con_z;
 	float d_max_pm = d_max + size_node/2, front_pm = front - size_node/2;
-	std::cout << "d_max_pm: " << d_max_pm << "front_pm "<< front_pm << std::endl;
+	std::cout << "front_pm "<< front_pm << "d_max_pm: " << d_max_pm << std::endl;
 	
 	#pragma omp for collapse(3)  schedule(dynamic)
 	for (row = 0; row < partitions; ++row){
