@@ -406,7 +406,7 @@ void NODE2P::histo_front_XX(double *PP, Node ***dat, float disn, float dn_x, flo
 	//======================================================================	
 	if( con_in_x && con_in_y ){
 	dis_f = disn + 2*ll - 2*(dn_x+dn_y)*size_box;
-	if (dis_f < ddmax_nod){
+	if (dis_f <= ddmax_nod){
 		for (i=0; i<dat[row][col][mom].len; ++i){
 		x = dat[row][col][mom].elements[i].x;
 		y = dat[row][col][mom].elements[i].y;
