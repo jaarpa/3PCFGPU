@@ -108,7 +108,7 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(d_DR, DR, bn*sizeof(double), cudaMemcpyHostToDevice, streamDR));
 
     //Sets the number of partitions of the box and the size of each node
-    partitions = 15;
+    partitions = 35;
     size_node = size_box/(float)(partitions);
 
     //Allocate memory for the nodes depending of how many partitions there are.

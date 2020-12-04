@@ -201,7 +201,6 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             d_max_node*=d_max_node;
             
             if(idx==0){
-                printf("Length node 0 : %i", nodeD[idx].len);
                 for (int i = 0; i<nodeD[idx].len; i++){
                     printf("%f, %f, %f, %f \n", elements[i].x, elements[i].y, elements[i].z, elements[i].w);
                 }
