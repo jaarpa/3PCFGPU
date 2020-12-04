@@ -184,6 +184,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 		//==================================================
 		// Pairs of points in the same node:
 		//==================================================
+		/*
 		for ( i= 0; i <nodeX[row][col][mom].len - 1; ++i){
 		x = nodeX[row][col][mom].elements[i].x;
 		y = nodeX[row][col][mom].elements[i].y;
@@ -199,6 +200,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			}
 			}
 		}
+		*/
 		//==================================================
 		// Pairs of points at different nodes
 		//==================================================
@@ -222,9 +224,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				dy = y-nodeX[u][v][w].elements[j].y;
 				dz = z-nodeX[u][v][w].elements[j].z;
 				dis = dx*dx+dy*dy+dz*dz;
-				if (dis <= dd_max){
-				*(XX + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
-				}
+				//if (dis <= dd_max){
+				//*(XX + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
+				//}
 				}
 				}
 			}
@@ -234,9 +236,11 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			// Boundary node conditions:
 			con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
 			if(con_z){
-			histo_front_XX(XX,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
+				*(XX + (int)(0)) += 1;
+				//histo_front_XX(XX,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
 			}
 		}
+		/*
 		//=========================
 		// N2 mobile in ZY
 		//=========================
@@ -322,7 +326,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				//}	
 				}	
 			}
-		}
+		}*/
 	}
 	}
 	}
