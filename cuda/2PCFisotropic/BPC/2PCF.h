@@ -163,7 +163,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	#pragma omp parallel num_threads(2) 
 	{
     	
-    	// Private variables in threads:
+    // Private variables in threads:
 	int i, j, row, col, mom, u, v, w;
 	float dis, dis_nod;
 	float x1D, y1D, z1D, x2D, y2D, z2D;
@@ -181,6 +181,11 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	x1D = nodeX[row][0][0].nodepos.x;
 	y1D = nodeX[row][col][0].nodepos.y;
 	z1D = nodeX[row][col][mom].nodepos.z;			
+		if (mom==0&&col==0&row==0){
+			for (i=0; i <nodeX[row][col][mom].len; ++i){
+				std::cout << nodeX[row][col][mom].elements[i].x << ", " << nodeX[row][col][mom].elements[i].y << ", " << nodeX[row][col][mom].elements[i].z << ", " << nodeX[row][col][mom].elements[i].w << std::endl;
+			}
+		}
 		//==================================================
 		// Pairs of points in the same node:
 		//==================================================
