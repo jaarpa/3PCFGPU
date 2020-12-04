@@ -236,7 +236,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			// Boundary node conditions:
 			con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
 			if(con_z){
-				*(XX + (int)(0)) += 1;
+				*(XX + (int)(1)) += 1;
 				//histo_front_XX(XX,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
 			}
 		}
