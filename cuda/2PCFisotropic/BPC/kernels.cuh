@@ -161,6 +161,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
+                    }
                 }
             }
         }
