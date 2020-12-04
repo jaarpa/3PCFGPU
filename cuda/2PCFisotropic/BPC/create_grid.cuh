@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
-#include <iomanip>
 
 using namespace std;
 
@@ -91,7 +90,7 @@ void save_histogram(string name, int bns, double *histo){
         exit(1);
     }
     for (int i = 0; i < bns; i++){
-        file2 << setprecision(12) << histo[i] << endl;
+        file2 << histo[i] << endl;
     }
     file2.close();
 }
