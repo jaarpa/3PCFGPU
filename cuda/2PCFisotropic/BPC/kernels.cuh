@@ -166,12 +166,14 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
             
             int idx2, u=row,v=col,w=mom; // Position index of the second node
+            float nx2, ny2, nz2;
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
                 idx2 = row + col*partitions + w*partitions*partitions;
-                dz_nod12 = nodeD[idx2].nodepos.z - nz1;
+                nz2 = nodeD[idx2].nodepos.z;
+                dz_nod12 = nz2 - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
                 if (dd_nod12 <= d_max_node){
                     count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
@@ -181,10 +183,12 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
                 idx2 = row + col*partitions;
-                dy_nod12 = nodeD[idx2].nodepos.y - ny1;
+                ny2 = nodeD[idx2].nodepos.y;
+                dy_nod12 = ny2 - ny1;
                 for(w=0; w<partitions; w++){
                     idx2 = row + v*partitions + w*partitions*partitions;
-                    dz_nod12 = nodeD[idx2].nodepos.z - nz1;
+                    nz2 = nodeD[idx2].nodepos.z;
+                    dz_nod12 = nz2 - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=d_max_node){
                         count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
@@ -194,13 +198,16 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
 
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
-                dx_nod12 = nodeD[u].nodepos.x - nx1;
+                nx2 = nodeD[u].nodepos.x;
+                dx_nod12 = nx2 - nx1;
                 for(v = 0; v < partitions; v++){
                     idx2 = u + v*partitions;
-                    dy_nod12 = nodeD[idx2].nodepos.y - ny1;
+                    ny2 = nodeD[idx2].nodepos.y;
+                    dy_nod12 = ny2 - ny1;
                     for(w = 0; w < partitions; w++){
                         idx2 = u + v*partitions + w*partitions*partitions;
-                        dz_nod12 = nodeD[idx2].nodepos.z - nz1;
+                        nz2 = nodeD[idx2].nodepos.z;
+                        dz_nod12 = nz2 - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
                             count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
