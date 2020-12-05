@@ -141,7 +141,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
         float dis_f, dis, d_x, d_y, d_z, x, y, z, w1;
         float ll = size_box*size_box;
         double v;
-
+        /*
         if( con_in_x ){
             dis_f = disn + ll - 2*dn_x*size_box;
             if (dis_f <= ddmax_nod){
@@ -305,8 +305,8 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                 }
             }
             }
-
-        /*
+        */
+        
         dis_f = disn + (con_in_x + con_in_y + con_in_z)*ll - 2*(dn_x*con_in_x+dn_y*con_in_y+dn_z*con_in_z)*size_box;
         if (dis_f <= ddmax_nod){
             for (int i=start1; i<end1; ++i){
@@ -327,7 +327,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                 }
             }
         }
-        */
+        
     }
 }
 
@@ -355,7 +355,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
 
         //idx = row + col*partitions + mom*partitions*partitions;
 
-        //if (nodeD[idx].len > 0){
+        if (nodeD[idx].len > 0){
             bool con_x, con_y, con_z;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
@@ -438,7 +438,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                 }
             }
 
-        //}
+        }
     }
 }
 
