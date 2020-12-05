@@ -235,9 +235,9 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     }
                 }
             }
-        }
-        //======================================================================			
-        if( con_in_x && con_in_z ){
+            }
+            //======================================================================			
+            if( con_in_x && con_in_z ){
             dis_f = disn + 2*ll - 2*(dn_x+dn_z)*size_box;
             if (dis_f <= ddmax_nod){
                 for (int i=start1; i<end1; ++i){
@@ -258,10 +258,9 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     }
                 }
             }
-        }
-
-        //======================================================================		
-        if( con_in_y && con_in_z ){
+            }
+            //======================================================================		
+            if( con_in_y && con_in_z ){
             dis_f = disn + 2*ll - 2*(dn_y+dn_z)*size_box;
             if (dis_f <= ddmax_nod){
                 for (int i=start1; i<end1; ++i){
@@ -282,10 +281,9 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     }
                 }
             }
-        }
-
-        //======================================================================		
-        if( con_in_x && con_in_y && con_in_z ){
+            }
+            //======================================================================		
+            if( con_in_x && con_in_y && con_in_z ){
             dis_f = disn + 3*ll - 2*(dn_x+dn_y+dn_z)*size_box;
             if (dis_f <= ddmax_nod){
                 for (int i=start1; i<end1; ++i){
@@ -306,7 +304,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     }
                 }
             }
-        }
+            }
 
         /*
         dis_f = disn + (con_in_x + con_in_y + con_in_z)*ll - 2*(dn_x*con_in_x+dn_y*con_in_y+dn_z*con_in_z)*size_box;
@@ -365,11 +363,8 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
 
-            printf("Size of the box: %f Partitions: %i Size node: %f \n",  size_box, partitions, size_node);
-            printf("front_pm: %f, d_max_pm: %f ", d_front, dmax);
-
             // Counts distances within the same node
-            //count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
+            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
             
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float nx2, ny2, nz2;
@@ -381,17 +376,16 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                 nz2 = nodeD[idx2].nodepos.z;
                 dz_nod12 = nz2 - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
-                //if (dd_nod12 <= d_max_node){
-                    //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
-                //}
+                if (dd_nod12 <= d_max_node){
+                    count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
+                }
                 // Boundary node conditions:
                 con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
                 if(con_z){
-                    atomicAdd(&XX[1],1.0);
-                    //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, 0.0, dz_nod12, false, false, con_z, size_box, ds, dd_max, d_max_node);
+                    boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, 0.0, dz_nod12, false, false, con_z, size_box, ds, dd_max, d_max_node);
                 }
             }
-            /*
+
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
                 idx2 = row + col*partitions;
@@ -440,7 +434,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     }
                 }
             }
-            */
+            
         }
     }
 }

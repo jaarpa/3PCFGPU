@@ -27,7 +27,7 @@ int main(int argc, char **argv){
 
 	int n_pts = 32*32*32, bn = 30;
 	float d_max = 150.0, size_box = 250.0, alpha = 2.176;
-	int partitions = 35;
+	int partitions = 15;
 	float size_node = size_box/(float)(partitions); //alpha*(size_box/pow((float)(n_pts),1/3.));
 	dataD = new PointW3D[n_pts]; 
 	dataR = new PointW3D[n_pts]; 
@@ -109,6 +109,9 @@ int main(int argc, char **argv){
 	//===============================================
 	clock_t c_end = clock();
 	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
+	
+    cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
+    cout << "front_pm: " << size_box - d_max - size_node*0.5 << " , d_max_pm: " << d_max+size_node*0.5 << endl;
 
 	my_hist.~NODE2P();
 	
