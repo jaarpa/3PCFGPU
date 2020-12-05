@@ -219,7 +219,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             bool con_x, con_y, con_z;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
-            float d_front = size_box - dmax - size_node*0.5 - 1;
+            float d_front = size_box - dmax - size_node;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
 
@@ -240,7 +240,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                 //}
                 // Boundary node conditions:
-                con_z = ((nz1<=dmax+size_node*0.5)&&(nz2>=d_front))||((nz2<=dmax+size_node*0.5)&&(nz1>=d_front));
+                con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
                 if(con_z){
                     atomicAdd(&XX[1],1);
                     //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, 0.0, dz_nod12, false, false, con_z, size_box, ds, dd_max, d_max_node);
