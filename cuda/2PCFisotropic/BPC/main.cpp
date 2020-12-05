@@ -27,8 +27,9 @@ int main(int argc, char **argv){
 
 	int n_pts = 32*32*32, bn = 30;
 	float d_max = 150.0, size_box = 251.0, alpha = 2.176;
-	int partitions = (int)(ceil(pow((float)(n_pts),1/3.)/alpha));
-	float size_node = size_box/(float)(partitions);
+	float partitions_f = pow((float)(n_pts),1/3.)/alpha;
+	float size_node = size_box/partitions_f;
+	int partitions = (int)(ceil(partitions_f));
 	//float size_node = alpha*(size_box/pow((float)(n_pts),1/3.));
 	//int partitions = (int)(ceil(size_box/size_node));
 	dataD = new PointW3D[n_pts]; 
@@ -82,7 +83,7 @@ int main(int argc, char **argv){
 	}	
 	
 	// Start class
-	NODE2P my_hist(bn, n_pts, size_box, partitions, d_max, dataD, nodeD, dataR, nodeR);
+	NODE2P my_hist(bn, n_pts, size_box, partitions_f, d_max, dataD, nodeD, dataR, nodeR);
 	delete[] dataD;
 	delete[] dataR;
 	

@@ -32,7 +32,7 @@ class NODE2P{
 		int bn;
 		int n_pts;
 		float size_box;
-		float partitions;
+		int partitions;
 		float d_max;
 		Node ***nodeD;
 		PointW3D *dataD;
@@ -54,13 +54,13 @@ class NODE2P{
 	// Class Methods:
 	public:
 		// Class constructor:
-		NODE2P(int _bn, int _n_pts, float _size_box, float _partitions, float _d_max, PointW3D *_dataD, Node ***_nodeD, PointW3D *_dataR, Node ***_nodeR){
+		NODE2P(int _bn, int _n_pts, float _size_box, float _partitions_f, float _d_max, PointW3D *_dataD, Node ***_nodeD, PointW3D *_dataR, Node ***_nodeR){
 			
 			// Assigned
 			bn = _bn;
 			n_pts = _n_pts;
 			size_box = _size_box;
-			partitions = _partitions;
+			partitions = (int)(ceil(_partitions_f));
 			d_max = _d_max;
 			dataD = _dataD;
 			nodeD = _nodeD;
@@ -68,7 +68,7 @@ class NODE2P{
 			nodeR = _nodeR;
 			
 			// Derivatives
-			size_node = size_box/(float)(partitions);
+			size_node = size_box/_partitions_f;
 			ll = size_box*size_box;
 			dd_max = d_max*d_max;
 			front = size_box - d_max;
