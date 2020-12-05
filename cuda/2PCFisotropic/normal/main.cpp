@@ -1,4 +1,6 @@
-//c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
+
+// c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -6,6 +8,7 @@
 #include "2PCF.h"
 #include <omp.h>
 #include <cmath>
+#include <iomanip>
 
 using namespace std;
 
@@ -117,7 +120,7 @@ int main(int argc, char **argv){
 }
 
 //====================================================================
-//===================== Functions Section ===========================
+//===================== Functions Section ============================
 //====================================================================
 void open_files(string name_file, int pts, PointW3D *datos){
 	/* 
@@ -139,7 +142,10 @@ void open_files(string name_file, int pts, PointW3D *datos){
 }
 //====================================================================
 void save_histogram(string name, int bns, double *histo){
-	/* Función para guardar nuestros archivos de histogramas */
+	/* 
+	Function to save our histogram files
+	*/
+
 	ofstream file2;
 	file2.open(name.c_str(), ios::out | ios::binary);
 	
@@ -147,6 +153,6 @@ void save_histogram(string name, int bns, double *histo){
 		cout << "Failed to save file! " << endl;
 		exit(1);
 	}
-	for (int i=0; i<bns; ++i) file2 << histo[i] << endl;
+	for (int i=0; i<bns; ++i) file2 <<  setprecision(12) << histo[i] << endl;
 	file2.close();
 }
