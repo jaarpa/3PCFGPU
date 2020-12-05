@@ -161,6 +161,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	*/
 	
 	float d_max_pm = d_max + size_node/2, front_pm = front - size_node/2;
+
+    std::cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << std::endl;
+    std::cout << "front_pm: " << front_pm << " , d_max_pm: " << d_max_pm << std::endl;
 	
 	#pragma omp parallel num_threads(2) 
 	{
