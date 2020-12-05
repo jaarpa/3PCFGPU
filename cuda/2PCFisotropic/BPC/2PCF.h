@@ -184,7 +184,6 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 		//==================================================
 		// Pairs of points in the same node:
 		//==================================================
-		/*
 		for ( i= 0; i <nodeX[row][col][mom].len - 1; ++i){
 		x = nodeX[row][col][mom].elements[i].x;
 		y = nodeX[row][col][mom].elements[i].y;
@@ -200,7 +199,6 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			}
 			}
 		}
-		*/
 		//==================================================
 		// Pairs of points at different nodes
 		//==================================================
@@ -224,9 +222,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				dy = y-nodeX[u][v][w].elements[j].y;
 				dz = z-nodeX[u][v][w].elements[j].z;
 				dis = dx*dx+dy*dy+dz*dz;
-				//if (dis <= dd_max){
-				//*(XX + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
-				//}
+				if (dis <= dd_max){
+				*(XX + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
+				}
 				}
 				}
 			}
