@@ -27,7 +27,8 @@ int main(int argc, char **argv){
 
 	int n_pts = 32*32*32, bn = 30;
 	float d_max = 150.0, size_box = 250.0, alpha = 2.176;
-	float size_node = 250.0/13.0; //alpha*(size_box/pow((float)(n_pts),1/3.));
+	int partitions = 15;
+	float size_node = size_box/(float)(partitions); //alpha*(size_box/pow((float)(n_pts),1/3.));
 	dataD = new PointW3D[n_pts]; 
 	dataR = new PointW3D[n_pts]; 
 	
@@ -71,7 +72,6 @@ int main(int argc, char **argv){
 	open_files(argv[2],n_pts,dataR);
 	
 	// Initialize the grid
-	int partitions = (int)(ceil(size_box/size_node));
 	nodeD = new Node**[partitions];
 	nodeR = new Node**[partitions];
 	for ( i = 0; i < partitions; ++i){
@@ -111,7 +111,7 @@ int main(int argc, char **argv){
 	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
 	
     cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
-    cout << "front_pm: " << size_box - d_max - size_node*0.5 - 1 << " , d_max_pm: " << d_max+size_node*0.5 << endl;
+    cout << "front_pm: " << size_box - d_max - size_node*0.5 << " , d_max_pm: " << d_max+size_node*0.5 << endl;
 
 	my_hist.~NODE2P();
 	
