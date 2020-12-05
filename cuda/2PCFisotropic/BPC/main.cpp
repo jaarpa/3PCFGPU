@@ -101,7 +101,7 @@ int main(int argc, char **argv){
 	clock_t c_end = clock();
 	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
 	
-    cout << "Size of the box: " << size_box << "Partitions: " << partitions << "Size node: " << size_node << endl;
+    cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
     cout << "front_pm: " << size_box - d_max - size_node*0.5 - 1 << " , d_max_pm: " << d_max+size_node*0.5 << endl;
 
 	my_hist.~NODE2P();

@@ -109,7 +109,7 @@ int main(int argc, char **argv){
 
     //Sets the number of partitions of the box and the size of each node
     partitions = 15;
-    size_node = size_box/(float)(partitions);
+    size_node = 2.176*(size_box/pow((float)(np),1/3.)); //ceil(size_box/(float)(partitions));
 
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMalloc(&dnodeD_s1, partitions*partitions*partitions*sizeof(DNode)));
@@ -218,7 +218,7 @@ int main(int argc, char **argv){
     cudaEventSynchronize(stop_timmer);
     cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
 
-    cout << "Size of the box: " << size_box << "Partitions: " << partitions << "Size node: " << size_node << endl;
+    cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
     cout << "front_pm: " << size_box - dmax - size_node*0.5 - 1 << " , d_max_pm: " << dmax+size_node*0.5 << endl;
 
     cout << "Spent "<< time_spent << " miliseconds to compute all the histograms." << endl;
