@@ -220,7 +220,7 @@ int main(int argc, char **argv){
     cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
 
     cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
-    cout << "front_pm: " << size_box - dmax - size_node*0.5 - 1 << " , d_max_pm: " << dmax+size_node*0.5 << endl;
+    cout << "front_pm: " << size_box - dmax - size_node << " , d_max_pm: " << dmax << endl;
 
     cout << "Spent "<< time_spent << " miliseconds to compute all the histograms." << endl;
     
