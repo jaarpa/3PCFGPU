@@ -294,7 +294,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     }
                 }
             }
-            */
+            
         }
     }
 }
