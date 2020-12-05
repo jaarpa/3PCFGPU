@@ -83,7 +83,7 @@ int main(int argc, char **argv){
 	}	
 	
 	// Start class
-	NODE2P my_hist(bn, n_pts, size_box, partitions_f, d_max, dataD, nodeD, dataR, nodeR);
+	NODE2P my_hist(bn, n_pts, size_box, size_node, d_max, dataD, nodeD, dataR, nodeR);
 	delete[] dataD;
 	delete[] dataR;
 	
