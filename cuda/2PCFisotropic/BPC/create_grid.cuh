@@ -138,9 +138,9 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     for (row=0; row<partitions; row++){
         for (col=0; col<partitions; col++){
             for (mom=0; mom<partitions; mom++){
-                nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node))+size_node*0.5;
-                nod[row][col][mom].nodepos.y = ((float)(col)*(size_node))+size_node*0.5;
-                nod[row][col][mom].nodepos.x = ((float)(row)*(size_node))+size_node*0.5;
+                nod[row][col][mom].nodepos.z = ((float)(mom)*(size_node));
+                nod[row][col][mom].nodepos.y = ((float)(col)*(size_node));
+                nod[row][col][mom].nodepos.x = ((float)(row)*(size_node));
                 nod[row][col][mom].len = 0;
                 nod[row][col][mom].elements = new PointW3D[0];
             }
