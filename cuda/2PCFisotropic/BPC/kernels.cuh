@@ -365,8 +365,10 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
 
-            printf("Size of the box: %f Partitions: %i Size node: %f \n",  size_box, partitions, size_node);
-            printf("front_pm: %f, d_max_pm: %f ", d_front, dmax);
+            if (idx==0){
+                printf("Size of the box: %f Partitions: %i Size node: %f \n",  size_box, partitions, size_node);
+                printf("front_pm: %f, d_max_pm: %f \n", d_front, dmax);
+            }
 
             // Counts distances within the same node
             //count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
