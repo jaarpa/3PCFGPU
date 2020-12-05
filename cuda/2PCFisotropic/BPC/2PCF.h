@@ -108,7 +108,7 @@ void NODE2P::make_nodos(Node ***nod, PointW3D *dat){
 	nod: Node 3D array where the data will be classified
 	dat: array of PointW3D data to be classified and stored in the nodes
 	*/
-	int i, row, col, mom; //, partitions = (int)(ceil(size_box/size_node));
+	int i, row, col, mom;
 	float p_med = size_node/2;
 	
 	// First allocate memory as an empty node:
@@ -160,7 +160,6 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	
 	*/
 	
-	//int partitions = (int)(ceil(size_box/size_node));
 	float d_max_pm = d_max + size_node/2, front_pm = front - size_node/2;
 	
 	#pragma omp parallel num_threads(2) 
@@ -507,7 +506,6 @@ void NODE2P::make_histoXY(double *XY, Node ***nodeX, Node ***nodeY){
 	
 	*/
 	
-	//int partitions = (int)(ceil(size_box/size_node));
 	float d_max_pm = d_max + size_node/2, front_pm = front - size_node/2;
 	
 	#pragma omp parallel num_threads(2) 
