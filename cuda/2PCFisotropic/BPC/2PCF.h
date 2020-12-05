@@ -162,6 +162,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	
 	float d_max_pm = d_max + size_node/2, front_pm = front - size_node/2;
 	
+    cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
+    cout << "front_pm: " << front_pm << " , d_max_pm: " << d_max_pm << endl;
+
 	#pragma omp parallel num_threads(2) 
 	{
     	
@@ -187,6 +190,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 		//==================================================
 		// Pairs of points in the same node:
 		//==================================================
+		/*
 		for ( i= 0; i <nodeX[row][col][mom].len - 1; ++i){
 		x = nodeX[row][col][mom].elements[i].x;
 		y = nodeX[row][col][mom].elements[i].y;
@@ -202,6 +206,8 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			}
 			}
 		}
+		*/
+
 		//==================================================
 		// Pairs of points at different nodes
 		//==================================================
@@ -225,9 +231,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				dy = y-nodeX[u][v][w].elements[j].y;
 				dz = z-nodeX[u][v][w].elements[j].z;
 				dis = dx*dx+dy*dy+dz*dz;
-				if (dis <= dd_max){
-				*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
-				}
+				//if (dis <= dd_max){
+				//*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
+				//}
 				}
 				}
 			}
@@ -237,10 +243,12 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			// Boundary node conditions:
 			con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
 			if(con_z){
-			histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
+			*(SS + (int)(1)) += 1;
+			//histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
 			}
 		}
 		
+		/*
 		//=========================
 		// N2 mobile in ZY
 		//=========================
@@ -327,7 +335,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				}	
 			}
 		}
-		
+		*/
 	}
 	}
 	}
@@ -495,6 +503,7 @@ void NODE2P::histo_front_XX(double *PP, Node ***dat, float disn, float dn_x, flo
 	}
 	}
 }
+
 //=================================================================== 
 void NODE2P::make_histoXY(double *XY, Node ***nodeX, Node ***nodeY){
 	/*
