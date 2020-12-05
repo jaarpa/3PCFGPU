@@ -239,7 +239,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
 			}
 		}
-		/*
+		
 		//=========================
 		// N2 mobile in ZY
 		//=========================
@@ -325,7 +325,8 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 				}	
 				}	
 			}
-		}*/
+		}
+		
 	}
 	}
 	}
