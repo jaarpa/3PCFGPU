@@ -143,6 +143,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
         double v;
 
         //======================================================================
+        /*
         if( con_in_z ){
             dis_f = disn + ll - 2*dn_z*size_box;
             if (dis_f <= ddmax_nod){
@@ -165,8 +166,8 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                 }
             }
         }
+        */
 
-        /*
         dis_f = disn + (con_in_x + con_in_y + con_in_z)*ll - 2*(dn_x*con_in_x+dn_y*con_in_y+dn_z*con_in_z)*size_box;
         if (dis_f <= ddmax_nod){
             for (int i=start1; i<end1; ++i){
@@ -187,7 +188,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                 }
             }
         }
-        */
+
     }
 }
 
