@@ -31,6 +31,7 @@ class NODE2P{
 		// Assigned
 		int bn;
 		int n_pts;
+		int partitions;
 		float size_box;
 		float size_node;
 		float d_max;
@@ -53,13 +54,14 @@ class NODE2P{
 	// Class Methods:
 	public:
 		// Class constructor:
-		NODE2P(int _bn, int _n_pts, float _size_box, float _size_node, float _d_max, PointW3D *_dataD, Node ***_nodeD, PointW3D *_dataR, Node ***_nodeR){
+		NODE2P(int _bn, int _n_pts, float _size_box, float _size_node, int _partitions, float _d_max, PointW3D *_dataD, Node ***_nodeD, PointW3D *_dataR, Node ***_nodeR){
 			
 			// Assigned
 			bn = _bn;
 			n_pts = _n_pts;
 			size_box = _size_box;
 			size_node = _size_node;
+			partitions = _partitions;
 			d_max = _d_max;
 			dataD = _dataD;
 			nodeD = _nodeD;
@@ -106,7 +108,7 @@ void NODE2P::make_nodos(Node ***nod, PointW3D *dat){
 	nod: Node 3D array where the data will be classified
 	dat: array of PointW3D data to be classified and stored in the nodes
 	*/
-	int i, row, col, mom, partitions = (int)(ceil(size_box/size_node));
+	int i, row, col, mom; //, partitions = (int)(ceil(size_box/size_node));
 	float p_med = size_node/2;
 	
 	// First allocate memory as an empty node:
@@ -158,7 +160,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 	
 	*/
 	
-	int partitions = (int)(ceil(size_box/size_node));
+	//int partitions = (int)(ceil(size_box/size_node));
 	float d_max_pm = d_max + size_node/2, front_pm = front - size_node/2;
 	
 	#pragma omp parallel num_threads(2) 
@@ -505,7 +507,7 @@ void NODE2P::make_histoXY(double *XY, Node ***nodeX, Node ***nodeY){
 	
 	*/
 	
-	int partitions = (int)(ceil(size_box/size_node));
+	//int partitions = (int)(ceil(size_box/size_node));
 	float d_max_pm = d_max + size_node/2, front_pm = front - size_node/2;
 	
 	#pragma omp parallel num_threads(2) 
