@@ -130,7 +130,7 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
         }
     }
 }
-
+/*
 __device__ void histo_front_XX(){
     int i, j;
     float dis_f,dis,d_x,d_y,d_z;
@@ -282,7 +282,7 @@ __device__ void histo_front_XX(){
         }
     }
     }
-}
+}*/
 
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     /*
