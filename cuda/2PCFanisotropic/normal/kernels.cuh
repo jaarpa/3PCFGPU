@@ -177,16 +177,15 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             // Counts distances within the same node
             count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max, 2);
             
-            /*
             int idx2, u=row,v=col,w=mom; // Position index of the second node
-            float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
+            float dx_nod12, dy_nod12, dz_nod12, dd_ort12, dd_z12; //Internodal distance
 
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
                 idx2 = row + col*partitions + w*partitions*partitions;
                 dz_nod12 = nodeD[idx2].nodepos.z - nz1;
-                dd_nod12 = dz_nod12*dz_nod12;
-                if (dd_nod12 <= d_max_node){
+                dd_z12 = dz_nod12*dz_nod12;
+                if (dd_z12 <= d_max_node){
                     count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max, 2);
                 }
             }
@@ -198,8 +197,9 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                 for(w=0; w<partitions; w++){
                     idx2 = row + v*partitions + w*partitions*partitions;
                     dz_nod12 = nodeD[idx2].nodepos.z - nz1;
-                    dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    if (dz_nod12*dz_nod12<=d_max_node && dd_nod12<=d_max_node){
+                    dd_z12 = dz_nod12*dz_nod12;
+                    dd_ort12 = dy_nod12*dy_nod12;
+                    if (dd_z12<=d_max_node && dd_ort12<=d_max_node){
                         count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max, 2);
                     }
                 }
@@ -214,14 +214,15 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     for(w = 0; w < partitions; w++){
                         idx2 = u + v*partitions + w*partitions*partitions;
                         dz_nod12 = nodeD[idx2].nodepos.z - nz1;
-                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dz_nod12*dz_nod12<=d_max_node && dd_nod12<=d_max_node){
+                        dd_z12 = dz_nod12*dz_nod12;
+                        dd_ort12 = dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
+                        if (dd_z12<=d_max_node && dd_ort12<=d_max_node){
                             count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max, 2);
                         }
                     }
                 }
             }
-            */
+
         }
     }
 }
