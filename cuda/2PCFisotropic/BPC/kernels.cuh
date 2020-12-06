@@ -372,7 +372,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
 
             if (idx==0){
                 printf("Size_box: %f Partitions: %f Size_node: %f \n", size_box, partitions, size_node);
-                printf("front_pm: %f Partitions: %f d_max_pm: %f \n", d_front, dmax);
+                printf("front_pm: %f d_max_pm: %f \n", d_front, dmax);
             }
 
             //Second node mobil in Z direction
