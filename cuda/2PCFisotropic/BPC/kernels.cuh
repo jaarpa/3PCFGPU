@@ -354,6 +354,9 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
         int row = idx%partitions;
 
         //idx = row + col*partitions + mom*partitions*partitions;
+        if (idx==0){
+            printf("Len: %i \n", nodeD[idx].len);
+        }
 
         if (nodeD[idx].len > 0){
             bool con_x, con_y, con_z;
