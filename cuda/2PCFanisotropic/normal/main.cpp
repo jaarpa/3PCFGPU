@@ -128,6 +128,11 @@ void open_files(string name_file, int pts, PointW3D *datos){
 	/* 
 	Function to open our data files 
 	*/
+
+    string mypathto_files = "../../../data/";
+    //This creates the full path to where I have my data files
+    name_file.insert(0,mypathto_files);
+
 	ifstream file;
 	file.open(name_file.c_str(), ios::in | ios::binary); 
 	if (file.fail()){
