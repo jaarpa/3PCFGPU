@@ -40,7 +40,7 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int start, int
             dd_z = (z2-z1)*(z2-z1);
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
-            if (dd_z <= dd_max && dd_ort <= dd_max){
+            if (dd_z < dd_max && dd_ort < dd_max){
                 bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds);
                 v = sum*w1*elements[j].w;
                 atomicAdd(&XX[bin],v);
@@ -86,7 +86,7 @@ __device__ void count_distances12(double *XX, PointW3D *elements, int start1, in
             dd_z = (z2-z1)*(z2-z1);
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
-            if (dd_z <= dd_max && dd_ort <= dd_max){
+            if (dd_z < dd_max && dd_ort < dd_max){
                 bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds);
                 v = sum*w1*elements[j].w;
                 atomicAdd(&XX[bin],v);
@@ -133,7 +133,7 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
             dd_z = (z2-z1)*(z2-z1);
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
-            if (dd_z <= dd_max && dd_ort <= dd_max){
+            if (dd_z < dd_max && dd_ort < dd_max){
                 bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds);
                 v = sum*w1*elements2[j].w;
                 atomicAdd(&XY[bin],v);
@@ -259,7 +259,7 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
             d_max_node*=d_max_node;
             
             int idx2,u,v,w; //Position of the second node
-            unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
+            unsigned int dx_nod12, dy_nod12, dz_nod12, dd_z12, dd_ort12;
 
             //Second node mobil in XYZ
             for(u = 0; u < partitions; u++){
@@ -270,8 +270,9 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
                     for(w = 0; w < partitions; w++){
                         idx2 = u + v*partitions + w*partitions*partitions;
                         dz_nod12 = nodeR[idx2].nodepos.z - nz1;
-                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dz_nod12*dz_nod12<=d_max_node && dd_nod12<=d_max_node){
+                        dd_z12 = dz_nod12*dz_nod12;
+                        dd_ort12 = dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
+                        if (dd_z12<=d_max_node && dd_ort12<=d_max_node){
                             count_distancesXY(XY, elementsD, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, elementsR, nodeR[idx2].prev_i, nodeR[idx2].prev_i + nodeR[idx2].len, bn, ds, dd_max, 1);
                         }
                     }
