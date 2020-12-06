@@ -38,7 +38,7 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int start, int
             w2 = elements[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
             if (d<=dd_max){
-                bin = (int)(sqrt(d)*ds);
+                bin = (int)(sqrtf(d)*ds);
                 v = sum*w1*w2;
                 atomicAdd(&XX[bin],v);
             }
@@ -80,7 +80,7 @@ __device__ void count_distances12(double *XX, PointW3D *elements, int start1, in
             w2 = elements[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
             if (d<=dd_max){
-                bin = (int)(sqrt(d)*ds);
+                bin = (int)(sqrtf(d)*ds);
                 v = sum*w1*w2;
                 atomicAdd(&XX[bin],v);
             }
@@ -123,7 +123,7 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
             w2 = elements2[j].w;
             d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
             if (d<=dd_max){
-                bin = (int)(sqrt(d)*ds);
+                bin = (int)(sqrtf(d)*ds);
                 v = sum*w1*w2;
                 atomicAdd(&XY[bin],v);
             }
@@ -156,7 +156,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                         d_z = z-elements[j].z;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
-                            bin = (int)(sqrt(dis)*ds);
+                            bin = (int)(sqrtf(dis)*ds);
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
@@ -180,7 +180,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                         d_z = z-elements[j].z;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
-                            bin = (int)(sqrt(dis)*ds);
+                            bin = (int)(sqrtf(dis)*ds);
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
@@ -204,7 +204,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                         d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
-                            bin = (int)(sqrt(dis)*ds);
+                            bin = (int)(sqrtf(dis)*ds);
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
@@ -228,7 +228,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                         d_z = z-elements[j].z;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
-                            bin = (int)(sqrt(dis)*ds);
+                            bin = (int)(sqrtf(dis)*ds);
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
@@ -251,7 +251,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                         d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
-                            bin = (int)(sqrt(dis)*ds);
+                            bin = (int)(sqrtf(dis)*ds);
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
@@ -274,7 +274,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                         d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
-                            bin = (int)(sqrt(dis)*ds);
+                            bin = (int)(sqrtf(dis)*ds);
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
@@ -297,7 +297,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                         d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z;
                         if (dis < dd_max){
-                            bin = (int)(sqrt(dis)*ds);
+                            bin = (int)(sqrtf(dis)*ds);
                             v = 2*w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
@@ -320,7 +320,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     d_z = fabsf(z-elements[j].z)-(size_box*con_in_z);
                     dis = d_x*d_x + d_y*d_y + d_z*d_z;
                     if (dis < dd_max){
-                        bin = (int)(sqrt(dis)*ds);
+                        bin = (int)(sqrtf(dis)*ds);
                         v = 2*w1*elements[j].w;
                         atomicAdd(&XX[bin],v);
                     }
@@ -361,7 +361,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float dmax_pm = dmax+size_node*0.5;
             float d_front = size_box - dmax - size_node*0.5;
-            float d_max_node = dmax + size_node*sqrt(3.0);
+            float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
 
             // Counts distances within the same node
@@ -476,7 +476,7 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
-            float d_max_node = dmax + size_node*sqrt(3.0);
+            float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
             
             int idx2,u,v,w; //Position of the second node
