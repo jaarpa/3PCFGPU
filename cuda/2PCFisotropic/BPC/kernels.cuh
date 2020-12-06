@@ -380,11 +380,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                 }
                 // Boundary node conditions:
-                //con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
-                //if(con_z){
+                con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
+                if(con_z){
                     //atomicAdd(&XX[1],1);
-                    //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, 0.0, dz_nod12, false, false, con_z, size_box, ds, dd_max, d_max_node);
-                //}
+                    boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, 0.0, dz_nod12, false, false, con_z, size_box, ds, dd_max, d_max_node);
+                }
             }
 
             //Second node mobil in YZ
@@ -401,12 +401,12 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                         count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                     }
                     // Boundary node conditions:
-                    //con_y = ((ny1<=dmax)&&(ny2>=d_front))||((ny2<=dmax)&&(ny1>=d_front));
-                    //con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
-                    //if(con_y || con_z){
+                    con_y = ((ny1<=dmax)&&(ny2>=d_front))||((ny2<=dmax)&&(ny1>=d_front));
+                    con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
+                    if(con_y || con_z){
                         //atomicAdd(&XX[2],1);
-                        //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, dy_nod12, dz_nod12, false, con_y, con_z, size_box, ds, dd_max, d_max_node);
-                    //}
+                        boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, dy_nod12, dz_nod12, false, con_y, con_z, size_box, ds, dd_max, d_max_node);
+                    }
                 }
             }
 
@@ -427,13 +427,13 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                             count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                         }
                         // Boundary node conditions:
-                        //con_x = ((nx1<=dmax)&&(nx2>=d_front))||((nx2<=dmax)&&(nx1>=d_front));
-                        //con_y = ((ny1<=dmax)&&(ny2>=d_front))||((ny2<=dmax)&&(ny1>=d_front));
-                        //con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
-                        //if(con_x || con_y || con_z){
+                        con_x = ((nx1<=dmax)&&(nx2>=d_front))||((nx2<=dmax)&&(nx1>=d_front));
+                        con_y = ((ny1<=dmax)&&(ny2>=d_front))||((ny2<=dmax)&&(ny1>=d_front));
+                        con_z = ((nz1<=dmax)&&(nz2>=d_front))||((nz2<=dmax)&&(nz1>=d_front));
+                        if(con_x || con_y || con_z){
                             //atomicAdd(&XX[3],1);
-                            //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, dx_nod12, dy_nod12, dz_nod12, con_x, con_y, con_z, size_box, ds, dd_max, d_max_node);
-                        //}
+                            boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, dx_nod12, dy_nod12, dz_nod12, con_x, con_y, con_z, size_box, ds, dd_max, d_max_node);
+                        }
                     }
                 }
             }
