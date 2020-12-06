@@ -131,207 +131,7 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
     }
 }
 
-__device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int end1, int start2, int end2, float disn, float dn_x, float dn_y, float dn_z, bool con_in_x, bool con_in_y, bool con_in_z, float size_box, float ds, float dd_max, float ddmax_nod){
-    /*
-    Function to consider periodic boundary conditions contributions.
-    */
-
-    //if (con_in_x || con_in_y || con_in_z){
-        int bin;
-        float dis_f, dis, d_x, d_y, d_z, x, y, z, w1;
-        float ll = size_box*size_box;
-        double v;
-        
-        if( con_in_x ){
-            dis_f = disn + ll - 2*dn_x*size_box;
-            if (dis_f <= ddmax_nod){
-                for (int i=start1; i<end1; ++i){
-                    x = elements[i].x;
-                    y = elements[i].y;
-                    z = elements[i].z;
-                    w1 = elements[i].w;
-                    for (int j=start2; j<end2; ++j){
-                        d_x = fabsf(x-elements[j].x)-size_box;
-                        d_y = y-elements[j].y;
-                        d_z = z-elements[j].z;
-                        dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-                        if (dis < dd_max){
-                            bin = (int)(sqrtf(dis)*ds);
-                            v = 2*w1*elements[j].w;
-                            atomicAdd(&XX[bin],v);
-                        }
-                    }
-                }
-            }
-        }
-
-        //======================================================================		
-        if( con_in_y ){
-            dis_f = disn + ll - 2*dn_y*size_box;
-            if (dis_f <= ddmax_nod){
-                for (int i=start1; i<end1; ++i){
-                    x = elements[i].x;
-                    y = elements[i].y;
-                    z = elements[i].z;
-                    w1 = elements[i].w;
-                    for (int j=start2; j<end2; ++j){
-                        d_x = x-elements[j].x;
-                        d_y = fabsf(y-elements[j].y)-size_box;
-                        d_z = z-elements[j].z;
-                        dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-                        if (dis < dd_max){
-                            bin = (int)(sqrtf(dis)*ds);
-                            v = 2*w1*elements[j].w;
-                            atomicAdd(&XX[bin],v);
-                        }
-                    }
-                }
-            }
-        }
-
-        //======================================================================
-        if( con_in_z ){
-            dis_f = disn + ll - 2*dn_z*size_box;
-            if (dis_f <= ddmax_nod){
-                for (int i=start1; i<end1; ++i){
-                    x = elements[i].x;
-                    y = elements[i].y;
-                    z = elements[i].z;
-                    w1 = elements[i].w;
-                    for (int j=start2; j<end2; ++j){
-                        d_x = x-elements[j].x;
-                        d_y = y-elements[j].y;
-                        d_z = fabsf(z-elements[j].z)-size_box;
-                        dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-                        if (dis < dd_max){
-                            bin = (int)(sqrtf(dis)*ds);
-                            v = 2*w1*elements[j].w;
-                            atomicAdd(&XX[bin],v);
-                        }
-                    }
-                }
-            }
-        }
-
-        //======================================================================	
-        if( con_in_x && con_in_y ){
-            dis_f = disn + 2*ll - 2*(dn_x+dn_y)*size_box;
-            if (dis_f <= ddmax_nod){
-                for (int i=start1; i<end1; ++i){
-                    x = elements[i].x;
-                    y = elements[i].y;
-                    z = elements[i].z;
-                    w1 = elements[i].w;
-                    for (int j=start2; j<end2; ++j){
-                        d_x = fabsf(x-elements[j].x)-size_box;
-                        d_y = fabsf(y-elements[j].y)-size_box;
-                        d_z = z-elements[j].z;
-                        dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-                        if (dis < dd_max){
-                            bin = (int)(sqrtf(dis)*ds);
-                            v = 2*w1*elements[j].w;
-                            atomicAdd(&XX[bin],v);
-                        }
-                    }
-                }
-            }
-            }
-            //======================================================================			
-            if( con_in_x && con_in_z ){
-            dis_f = disn + 2*ll - 2*(dn_x+dn_z)*size_box;
-            if (dis_f <= ddmax_nod){
-                for (int i=start1; i<end1; ++i){
-                    x = elements[i].x;
-                    y = elements[i].y;
-                    z = elements[i].z;
-                    w1 = elements[i].w;
-                    for (int j=start2; j<end2; ++j){
-                        d_x = fabsf(x-elements[j].x)-size_box;
-                        d_y = y-elements[j].y;
-                        d_z = fabsf(z-elements[j].z)-size_box;
-                        dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-                        if (dis < dd_max){
-                            bin = (int)(sqrtf(dis)*ds);
-                            v = 2*w1*elements[j].w;
-                            atomicAdd(&XX[bin],v);
-                        }
-                    }
-                }
-            }
-            }
-            //======================================================================		
-            if( con_in_y && con_in_z ){
-            dis_f = disn + 2*ll - 2*(dn_y+dn_z)*size_box;
-            if (dis_f <= ddmax_nod){
-                for (int i=start1; i<end1; ++i){
-                    x = elements[i].x;
-                    y = elements[i].y;
-                    z = elements[i].z;
-                    w1 = elements[i].w;
-                    for (int j=start2; j<end2; ++j){
-                        d_x = x-elements[j].x;
-                        d_y = fabsf(y-elements[j].y)-size_box;
-                        d_z = fabsf(z-elements[j].z)-size_box;
-                        dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-                        if (dis < dd_max){
-                            bin = (int)(sqrtf(dis)*ds);
-                            v = 2*w1*elements[j].w;
-                            atomicAdd(&XX[bin],v);
-                        }
-                    }
-                }
-            }
-            }
-            //======================================================================		
-            if( con_in_x && con_in_y && con_in_z ){
-            dis_f = disn + 3*ll - 2*(dn_x+dn_y+dn_z)*size_box;
-            if (dis_f <= ddmax_nod){
-                for (int i=start1; i<end1; ++i){
-                    x = elements[i].x;
-                    y = elements[i].y;
-                    z = elements[i].z;
-                    w1 = elements[i].w;
-                    for (int j=start2; j<end2; ++j){
-                        d_x = fabsf(x-elements[j].x)-size_box;
-                        d_y = fabsf(y-elements[j].y)-size_box;
-                        d_z = fabsf(z-elements[j].z)-size_box;
-                        dis = d_x*d_x + d_y*d_y + d_z*d_z;
-                        if (dis < dd_max){
-                            bin = (int)(sqrtf(dis)*ds);
-                            v = 2*w1*elements[j].w;
-                            atomicAdd(&XX[bin],v);
-                        }
-                    }
-                }
-            }
-        }
-
-        /*
-        dis_f = disn + (con_in_x + con_in_y + con_in_z)*ll - 2*(dn_x*con_in_x+dn_y*con_in_y+dn_z*con_in_z)*size_box;
-        if (dis_f <= ddmax_nod){
-            for (int i=start1; i<end1; ++i){
-                x = elements[i].x;
-                y = elements[i].y;
-                z = elements[i].z;
-                w1 = elements[i].w;
-                for (int j=start2; j<end2; ++j){
-                    d_x = fabsf(x-elements[j].x)-(size_box*con_in_x);
-                    d_y = fabsf(y-elements[j].y)-(size_box*con_in_y);
-                    d_z = fabsf(z-elements[j].z)-(size_box*con_in_z);
-                    dis = d_x*d_x + d_y*d_y + d_z*d_z;
-                    if (dis < dd_max){
-                        bin = (int)(sqrtf(dis)*ds);
-                        v = 2*w1*elements[j].w;
-                        atomicAdd(&XX[bin],v);
-                    }
-                }
-            }
-        }
-        */
-    //}
-}
-
-__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node, float size_box){
+__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
 
@@ -359,89 +159,56 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
         }
 
         if (nodeD[idx].len > 0){
-            bool con_x, con_y, con_z;
+
+            float size_box = partitions*size_node;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
-            float dmax_pm = dmax+size_node*0.5;
-            float d_front = size_box - dmax - size_node*0.5;
             float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
 
             // Counts distances within the same node
-            //count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
+            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
             
             int idx2, u=row,v=col,w=mom; // Position index of the second node
-            float nx2, ny2, nz2;
+            float nx1, ny1, nz1;
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
-
-            if (idx==0){
-                printf("Size_box: %f Partitions: %i Size_node: %f \n", size_box, partitions, size_node);
-                printf("front_pm: %f d_max_pm: %f \n", d_front, dmax);
-            }
 
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
                 idx2 = row + col*partitions + w*partitions*partitions;
-                nz2 = nodeD[idx2].nodepos.z;
-                dz_nod12 = nz2 - nz1;
+                dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
-                //if (dd_nod12 <= d_max_node){
-                    //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
-                //}
-                // Boundary node conditions:
-                con_z = ((nz1<=dmax_pm)&&(nz2>=d_front))||((nz2<=dmax_pm)&&(nz1>=d_front));
-                if(con_z){
-                    atomicAdd(&XX[1],1);
-                    //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, 0.0, dz_nod12, false, false, con_z, size_box, ds, dd_max, d_max_node);
+                if (dd_nod12 <= d_max_node){
+                    count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                 }
             }
 
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
-                idx2 = row + v*partitions;
-                ny2 = nodeD[idx2].nodepos.y;
-                dy_nod12 = ny2 - ny1;
+                idx2 = row + col*partitions;
+                dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                 for(w=0; w<partitions; w++){
                     idx2 = row + v*partitions + w*partitions*partitions;
-                    nz2 = nodeD[idx2].nodepos.z;
-                    dz_nod12 = nz2 - nz1;
+                    dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    //if (dd_nod12<=d_max_node){
-                        //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
-                    //}
-                    // Boundary node conditions:
-                    con_y = ((ny1<=dmax_pm)&&(ny2>=d_front))||((ny2<=dmax_pm)&&(ny1>=d_front));
-                    con_z = ((nz1<=dmax_pm)&&(nz2>=d_front))||((nz2<=dmax_pm)&&(nz1>=d_front));
-                    if(con_y || con_z){
-                        atomicAdd(&XX[2],1);
-                        //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, 0.0, dy_nod12, dz_nod12, false, con_y, con_z, size_box, ds, dd_max, d_max_node);
+                    if (dd_nod12<=d_max_node){
+                        count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                     }
                 }
             }
 
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
-                nx2 = nodeD[u].nodepos.x;
-                dx_nod12 = nx2 - nx1;
+                dx_nod12 = nodeD[u].nodepos.x - nx1;
                 for(v = 0; v < partitions; v++){
                     idx2 = u + v*partitions;
-                    ny2 = nodeD[idx2].nodepos.y;
-                    dy_nod12 = ny2 - ny1;
+                    dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
                         idx2 = u + v*partitions + w*partitions*partitions;
-                        nz2 = nodeD[idx2].nodepos.z;
-                        dz_nod12 = nz2 - nz1;
+                        dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        //if (dd_nod12<=d_max_node){
-                            //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
-                        //}
-                        // Boundary node conditions:
-                        con_x = ((nx1<=dmax_pm)&&(nx2>=d_front))||((nx2<=dmax_pm)&&(nx1>=d_front));
-                        con_y = ((ny1<=dmax_pm)&&(ny2>=d_front))||((ny2<=dmax_pm)&&(ny1>=d_front));
-                        con_z = ((nz1<=dmax_pm)&&(nz2>=d_front))||((nz2<=dmax_pm)&&(nz1>=d_front));
-                        if(con_x || con_y || con_z){
-                            atomicAdd(&XX[3],1);
-                            //boundaries_XX(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, dd_nod12, dx_nod12, dy_nod12, dz_nod12, con_x, con_y, con_z, size_box, ds, dd_max, d_max_node);
+                        if (dd_nod12<=d_max_node){
+                            count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                         }
                     }
                 }
