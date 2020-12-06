@@ -270,7 +270,7 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
                         dz_nod12 = nodeR[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dz_nod12*dz_nod12<=d_max_node && dd_nod12<=d_max_node){
-                            count_distancesXY(XY, elementsD, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, elementsR, nodeR[idx2].prev_i, nodeR[idx2].prev_i + nodeR[idx2].len, ds, dd_max, 1);
+                            count_distancesXY(XY, elementsD, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, elementsR, nodeR[idx2].prev_i, nodeR[idx2].prev_i + nodeR[idx2].len, bn, ds, dd_max, 1);
                         }
                     }
                 }
