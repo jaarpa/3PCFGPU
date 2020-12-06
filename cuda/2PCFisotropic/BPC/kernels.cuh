@@ -188,7 +188,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
 
                 con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
                 if(con_z){
-                    atomicAdd(&XY[1],1);
+                    atomicAdd(&XX[1],1);
                     //histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
                 }
             }
@@ -211,7 +211,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     con_y = ((ny1<=d_max_pm)&&(ny2>=front_pm))||((ny2<=d_max_pm)&&(ny1>=front_pm));
                     con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
                     if(con_y || con_z){
-                        atomicAdd(&XY[2],1);
+                        atomicAdd(&XX[2],1);
                         //histo_front_XX(SS,nodeX,dis_nod,0.0,sqrt(dy_nod),sqrt(dz_nod),false,con_y,con_z,row,col,mom,u,v,w);
                     }
                 }
@@ -239,7 +239,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                         con_y = ((ny1<=d_max_pm)&&(ny2>=front_pm))||((ny2<=d_max_pm)&&(ny1>=front_pm));
                         con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
                         if(con_x || con_y || con_z){
-                            atomicAdd(&XY[3],1);
+                            atomicAdd(&XX[3],1);
                             //histo_front_XX(SS,nodeX,dis_nod,sqrt(dx_nod),sqrt(dy_nod),sqrt(dz_nod),con_x,con_y,con_z,row,col,mom,u,v,w);
                         }
                     }
