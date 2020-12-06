@@ -83,29 +83,23 @@ void save_histogram(string name, int bns, double *histo){
     Receives the name of the file, number of bins in the histogram and the histogram array
     */
 
-    ofstream file2;
-    file2.open(name.c_str(), ios::out | ios::binary);
+    ofstream file;
+    file.open(name.c_str(), ios::out | ios::binary);
 
-    if (file2.fail()){
+    if (file.fail()){
         cout << "Failed to save the the histogram in " << name << endl;
         exit(1);
     }
-
-	for (i=0; i<bns; ++i){
-		for (j=0; j<bns; ++j) file << histo[i][j] << " ";
-		file << "\n";
-	}
-	file.close();
 
     int idx;
 
     for (int i = 0; i < bns; i++){
         for (int j = 0; i < bns i++){
             idx = i*bns + j;
-            file2 << setprecision(12) << histo[idx] << endl;
+            file << setprecision(12) << histo[idx] << endl;
         }
     }
-    file2.close();
+    file.close();
 }
 
 //=================================================================== 

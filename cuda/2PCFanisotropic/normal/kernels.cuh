@@ -41,7 +41,7 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int start, int
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
             if (dd_z <= dd_max && dd_ort <= dd_max){
-                bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds)
+                bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds);
                 v = sum*w1*elements[j].w;
                 atomicAdd(&XX[bin],v);
             }
@@ -87,7 +87,7 @@ __device__ void count_distances12(double *XX, PointW3D *elements, int start1, in
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
             if (dd_z <= dd_max && dd_ort <= dd_max){
-                bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds)
+                bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds);
                 v = sum*w1*elements[j].w;
                 atomicAdd(&XX[bin],v);
             }
@@ -109,7 +109,7 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
     elements2: (PointW3D*)  Array of PointW3D points orderered coherently by the nodes
     start2: (int) index at which the nodeB starts to be defined by elements2. Inclusive.
     end2: (int) index at which the nodeB stops being defined by elements1. Non inclusive.
-    bns: (int) number of bins per XX dimension
+    bns: (int) number of bins per XY dimension
     ds: (float) number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
     dd_max: (float) The maximum distance of interest.
     sum: (int) State if each distance is counted twice or once
@@ -134,9 +134,9 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
             dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
             if (dd_z <= dd_max && dd_ort <= dd_max){
-                bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds)
+                bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds);
                 v = sum*w1*elements[j].w;
-                atomicAdd(&XX[bin],v);
+                atomicAdd(&XY[bin],v);
             }
 
         }
