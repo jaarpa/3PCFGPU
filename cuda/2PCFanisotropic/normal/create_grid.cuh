@@ -94,7 +94,7 @@ void save_histogram(string name, int bns, double *histo){
     int idx;
 
     for (int i = 0; i < bns; i++){
-        for (int j = 0; i < bns i++){
+        for (int j = 0; j < bns j++){
             idx = i*bns + j;
             file << setprecision(12) << histo[idx] << endl;
         }

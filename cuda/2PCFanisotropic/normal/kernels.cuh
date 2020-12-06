@@ -135,7 +135,7 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
 
             if (dd_z <= dd_max && dd_ort <= dd_max){
                 bin = (int)(sqrt(dd_z)*ds)*bns + (int)(sqrtf(dd_ort)*ds);
-                v = sum*w1*elements[j].w;
+                v = sum*w1*elements2[j].w;
                 atomicAdd(&XY[bin],v);
             }
 
