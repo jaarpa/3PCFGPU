@@ -317,7 +317,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             d_max_node*=d_max_node;
 
             bool con_x, con_y, con_z;
-            float d_max_pm = dmax, front_pm = size_box - dmax - size_node;
+            float d_max_pm = dmax+size_node*0.5, front_pm = size_box - dmax - size_node*0.5;
 
             if (idx==0){
                 printf("Len: %i\n", nodeD[idx].len);
