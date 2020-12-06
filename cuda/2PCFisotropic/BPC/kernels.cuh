@@ -359,7 +359,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             bool con_x, con_y, con_z;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
-            float dmax_pm = dmax+size_node*0.5
+            float dmax_pm = dmax+size_node*0.5;
             float d_front = size_box - dmax - size_node*0.5;
             float d_max_node = dmax + size_node*sqrt(3.0);
             d_max_node*=d_max_node;
