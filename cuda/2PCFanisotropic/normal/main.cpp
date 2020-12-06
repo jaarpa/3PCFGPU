@@ -1,3 +1,6 @@
+
+//c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -5,6 +8,7 @@
 #include "2PCFani.h"
 #include <omp.h>
 #include <cmath>
+#include <iomanip>
 
 using namespace std;
 
@@ -154,7 +158,7 @@ void save_histogram(string name, int bns, double **histo){
 		exit(1);
 	}
 	for (i=0; i<bns; ++i){
-		for (j=0; j<bns; ++j) file << histo[i][j] << " ";
+		for (j=0; j<bns; ++j) file << setprecision(12) << histo[i][j] << " ";
 		file << "\n";
 	}
 	file.close();

@@ -90,8 +90,20 @@ void save_histogram(string name, int bns, double *histo){
         cout << "Failed to save the the histogram in " << name << endl;
         exit(1);
     }
+
+	for (i=0; i<bns; ++i){
+		for (j=0; j<bns; ++j) file << histo[i][j] << " ";
+		file << "\n";
+	}
+	file.close();
+
+    int idx;
+
     for (int i = 0; i < bns; i++){
-        file2 << setprecision(12) << histo[i] << endl;
+        for (int j = 0; i < bns i++){
+            idx = i*bns + j;
+            file2 << setprecision(12) << histo[idx] << endl;
+        }
     }
     file2.close();
 }
