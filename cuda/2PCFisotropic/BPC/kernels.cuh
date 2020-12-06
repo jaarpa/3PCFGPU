@@ -166,8 +166,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
 
+            bool con_x, con_y, con_z;
+            float d_max_pm = dmax, front_pm = size_box - dmax - size_node;
+
             // Counts distances within the same node
-            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
+            //count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
             
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float nx2, ny2, nz2;
@@ -179,8 +182,14 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                 nz2 = nodeD[idx2].nodepos.z;
                 dz_nod12 = nz2 - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
-                if (dd_nod12 <= d_max_node){
-                    count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
+                //if (dd_nod12 <= d_max_node){
+                    //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
+                //}
+
+                con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
+                if(con_z){
+                    atomicAdd(&XY[1],1);
+                    //histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
                 }
             }
 
@@ -196,6 +205,14 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
                     if (dd_nod12<=d_max_node){
                         count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
+                    }
+
+                    // Boundary node conditions:
+                    con_y = ((ny1<=d_max_pm)&&(ny2>=front_pm))||((ny2<=d_max_pm)&&(ny1>=front_pm));
+                    con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
+                    if(con_y || con_z){
+                        atomicAdd(&XY[2],1);
+                        //histo_front_XX(SS,nodeX,dis_nod,0.0,sqrt(dy_nod),sqrt(dz_nod),false,con_y,con_z,row,col,mom,u,v,w);
                     }
                 }
             }
@@ -215,6 +232,15 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
                             count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
+                        }
+
+                        // Boundary node conditions:
+                        con_x = ((nx1<=d_max_pm)&&(nx2>=front_pm))||((nx2<=d_max_pm)&&(nx1>=front_pm));
+                        con_y = ((ny1<=d_max_pm)&&(ny2>=front_pm))||((ny2<=d_max_pm)&&(ny1>=front_pm));
+                        con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
+                        if(con_x || con_y || con_z){
+                            atomicAdd(&XY[3],1);
+                            //histo_front_XX(SS,nodeX,dis_nod,sqrt(dx_nod),sqrt(dy_nod),sqrt(dz_nod),con_x,con_y,con_z,row,col,mom,u,v,w);
                         }
                     }
                 }
