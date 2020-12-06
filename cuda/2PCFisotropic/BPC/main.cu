@@ -219,9 +219,6 @@ int main(int argc, char **argv){
     cudaEventSynchronize(stop_timmer);
     cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
 
-    cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
-    cout << "front_pm: " << size_box - dmax - size_node*0.5 << " , d_max_pm: " << dmax+0.5*size_node << endl;
-
     cout << "Spent "<< time_spent << " miliseconds to compute all the histograms." << endl;
     
     /* =======================================================================*/

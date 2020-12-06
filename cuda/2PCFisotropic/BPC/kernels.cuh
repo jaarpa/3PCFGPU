@@ -370,6 +370,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
             float nx2, ny2, nz2;
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
+            if (idx==0){
+                printf("Size_box: %f Partitions: %f Size_node: %f \n", size_box, partitions, size_node);
+                printf("front_pm: %f Partitions: %f d_max_pm: %f \n", d_front, dmax);
+            }
+
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
                 idx2 = row + col*partitions + w*partitions*partitions;
