@@ -141,7 +141,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
         float dis_f, dis, d_x, d_y, d_z, x, y, z, w1;
         float ll = size_box*size_box;
         double v;
-        /*
+        
         if( con_in_x ){
             dis_f = disn + ll - 2*dn_x*size_box;
             if (dis_f <= ddmax_nod){
@@ -151,7 +151,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     z = elements[i].z;
                     w1 = elements[i].w;
                     for (int j=start2; j<end2; ++j){
-                        d_x = fabs(x-elements[j].x)-size_box;
+                        d_x = fabsf(x-elements[j].x)-size_box;
                         d_y = y-elements[j].y;
                         d_z = z-elements[j].z;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
@@ -176,7 +176,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     w1 = elements[i].w;
                     for (int j=start2; j<end2; ++j){
                         d_x = x-elements[j].x;
-                        d_y = fabs(y-elements[j].y)-size_box;
+                        d_y = fabsf(y-elements[j].y)-size_box;
                         d_z = z-elements[j].z;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
@@ -201,7 +201,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     for (int j=start2; j<end2; ++j){
                         d_x = x-elements[j].x;
                         d_y = y-elements[j].y;
-                        d_z = fabs(z-elements[j].z)-size_box;
+                        d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
                             bin = (int)(sqrt(dis)*ds);
@@ -223,8 +223,8 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     z = elements[i].z;
                     w1 = elements[i].w;
                     for (int j=start2; j<end2; ++j){
-                        d_x = fabs(x-elements[j].x)-size_box;
-                        d_y = fabs(y-elements[j].y)-size_box;
+                        d_x = fabsf(x-elements[j].x)-size_box;
+                        d_y = fabsf(y-elements[j].y)-size_box;
                         d_z = z-elements[j].z;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
@@ -246,9 +246,9 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     z = elements[i].z;
                     w1 = elements[i].w;
                     for (int j=start2; j<end2; ++j){
-                        d_x = fabs(x-elements[j].x)-size_box;
+                        d_x = fabsf(x-elements[j].x)-size_box;
                         d_y = y-elements[j].y;
-                        d_z = fabs(z-elements[j].z)-size_box;
+                        d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
                             bin = (int)(sqrt(dis)*ds);
@@ -270,8 +270,8 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     w1 = elements[i].w;
                     for (int j=start2; j<end2; ++j){
                         d_x = x-elements[j].x;
-                        d_y = fabs(y-elements[j].y)-size_box;
-                        d_z = fabs(z-elements[j].z)-size_box;
+                        d_y = fabsf(y-elements[j].y)-size_box;
+                        d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z; 
                         if (dis < dd_max){
                             bin = (int)(sqrt(dis)*ds);
@@ -292,9 +292,9 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     z = elements[i].z;
                     w1 = elements[i].w;
                     for (int j=start2; j<end2; ++j){
-                        d_x = fabs(x-elements[j].x)-size_box;
-                        d_y = fabs(y-elements[j].y)-size_box;
-                        d_z = fabs(z-elements[j].z)-size_box;
+                        d_x = fabsf(x-elements[j].x)-size_box;
+                        d_y = fabsf(y-elements[j].y)-size_box;
+                        d_z = fabsf(z-elements[j].z)-size_box;
                         dis = d_x*d_x + d_y*d_y + d_z*d_z;
                         if (dis < dd_max){
                             bin = (int)(sqrt(dis)*ds);
@@ -304,9 +304,9 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                     }
                 }
             }
-            }
-        */
-        
+        }
+
+        /*
         dis_f = disn + (con_in_x + con_in_y + con_in_z)*ll - 2*(dn_x*con_in_x+dn_y*con_in_y+dn_z*con_in_z)*size_box;
         if (dis_f <= ddmax_nod){
             for (int i=start1; i<end1; ++i){
@@ -315,9 +315,9 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                 z = elements[i].z;
                 w1 = elements[i].w;
                 for (int j=start2; j<end2; ++j){
-                    d_x = fabs(x-elements[j].x)-(size_box*con_in_x);
-                    d_y = fabs(y-elements[j].y)-(size_box*con_in_y);
-                    d_z = fabs(z-elements[j].z)-(size_box*con_in_z);
+                    d_x = fabsf(x-elements[j].x)-(size_box*con_in_x);
+                    d_y = fabsf(y-elements[j].y)-(size_box*con_in_y);
+                    d_z = fabsf(z-elements[j].z)-(size_box*con_in_z);
                     dis = d_x*d_x + d_y*d_y + d_z*d_z;
                     if (dis < dd_max){
                         bin = (int)(sqrt(dis)*ds);
@@ -327,7 +327,7 @@ __device__ void boundaries_XX(double *XX, PointW3D *elements, int start1, int en
                 }
             }
         }
-        
+        */
     }
 }
 
