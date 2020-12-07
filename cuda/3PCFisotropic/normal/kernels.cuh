@@ -5,16 +5,17 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count_distances11(double *XX, PointW3D *elements, int start, int end, float ds, float dd_max, int sum){
+__device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, int end, int bns float ds, float dd_max){
     /*
     This device function counts the distances betweeen points within the same node. This function is used 
     to compute the XX histogram
 
     Args:
-    XX: (double*) The histogram where the distances are counted in
+    XXX: (double*) The histogram where the distances are counted in
     elements: (PointW3D*)  Array of PointW3D points orderered coherently by the nodes
     start: (int) index at which the nodeA starts to be defined by elements1. Inclusive.
     end: (int) index at which the nodeA stops being defined by elements1. Non inclusive.
+    bns: (int) number of bins per XXX dimension
     ds: (float) number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
     dd_max: (float) The maximum distance of interest.
     sum: (int) State if each distance is counted twice or once
@@ -22,42 +23,55 @@ __device__ void count_distances11(double *XX, PointW3D *elements, int start, int
     
     int bin;
     double v;
-    float d;
-    float x1, y1, z1, w1;
+    float x1,y1,z1,w1;
     float x2,y2,z2,w2;
+    float x3,y3,z3;
+    float dd12, dd23, dd31;
 
-    for (int i=start; i<end-1; ++i){
+    for (int i=start; i<end-2; ++i){
         x1 = elements[i].x;
         y1 = elements[i].y;
         z1 = elements[i].z;
         w1 = elements[i].w;
-        for (int j=i+1; j<end; ++j){
+        for (int j=i+1; j<end-1; ++j){
             x2 = elements[j].x;
             y2 = elements[j].y;
             z2 = elements[j].z;
             w2 = elements[j].w;
-            d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-            if (d<=dd_max){
-                bin = (int)(sqrtf(d)*ds);
-                v = sum*w1*w2;
-                atomicAdd(&XX[bin],v);
+            dd12 = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+            if (dd12<dd_max){
+                for (int k=j+1; k<end; k++){
+                    x3 = elements[k].x;
+                    y3 = elements[k].y;
+                    z3 = elements[k].z;
+                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+(z3-z2)*(z3-z2);
+                    if (dd23<dd_max){
+                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+(z3-z1)*(z3-z1);
+                        if (dd31<dd_max){
+                            v = w1*w2*elements[k].w;
+                            bin = (int)(sqrtf(dd12)*ds)*bns*bns + (int)(sqrtf(dd23)*ds)*bns + (int)(sqrtf(dd31)*ds);
+                            atomicAdd(&XXX[bin],v);
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-__device__ void count_distances12(double *XX, PointW3D *elements, int start1, int end1, int start2, int end2, float ds, float dd_max, int sum){
+__device__ void count_112_triangles(double *XXX, PointW3D *elements, int start1, int end1, int start2, int end2, int bns; float ds, float dd_max){
     /*
     This device function counts the distances betweeen points between two different nodes from the same file. This function is used 
     to compute the XX histogram
 
     Args:
-    XX: (double*) The histogram where the distances are counted in
+    XXX: (double*) The histogram where the distances are counted in
     elements: (PointW3D*)  Array of PointW3D points orderered coherently by the nodes
     start1: (int) index at which the nodeA starts to be defined by elements1. Inclusive.
     end1: (int) index at which the nodeA stops being defined by elements1. Non inclusive.
     start2: (int) index at which the nodeB starts to be defined by elements1. Inclusive.
     end2: (int) index at which the nodeB stops being defined by elements1. Non inclusive.
+    bns: (int) number of bins per XXX dimension
     ds: (float) number of bins divided by the maximum distance. Used to calculate the bin it should be counted at
     dd_max: (float) The maximum distance of interest.
     sum: (int) State if each distance is counted twice or once
@@ -65,8 +79,10 @@ __device__ void count_distances12(double *XX, PointW3D *elements, int start1, in
 
     int bin;
     double v;
-    float d;
-    float x1,y1,z1,w1,x2,y2,z2,w2;
+    float x1,y1,z1,w1;
+    float x2,y2,z2,w2;
+    float x3,y3,z3;
+    float dd12, dd23, dd31;
 
     for (int i=start1; i<end1; ++i){
         x1 = elements[i].x;
@@ -136,7 +152,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
 
     args:
-    XX: (double*) The histogram where the distances are counted.
+    XXX: (double*) The histogram where the distances are counted.
     elements: (PointW3D*) Array of the points ordered coherently with the nodes.
     node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
     partitions: (int) Number of partitions that are fitted by box side.
@@ -163,7 +179,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             d_max_node*=d_max_node;
 
             // Counts distances within the same node
-            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
+            count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max);
             
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
