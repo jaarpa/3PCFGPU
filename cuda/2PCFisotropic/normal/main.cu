@@ -86,6 +86,10 @@ int main(int argc, char **argv){
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
     open_files(argv[2], np, dataR, r_size_box);
 
+    //Sets the number of partitions of the box and the size of each node
+    partitions = 35;
+    size_node = size_box/(float)(partitions);
+
     // Allocate memory for the histogram as double
     DD = new double[bn];
     RR = new double[bn];
@@ -94,7 +98,6 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_DD, bn*sizeof(double)));
     cucheck(cudaMalloc(&d_RR, bn*sizeof(double)));
     cucheck(cudaMalloc(&d_DR, bn*sizeof(double)));
-
 
     //Restarts the main histograms in host to zero
     for (int i = 0; i<bn; i++){
@@ -106,10 +109,6 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(d_DD, DD, bn*sizeof(double), cudaMemcpyHostToDevice, streamDD));
     cucheck(cudaMemcpyAsync(d_RR, RR, bn*sizeof(double), cudaMemcpyHostToDevice, streamRR));
     cucheck(cudaMemcpyAsync(d_DR, DR, bn*sizeof(double), cudaMemcpyHostToDevice, streamDR));
-
-    //Sets the number of partitions of the box and the size of each node
-    partitions = 35;
-    size_node = size_box/(float)(partitions);
 
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMalloc(&dnodeD_s1, partitions*partitions*partitions*sizeof(DNode)));
