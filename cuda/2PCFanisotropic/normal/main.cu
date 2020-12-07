@@ -65,9 +65,9 @@ int main(int argc, char **argv){
     DNode *hnodeD_s, *hnodeR_s;
     PointW3D *h_ordered_pointsD_s, *h_ordered_pointsR_s;
     cudaStream_t streamDD, streamRR, streamDR;
-    cudaStreamCreate(&streamDD);
-    cudaStreamCreate(&streamDR);
-    cudaStreamCreate(&streamRR);
+    cucheck(cudaStreamCreate(&streamDD));
+    cucheck(cudaStreamCreate(&streamDR));
+    cucheck(cudaStreamCreate(&streamRR));
     DNode *dnodeD_s1, *dnodeD_s3, *dnodeR_s2, *dnodeR_s3;
     int row, col, mom, k_element, last_pointD, last_pointR;
     PointW3D *d_ordered_pointsD_s1, *d_ordered_pointsD_s3, *d_ordered_pointsR_s2, *d_ordered_pointsR_s3;
@@ -198,25 +198,22 @@ int main(int argc, char **argv){
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
-    cudaEventRecord(start_timmer);
+    cucheck(cudaEventRecord(start_timmer));
     make_histoXX<<<blocks,threads_perblock,0,streamDD>>>(d_DD, d_ordered_pointsD_s1, dnodeD_s1, partitions, bn, dmax, size_node);
     make_histoXX<<<blocks,threads_perblock,0,streamRR>>>(d_RR, d_ordered_pointsR_s2, dnodeR_s2, partitions, bn, dmax, size_node);
     make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_s3, dnodeD_s3, d_ordered_pointsR_s3, dnodeR_s3, partitions, bn, dmax, size_node);
 
-    cucheck(cudaStreamSynchronize(streamRR));
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
-    cucheck(cudaStreamSynchronize(streamDR));
     cucheck(cudaMemcpyAsync(DR, d_DR, bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDR));
-    cucheck(cudaStreamSynchronize(streamDD));
     cucheck(cudaMemcpyAsync(DD, d_DD, bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
 
 
-    cudaEventRecord(stop_timmer);
-    cudaEventSynchronize(stop_timmer);
-    cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
+    cucheck(cudaEventRecord(stop_timmer));
+    cucheck(cudaEventSynchronize(stop_timmer));
+    cucheck(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
 
     cout << "Spent "<< time_spent << " miliseconds to compute all the histograms." << endl;
     
@@ -234,9 +231,9 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Free the memory
-    cudaStreamDestroy(streamDD);
-    cudaStreamDestroy(streamDR);
-    cudaStreamDestroy(streamRR);
+    cucheck(cudaStreamDestroy(streamDD));
+    cucheck(cudaStreamDestroy(streamDR));
+    cucheck(cudaStreamDestroy(streamRR));
 
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
