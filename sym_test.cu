@@ -119,7 +119,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
 __global__ void simmetrization(float *s_XXX,float *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     float v;
-    printf("%d \n", XXX[i]);
+    printf("%f \n", XXX[i]);
     for (int j=i+1; j<bn; j++){
         for (int k=j+1; k<bn; k++){
             v = XXX[i*bn*bn + j*bn + k] + XXX[i*bn*bn + k*bn + j] + XXX[j*bn*bn + k*bn + i] + XXX[j*bn*bn + i*bn + k] + XXX[k*bn*bn + i*bn + j] + XXX[k*bn*bn + j*bn + i];
@@ -143,22 +143,24 @@ int main(int argc, char **argv){
 
     float *DDD, *d_DDD, *sd_DDD;
     DDD = new float[bn*bn*bn];
-    cucheck(cudaMallocManaged(&d_DDD, bn*bn*bn*sizeof(float)));
-    cucheck(cudaMallocManaged(&sd_DDD, bn*bn*bn*sizeof(float)));
+    cucheck(cudaMalloc(&d_DDD, bn*bn*bn*sizeof(float)));
+    cucheck(cudaMalloc(&sd_DDD, bn*bn*bn*sizeof(float)));
 
     PointW3D *dataD;
     dataD = new PointW3D[np];
     open_files(argv[1], np, dataD, size_box);
 
     for (int i=0; i<bn*bn*bn; i++){
-        d_DDD[i] = dataD[i].x+dataD[i].y-dataD[i].z;
+        DDD[i] = dataD[i].x+dataD[i].y-dataD[i].z;
     }
 
     for (int i=0; i<12; i++){
-        cout << d_DDD[i] <<endl;
+        cout << DDD[i] <<endl;
     }
-    cout << "Entering to the device code "<< endl;
-    //cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(float), cudaMemcpyHostToDevice));
+
+    cout << "Entering the device code \n" << endl;
+
+    cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(float), cudaMemcpyHostToDevice));
 
     start_timmer = clock();
 
@@ -169,9 +171,9 @@ int main(int argc, char **argv){
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
     printf("\nSpent time = %.4f seg.\n", time_spent );
 
-    //cucheck(cudaMemcpy(DDD, sd_DDD, bn*bn*bn*sizeof(float), cudaMemcpyDeviceToHost));
+    cucheck(cudaMemcpy(DDD, sd_DDD, bn*bn*bn*sizeof(float), cudaMemcpyDeviceToHost));
     
-    save_histogram("DDD.dat", bn, d_DDD);
+    save_histogram("DDD.dat", bn, DDD);
     
     delete[] dataD;
     delete[] DDD;
