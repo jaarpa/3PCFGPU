@@ -157,7 +157,7 @@ int main(int argc, char **argv){
     for (int i=0; i<12; i++){
         cout << d_DDD[i] <<endl;
     }
-
+    cout << "Entering to the device code "<< endl;
     //cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(float), cudaMemcpyHostToDevice));
 
     start_timmer = clock();
