@@ -100,15 +100,9 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_DR, bn*bn*sizeof(double)));
 
     //Restarts the main histograms in host to zero
-    for (int i = 0; i<bn*bn; i++){
-        *(DD+i) = 0.0;
-        *(RR+i) = 0.0;
-        *(DR+i) = 0.0;
-    }
-
-    cucheck(cudaMemcpyAsync(d_DD, DD, bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDD));
-    cucheck(cudaMemcpyAsync(d_RR, RR, bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRR));
-    cucheck(cudaMemcpyAsync(d_DR, DR, bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDR));
+    cucheck(cudaMemsetAsync(d_DD, 0, bn*bn*sizeof(double), streamDD));
+    cucheck(cudaMemsetAsync(d_RR, 0, bn*bn*sizeof(double), streamRR));
+    cucheck(cudaMemsetAsync(d_DR, 0, bn*bn*sizeof(double), streamDR));
 
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMalloc(&dnodeD_s1, partitions*partitions*partitions*sizeof(DNode)));
