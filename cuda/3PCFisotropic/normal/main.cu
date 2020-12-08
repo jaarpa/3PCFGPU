@@ -72,10 +72,10 @@ int main(int argc, char **argv){
     cucheck(cudaStreamCreate(&streamDDR));
     cucheck(cudaStreamCreate(&streamDRR));
     cucheck(cudaStreamCreate(&streamRRR));
-    DNode *dnodeD_DDD, *dnodeD_DDR, *dnodeD_RRD;
-    DNode *dnodeR_RRR, *dnodeR_DDR, *dnodeR_RRD;
+    DNode *dnodeD_DDD, *dnodeD_DDR, *dnodeD_DRR;
+    DNode *dnodeR_RRR, *dnodeR_DDR, *dnodeR_DRR;
     PointW3D *d_ordered_pointsD_DDD, *d_ordered_pointsD_DDR, *d_ordered_pointsD_DRR;
-    PointW3D *d_ordered_pointsD_RRR, *d_ordered_pointsD_DDR, *d_ordered_pointsD_DRR;
+    PointW3D *d_ordered_pointsR_RRR, *d_ordered_pointsR_DDR, *d_ordered_pointsR_DRR;
 
     // Name of the files where the results are saved
     string nameDDD = "DDDiso.dat", nameRRR = "RRRiso.dat", nameDDR = "DDRiso.dat", nameDRR = "DRRiso.dat";
@@ -108,9 +108,10 @@ int main(int argc, char **argv){
 
     //Restarts the main histograms in host to zero
     for (int i = 0; i<bn*bn*bn; i++){
-        *(DD+i) = 0.0;
-        *(RR+i) = 0.0;
-        *(DR+i) = 0.0;
+        *(DDR+i) = 0.0;
+        *(RRR+i) = 0.0;
+        *(DRR+i) = 0.0;
+        *(DDR+i) = 0.0;
     }
 
     cucheck(cudaMemcpyAsync(d_DDD, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));

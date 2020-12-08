@@ -354,7 +354,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
                 nx2 = nodeD[u].nodepos.x;
-                dx_nod12 = nodeD[u].nodepos.x - nx1;
+                dx_nod12 = nx2 - nx1;
                 for(v = 0; v < partitions; v++){
                     idx2 = u + v*partitions;
                     ny2 = nodeD[idx2].nodepos.y;
