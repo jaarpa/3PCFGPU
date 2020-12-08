@@ -143,22 +143,22 @@ int main(int argc, char **argv){
 
     float *DDD, *d_DDD, *sd_DDD;
     DDD = new float[bn*bn*bn];
-    cucheck(cudaMalloc(&d_DDD, bn*bn*bn*sizeof(float)));
-    cucheck(cudaMalloc(&sd_DDD, bn*bn*bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&d_DDD, bn*bn*bn*sizeof(float)));
+    cucheck(cudaMallocManaged(&sd_DDD, bn*bn*bn*sizeof(float)));
 
     PointW3D *dataD;
     dataD = new PointW3D[np];
     open_files(argv[1], np, dataD, size_box);
 
     for (int i=0; i<bn*bn*bn; i++){
-        DDD[i] = dataD[i].x+dataD[i].y-dataD[i].z;
+        d_DDD[i] = dataD[i].x+dataD[i].y-dataD[i].z;
     }
 
     for (int i=0; i<12; i++){
-        cout << DDD[i] <<endl;
+        cout << d_DDD[i] <<endl;
     }
 
-    cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(float), cudaMemcpyHostToDevice));
+    //cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(float), cudaMemcpyHostToDevice));
 
     start_timmer = clock();
 
@@ -169,9 +169,9 @@ int main(int argc, char **argv){
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
     printf("\nSpent time = %.4f seg.\n", time_spent );
 
-    cucheck(cudaMemcpy(DDD, sd_DDD, bn*bn*bn*sizeof(float), cudaMemcpyDeviceToHost));
+    //cucheck(cudaMemcpy(DDD, sd_DDD, bn*bn*bn*sizeof(float), cudaMemcpyDeviceToHost));
     
-    save_histogram("DDD.dat", bn, DDD);
+    save_histogram("DDD.dat", bn, d_DDD);
     
     delete[] dataD;
     delete[] DDD;
