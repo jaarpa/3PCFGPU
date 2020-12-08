@@ -48,7 +48,7 @@ void save_histogram(string name, int bns, double *histo){
 
     string mypathto_files = "data/";
     //This creates the full path to where I have my data files
-    name_file.insert(0,mypathto_files);
+    name.insert(0,mypathto_files);
 
     if (file.fail()){
         cout << "Failed to save the the histogram in " << name << endl;
@@ -118,7 +118,6 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
 
 __global__ void simmetrization(double *s_XXX,double *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx;
     double v;
     for (int j=i+1; j<bn; j++){
         for (int k=j+1; k<bn; k++){
