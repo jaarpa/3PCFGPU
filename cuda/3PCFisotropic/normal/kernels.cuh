@@ -302,11 +302,11 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         int row = idx%partitions;
 
         //idx = row + col*partitions + mom*partitions*partitions;
-
-        atomicAdd(&XXX[1],1.0);
+        double t = 1.0;
+        atomicAdd(&XXX[1],t);
         if (nodeD[idx].len > 0){
 
-            double t = (double)(nodeD[idx].len);
+            t = (double)(nodeD[idx].len);
             atomicAdd(&XXX[0],t);
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
