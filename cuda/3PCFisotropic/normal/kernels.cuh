@@ -379,6 +379,31 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 }
 
 /*
+__global__ void simmetrize(double *histogram, int bns){
+
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int i = (int) (idx/(bns*bns));
+    int j = (int) ((idx%(bns*bns))/bns);
+    int k = idx%bns;
+
+    // idx = k + j*bns + k*bns*bns
+    int idx2 = i + k*bns + j*bns*bns;
+    int idx3 = j + k*bns + i*bns*bns;
+    int idx4 = j + i*bns + k*bns*bns;
+    int idx5 = k + i*bns + j*bns*bns;
+    int idx6 = k + j*bns + i*bns*bns;
+
+    float = XXX[idx] + XXX[idx2] + XXX[idx3] + XXX[idx4] + XXX[idx5] + XXX[idx6];
+
+    XXX[idx] = elem;
+    XXX[idx2] = elem;
+    XXX[idx3] = elem;
+    XXX[idx4] = elem;
+    XXX[idx5] = elem;
+    XXX[idx6] = elem;
+}*/
+
+/*
 __global__ void make_histoXXY(double *XXY, PointW3D *elementsD, DNode *nodeD, PointW3D *elementsR,  DNode *nodeR, int partitions, int bn, float dmax, float size_node){
     /*
     Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
