@@ -301,7 +301,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
 
-        printf("%i len: %i n", idx, nodeD[idx].len);
+        printf("%i len: %i \n", idx, nodeD[idx].len);
 
         //idx = row + col*partitions + mom*partitions*partitions;
 
