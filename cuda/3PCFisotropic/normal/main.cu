@@ -122,13 +122,14 @@ int main(int argc, char **argv){
     }
 
     DDD[1241] = 100;
-
-    cucheck(cudaMemcpyAsync(d_DDD, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
+    cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
+    //cucheck(cudaMemcpyAsync(d_DDD, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
     cucheck(cudaMemcpyAsync(d_RRR, RRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRRR));
     cucheck(cudaMemcpyAsync(d_DRR, DRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDRR));
     cucheck(cudaMemcpyAsync(d_DDR, DDR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDR));
 
-    cucheck(cudaMemcpyAsync(d_DDD_sym, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
+    cucheck(cudaMemsetAsync(d_DDD_sym, 0, bn*bn*bn*sizeof(double), streamDDD));
+    //cucheck(cudaMemcpyAsync(d_DDD_sym, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
     cucheck(cudaMemcpyAsync(d_RRR_sym, RRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRRR));
     cucheck(cudaMemcpyAsync(d_DRR_sym, DRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDRR));
     cucheck(cudaMemcpyAsync(d_DDR_sym, DDR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDR));
