@@ -162,16 +162,6 @@ int main(int argc, char **argv){
     //The node classification is made in the host
     make_nodos(hnodeD, dataD, partitions, size_node, np);
     make_nodos(hnodeR, dataR, partitions, size_node, np);
-
-    int s=0;
-    for (int i=0; i<partitions; i++){
-    for (int j=0; j<partitions; j++){
-    for (int k=0; k<partitions; k++){
-        s+=hnodeD[i][j][k].len;
-    }
-    }
-    }
-    cout << "Tot number of points in the host nodes" << s << endl;
     
     //Deep copy to device memory
     last_pointR = 0;
@@ -182,24 +172,32 @@ int main(int argc, char **argv){
         row = idx%partitions;
         
         hnodeD_s[idx].nodepos = hnodeD[row][col][mom].nodepos;
-        hnodeD_s[idx].prev_i = last_pointD;
-        last_pointD = last_pointD + hnodeD[row][col][mom].len;
+        hnodeD_s[idx].start = last_pointD;
+        hnodeD_s[idx].end = hnodeD_s[idx].start + hnodeD[row][col][mom].len;
         hnodeD_s[idx].len = hnodeD[row][col][mom].len;
-        for (int j=hnodeD_s[idx].prev_i; j<last_pointD; j++){
+        last_pointD = last_pointD + hnodeD[row][col][mom].len;
+        for (int j=hnodeD_s[idx].start; j<hnodeD_s[idx].end; j++){
             k_element = j-hnodeD_s[idx].prev_i;
             h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
         }
 
         hnodeR_s[idx].nodepos = hnodeR[row][col][mom].nodepos;
-        hnodeR_s[idx].prev_i = last_pointR;
-        last_pointR = last_pointR + hnodeR[row][col][mom].len;
+        hnodeR_s[idx].start = last_pointR;
+        hnodeR_s[idx].end = hnodeR_s[idx].start + hnodeR[row][col][mom].len;
         hnodeR_s[idx].len = hnodeR[row][col][mom].len;
-        for (int j=hnodeR_s[idx].prev_i; j<last_pointR; j++){
+        last_pointD = last_pointD + hnodeR[row][col][mom].len;
+        for (int j=hnodeR_s[idx].start; j<hnodeR_s[idx].end; j++){
             k_element = j-hnodeR_s[idx].prev_i;
-            h_ordered_pointsR_s[j] = hnodeR[row][col][mom].elements[k_element];
+            h_ordered_pointsD_s[j] = hnodeR[row][col][mom].elements[k_element];
         }
     }
 
+
+    int s=0;
+    for (int i=0; i<partitions*partitions*partitions; i++){
+        s+=hnodeD_s[i].len;
+    }
+    cout << "Tot number of points in the copied host nodes" << s << endl;
 
     cucheck(cudaMemcpyAsync(dnodeD_DDD, hnodeD_s, partitions*partitions*partitions*sizeof(DNode), cudaMemcpyHostToDevice, streamDDD));
     cucheck(cudaMemcpyAsync(d_ordered_pointsD_DDD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDDD));
