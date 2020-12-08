@@ -229,7 +229,7 @@ int main(int argc, char **argv){
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
-
+    symmetrize(DDD, bn);
     cucheck(cudaEventRecord(stop_timmer));
     cucheck(cudaEventSynchronize(stop_timmer));
     cucheck(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));

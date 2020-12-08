@@ -166,7 +166,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     }
 }
 
-void NODE3P::symmetrize(double ***XXX){
+void symmetrize(double &*XXX){
     /*
     Function to symmetrize histogram
 
