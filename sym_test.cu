@@ -116,19 +116,19 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
 }
 
 
-__global__ void simmetrization(double *s_XXX,double *XXX , int bn){
+__global__ void simmetrization(float *s_XXX,float *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    double v;
+    float v;
     printf("%d \n", XXX[i]);
     for (int j=i+1; j<bn; j++){
         for (int k=j+1; k<bn; k++){
             v = XXX[i*bn*bn + j*bn + k] + XXX[i*bn*bn + k*bn + j] + XXX[j*bn*bn + k*bn + i] + XXX[j*bn*bn + i*bn + k] + XXX[k*bn*bn + i*bn + j] + XXX[k*bn*bn + j*bn + i];
-            XXX[i*bn*bn + j*bn + k] = v;
-            XXX[i*bn*bn + k*bn + j] = v;
-            XXX[j*bn*bn + k*bn + i] = v;
-            XXX[j*bn*bn + i*bn + k] = v;
-            XXX[k*bn*bn + i*bn + j] = v;
-            XXX[k*bn*bn + j*bn + i] = v;
+            s_XXX[i*bn*bn + j*bn + k] = v;
+            s_XXX[i*bn*bn + k*bn + j] = v;
+            s_XXX[j*bn*bn + k*bn + i] = v;
+            s_XXX[j*bn*bn + i*bn + k] = v;
+            s_XXX[k*bn*bn + i*bn + j] = v;
+            s_XXX[k*bn*bn + j*bn + i] = v;
         }
     }
     
@@ -141,10 +141,10 @@ int main(int argc, char **argv){
     clock_t start_timmer, stop_timmer;
     double time_spent;
 
-    double *DDD, *d_DDD, *sd_DDD;
-    DDD = new double[bn*bn*bn];
-    cucheck(cudaMalloc(&d_DDD, bn*bn*bn*sizeof(double)));
-    cucheck(cudaMalloc(&sd_DDD, bn*bn*bn*sizeof(double)));
+    float *DDD, *d_DDD, *sd_DDD;
+    DDD = new float[bn*bn*bn];
+    cucheck(cudaMalloc(&d_DDD, bn*bn*bn*sizeof(float)));
+    cucheck(cudaMalloc(&sd_DDD, bn*bn*bn*sizeof(float)));
 
     PointW3D *dataD;
     dataD = new PointW3D[np];
@@ -158,7 +158,7 @@ int main(int argc, char **argv){
         cout << DDD[i] <<endl;
     }
 
-    cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice));
+    cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(float), cudaMemcpyHostToDevice));
 
     start_timmer = clock();
 
@@ -169,7 +169,7 @@ int main(int argc, char **argv){
     time_spent = (double)(stop_timmer - start_timmer) / CLOCKS_PER_SEC;
     printf("\nSpent time = %.4f seg.\n", time_spent );
 
-    cucheck(cudaMemcpy(DDD, sd_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
+    cucheck(cudaMemcpy(DDD, sd_DDD, bn*bn*bn*sizeof(float), cudaMemcpyDeviceToHost));
     
     save_histogram("DDD.dat", bn, DDD);
     
