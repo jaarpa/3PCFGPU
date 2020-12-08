@@ -229,7 +229,31 @@ int main(int argc, char **argv){
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
-    symmetrize(DDD, bn);
+
+    double elem;
+
+    int idx1, idx2, idx3, idx4, idx5, idx6;
+
+    for (int i=0; i<bns; i++){
+        for (int j=i; j<bns; j++){
+            for (int k=j; k<bns; k++){
+                idx1 = k + j*bns + k*bns*bns;
+                idx2 = k + i*bns + j*bns*bns;
+                idx3 = i + j*bns + k*bns*bns;
+                idx4 = i + k*bns + j*bns*bns;
+                idx5 = j + k*bns + i*bns*bns;
+                idx6 = j + i*bns + k*bns*bns;
+                elem = DDD[idx1] + DDD[idx2] + DDD[idx3] + DDD[idx4] + DDD[idx5] + DDD[idx6];
+                DDD[idx1] = elem;
+                DDD[idx2] = elem;
+                DDD[idx3] = elem;
+                DDD[idx4] = elem;
+                DDD[idx5] = elem;
+                DDD[idx6] = elem;
+            }
+        }
+    }
+
     cucheck(cudaEventRecord(stop_timmer));
     cucheck(cudaEventSynchronize(stop_timmer));
     cucheck(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
