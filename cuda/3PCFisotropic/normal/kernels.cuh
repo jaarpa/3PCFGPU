@@ -305,6 +305,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
         if (nodeD[idx].len > 0){
 
+            printf("%i len: %i \n", idx, nodeD[idx].len);
             double t = (double)(nodeD[idx].len);
             atomicAdd(&XXX[0],t);
 
