@@ -166,7 +166,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
     }
 }
 
-void symmetrize(double &*XXX){
+void symmetrize(double *XXX, int bns){
     /*
     Function to symmetrize histogram
 
@@ -178,9 +178,9 @@ void symmetrize(double &*XXX){
 
     int idx1, idx2, idx3, idx4, idx5, idx6;
 
-    for (i=0; i<bn; i++){
-        for (j=i; j<bn; j++){
-            for (k=j; k<bn; k++){
+    for (int i=0; i<bns; i++){
+        for (int j=i; j<bns; j++){
+            for (int k=j; k<bns; k++){
                 idx1 = k + j*bns + k*bns*bns;
                 idx2 = k + i*bns + j*bns*bns;
                 idx3 = i + j*bns + k*bns*bns;
