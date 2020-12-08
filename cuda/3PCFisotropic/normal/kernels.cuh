@@ -48,7 +48,7 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
                     if (dd23<dd_max){
                         dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+(z3-z1)*(z3-z1);
                         if (dd31<dd_max){
-                            v = w1*w2*elements[k].w;
+                            v = (double)(w1*w2*elements[k].w);
                             bin = (int)(sqrtf(dd12)*ds)*bns*bns + (int)(sqrtf(dd23)*ds)*bns + (int)(sqrtf(dd31)*ds);
                             atomicAdd(&XXX[bin],v);
                         }
