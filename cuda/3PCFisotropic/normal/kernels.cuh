@@ -248,7 +248,7 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
             if (dd_nod31 <= d_max_node){
                 dd_nod23 = (ny3-ny2)*(ny3-ny2) + (nz3-nz2)*(nz3-nz2) + ddx23;
                 if (dd_nod23 <= d_max_node) {
-                    count_123_triangles(XXX, elements, nodeD[idx].start, nodeD[idx].end, nodeD[idx2].start, nodeD[idx2].end, nodeD[idx2].start, nodeD[idx3].end, bn, ds, dd_max);
+                    count_123_triangles(XXX, elements, nodeD[idx].start, nodeD[idx]end, nodeD[idx2].start, nodeD[idx2].end, nodeD[idx2].start, nodeD[idx3].end, bn, ds, dd_max);
                 }
             }
         }
