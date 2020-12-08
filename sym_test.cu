@@ -119,6 +119,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
 __global__ void simmetrization(double *s_XXX,double *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     double v;
+    printf("%d \n", XXX[i]);
     for (int j=i+1; j<bn; j++){
         for (int k=j+1; k<bn; k++){
             v = XXX[i*bn*bn + j*bn + k] + XXX[i*bn*bn + k*bn + j] + XXX[j*bn*bn + k*bn + i] + XXX[j*bn*bn + i*bn + k] + XXX[k*bn*bn + i*bn + j] + XXX[k*bn*bn + j*bn + i];
