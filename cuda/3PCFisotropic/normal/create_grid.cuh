@@ -173,7 +173,6 @@ void symmetrize(double *XXX, int bns){
     Arg
     XXX: array to symmetrize
     */ 
-    int i,j,k;
     float elem;
 
     int idx1, idx2, idx3, idx4, idx5, idx6;
