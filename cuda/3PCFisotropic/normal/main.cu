@@ -50,6 +50,7 @@ int main(int argc, char **argv){
 
     double *DDD, *RRR, *DRR, *DDR;
     double *d_DDD, *d_RRR, *d_DRR, *d_DDR;
+    double *d_DDD_sym, *d_RRR_sym, *d_DRR_sym, *d_DDR_sym;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
     int threads_perblock, blocks;
@@ -107,6 +108,11 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_DRR, bn*bn*bn*sizeof(double)));
     cucheck(cudaMalloc(&d_DDR, bn*bn*bn*sizeof(double)));
 
+    cucheck(cudaMalloc(&d_DDD_sym, bn*bn*bn*sizeof(double)));
+    cucheck(cudaMalloc(&d_RRR_sym, bn*bn*bn*sizeof(double)));
+    cucheck(cudaMalloc(&d_DRR_sym, bn*bn*bn*sizeof(double)));
+    cucheck(cudaMalloc(&d_DDR_sym, bn*bn*bn*sizeof(double)));
+
     //Restarts the main histograms in host to zero
     for (int i = 0; i<bn*bn*bn; i++){
         *(DDR+i) = 0.0;
@@ -119,6 +125,11 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(d_RRR, RRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRRR));
     cucheck(cudaMemcpyAsync(d_DRR, DRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDRR));
     cucheck(cudaMemcpyAsync(d_DDR, DDR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDR));
+
+    cucheck(cudaMemcpyAsync(d_DDD_sym, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
+    cucheck(cudaMemcpyAsync(d_RRR_sym, RRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRRR));
+    cucheck(cudaMemcpyAsync(d_DRR_sym, DRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDRR));
+    cucheck(cudaMemcpyAsync(d_DDR_sym, DDR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDR));
 
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMalloc(&dnodeD_DDD, partitions*partitions*partitions*sizeof(DNode)));
@@ -223,10 +234,23 @@ int main(int argc, char **argv){
     //make_histoXXY<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsD_DRR, dnodeD_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, partitions, bn, dmax, size_node);
     //make_histoXXY<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, d_ordered_pointsR_DDR, dnodeR_DDR, partitions, bn, dmax, size_node);
 
-    cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
-    cucheck(cudaMemcpyAsync(RRR, d_RRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRRR));
-    cucheck(cudaMemcpyAsync(DRR, d_DRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDRR));
-    cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDR));
+    //Symmetrize the results
+    if (bn<64){
+        blocks = 1;
+        threads_perblock = bn;
+    } else {
+        threads_perblock = 64;
+        blocks = (int)(ceil((float)((float)(bn)/(float)(threads_perblock))));
+    }
+    simmetrization<<<blocks,threads_perblock,0,streamDDD>>>(d_DDD_sym, d_DDD, bn);
+    simmetrization<<<blocks,threads_perblock,0,streamRRR>>>(d_RRR_sym, d_RRR, bn);
+    simmetrization<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR_sym, d_DRR, bn);
+    simmetrization<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR_sym, d_DDR, bn);
+
+    cucheck(cudaMemcpyAsync(DDD, d_DDD_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
+    cucheck(cudaMemcpyAsync(RRR, d_RRR_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRRR));
+    cucheck(cudaMemcpyAsync(DRR, d_DRR_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDRR));
+    cucheck(cudaMemcpyAsync(DDR, d_DDR_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDR));
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
@@ -271,8 +295,12 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_RRR));
     cucheck(cudaFree(d_DRR));
     cucheck(cudaFree(d_DDR));
-
     
+    cucheck(cudaFree(d_DDD_sym));
+    cucheck(cudaFree(d_RRR_sym));
+    cucheck(cudaFree(d_DRR_sym));
+    cucheck(cudaFree(d_DDR_sym));
+
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
             delete[] hnodeD[i][j];

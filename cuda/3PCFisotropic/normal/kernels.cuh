@@ -379,30 +379,6 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     }
 }
 
-/*
-__global__ void simmetrize(double *histogram, int bns){
-
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int i = (int) (idx/(bns*bns));
-    int j = (int) ((idx%(bns*bns))/bns);
-    int k = idx%bns;
-
-    // idx = k + j*bns + k*bns*bns
-    int idx2 = i + k*bns + j*bns*bns;
-    int idx3 = j + k*bns + i*bns*bns;
-    int idx4 = j + i*bns + k*bns*bns;
-    int idx5 = k + i*bns + j*bns*bns;
-    int idx6 = k + j*bns + i*bns*bns;
-
-    float = XXX[idx] + XXX[idx2] + XXX[idx3] + XXX[idx4] + XXX[idx5] + XXX[idx6];
-
-    XXX[idx] = elem;
-    XXX[idx2] = elem;
-    XXX[idx3] = elem;
-    XXX[idx4] = elem;
-    XXX[idx5] = elem;
-    XXX[idx6] = elem;
-}*/
 
 /*
 __global__ void make_histoXXY(double *XXY, PointW3D *elementsD, DNode *nodeD, PointW3D *elementsR,  DNode *nodeR, int partitions, int bn, float dmax, float size_node){
@@ -460,3 +436,20 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsD, DNode *nodeD, Po
     }
 }
 */
+
+__global__ void simmetrization(double *s_XXX,double *XXX , int bn){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    double v;
+    for (int j=i+1; j<bn; j++){
+        for (int k=j+1; k<bn; k++){
+            v = XXX[i*bn*bn + j*bn + k] + XXX[i*bn*bn + k*bn + j] + XXX[j*bn*bn + k*bn + i] + XXX[j*bn*bn + i*bn + k] + XXX[k*bn*bn + i*bn + j] + XXX[k*bn*bn + j*bn + i];
+            s_XXX[i*bn*bn + j*bn + k] = v;
+            s_XXX[i*bn*bn + k*bn + j] = v;
+            s_XXX[j*bn*bn + k*bn + i] = v;
+            s_XXX[j*bn*bn + i*bn + k] = v;
+            s_XXX[k*bn*bn + i*bn + j] = v;
+            s_XXX[k*bn*bn + j*bn + i] = v;
+        }
+    }
+    
+}
