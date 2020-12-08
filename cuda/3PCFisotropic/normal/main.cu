@@ -177,7 +177,7 @@ int main(int argc, char **argv){
         hnodeD_s[idx].len = hnodeD[row][col][mom].len;
         last_pointD = last_pointD + hnodeD[row][col][mom].len;
         for (int j=hnodeD_s[idx].start; j<hnodeD_s[idx].end; j++){
-            k_element = j-hnodeD_s[idx].prev_i;
+            k_element = j-hnodeD_s[idx].start;
             h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
         }
 
@@ -187,7 +187,7 @@ int main(int argc, char **argv){
         hnodeR_s[idx].len = hnodeR[row][col][mom].len;
         last_pointD = last_pointD + hnodeR[row][col][mom].len;
         for (int j=hnodeR_s[idx].start; j<hnodeR_s[idx].end; j++){
-            k_element = j-hnodeR_s[idx].prev_i;
+            k_element = j-hnodeR_s[idx].start;
             h_ordered_pointsD_s[j] = hnodeR[row][col][mom].elements[k_element];
         }
     }
