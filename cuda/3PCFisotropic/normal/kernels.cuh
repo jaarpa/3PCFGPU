@@ -301,11 +301,11 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
 
-        printf("%i len: %i \n", idx, nodeD[idx].len);
-
         //idx = row + col*partitions + mom*partitions*partitions;
 
         if (nodeD[idx].len > 0){
+
+            printf("%i len: %i \n", idx, nodeD[idx].len);
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
