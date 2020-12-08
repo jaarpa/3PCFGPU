@@ -219,8 +219,8 @@ int main(int argc, char **argv){
     cudaEventRecord(start_timmer);
     make_histoXXX<<<blocks,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD_DDD, dnodeD_DDD, partitions, bn, dmax, size_node);
     make_histoXXX<<<blocks,threads_perblock,0,streamRRR>>>(d_RRR, d_ordered_pointsR_RRR, dnodeR_RRR, partitions, bn, dmax, size_node);
-    make_histoXXY<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsD_DRR, dnodeD_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, partitions, bn, dmax, size_node);
-    make_histoXXY<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, d_ordered_pointsR_DDR, dnodeR_DDR, partitions, bn, dmax, size_node);
+    //make_histoXXY<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsD_DRR, dnodeD_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, partitions, bn, dmax, size_node);
+    //make_histoXXY<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, d_ordered_pointsR_DDR, dnodeR_DDR, partitions, bn, dmax, size_node);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
     cucheck(cudaMemcpyAsync(RRR, d_RRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRRR));
@@ -240,9 +240,10 @@ int main(int argc, char **argv){
     /* =======================  Save the results =============================*/
     /* =======================================================================*/
 
-	save_histogram(nameDD, bn, DD);
-	save_histogram(nameRR, bn, RR);
-	save_histogram(nameDR, bn, DR);
+	save_histogram(nameDDD, bn, DDD);
+	save_histogram(nameRRR, bn, RRR);
+	save_histogram(nameDDR, bn, DDR);
+	save_histogram(nameDRR, bn, DRR);
     cout << "Saved the histograms" << endl;
     
     /* =======================================================================*/

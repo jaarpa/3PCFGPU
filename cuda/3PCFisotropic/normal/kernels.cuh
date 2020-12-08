@@ -213,7 +213,7 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
     float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
     float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
     float nx3=nx2, ny3=ny2, nz3;
-    float dx_nod31, dy_nod31, dz_nod31, dd_nod31; //Internodal distance
+    float dx_nod31, dy_nod31, dz_nod31, dd_nod31, dd_nod23; //Internodal distance
     float ddx31, ddy31, ddx23, ddy23;
 
     ddx31 = (nx3 - nx1)*(nx3 - nx1);
@@ -266,7 +266,7 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
                 idx3 = a + b*partitions + c*partitions*partitions;
                 nz3 = nodeD[idx3].nodepos.z;
                 dz_nod31 = nz3-nz1;
-                dd_nod31 = dy_nod31*dy_nod31 + dz_nod31*dz_nod31;
+                dd_nod31 = dx_nod31*dx_nod31 + dy_nod31*dy_nod31 + dz_nod31*dz_nod31;
                 if (dd_nod31 <= d_max_node){
                     dd_nod23 = (nx3-nx2)*(nx3-nx2) + (ny3 - ny2)*(ny3 - ny2) + (nz3 - nz2)*(nz3 - nz2);
                     if (dd_nod23 <= d_max_node) {
