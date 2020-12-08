@@ -94,8 +94,11 @@ int main(int argc, char **argv){
     open_files(argv[2], np, dataR, r_size_box);
 
     //Sets the number of partitions of the box and the size of each node
-    partitions = 10;
-    size_node = size_box/(float)(partitions);
+    //partitions = 10;
+    //size_node = size_box/(float)(partitions);
+    size_box = 250; 
+    size_node =  2.17 * 250/pow(np, (double)1/3);
+	partitions = (int)(ceil(size_box/size_node));
 
     // Allocate memory for the histogram as double
     DDD = new double[bn*bn*bn];
