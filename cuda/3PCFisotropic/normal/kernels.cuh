@@ -5,7 +5,7 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, int end, int bns float ds, float dd_max){
+__device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, int end, int bns, float ds, float dd_max){
     /*
     This device function counts the triangles betweeen points within the same node. This function is used 
     to compute the XXX histogram
@@ -108,8 +108,8 @@ __device__ void count_112_triangles(double *XXX, PointW3D *elements, int start1,
                         dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+(z3-z2)*(z3-z2);
                         if (dd23<dd_max){
                             bin = bx + by + (int)(sqrtf(dd23)*ds);
-                            v *= elements[k].w
-                            atomicAdd(&XX[bin],v);
+                            v *= elements[k].w;
+                            atomicAdd(&XXX[bin],v);
 
                         }
                     }
@@ -125,7 +125,7 @@ __device__ void count_112_triangles(double *XXX, PointW3D *elements, int start1,
                         if (dd23<dd_max){
                             bin = bx + by + (int)(sqrtf(dd23)*ds);
                             v *= elements[k].w;
-                            atomicAdd(&XX[bin],v);
+                            atomicAdd(&XXX[bin],v);
 
                         }
                     }
@@ -187,7 +187,7 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
                         if (dd31<dd_max){
                             bin = bx + by + (int)(sqrtf(dd31)*ds);
                             v *= elements[k].w;
-                            atomicAdd(&XX[bin],v);
+                            atomicAdd(&XXX[bin],v);
                         }
                     }
                 }
@@ -226,7 +226,7 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
     //Third node mobil in Z direction
     for (c=w+1;  c<partitions; ++c){
         idx3 = row + col*partitions + c*partitions*partitions;
-        nz3 = nodeX[idx3].nodepos.z;
+        nz3 = nodeD[idx3].nodepos.z;
         dz_nod31 = nz3-nz1;
         dd_nod31 = dz_nod31*dz_nod31 + ddx31 + ddy31;
         if (dd_nod31 <= d_max_node) {
@@ -240,11 +240,11 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
     //Third node mobil in YZ direction
     for (b=v+1; b<partitions; ++b){
         idx3 = row + b*partitions;
-        ny3 = nodeX[idx3].nodepos.y;
+        ny3 = nodeD[idx3].nodepos.y;
         dy_nod31 = ny3-ny1;
         for (c=0;  c<partitions; ++c){
             idx3 = row + b*partitions + c*partitions*partitions;
-            nz3 = nodeX[idx3].nodepos.z;
+            nz3 = nodeD[idx3].nodepos.z;
             dz_nod31 = nz3-nz1;
             dd_nod31 = dy_nod31*dy_nod31 + dz_nod31*dz_nod31 + ddx31;
             if (dd_nod31 <= d_max_node){
@@ -258,15 +258,15 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
 
     //Third node mobil in YZ direction
     for (a=u+1; a<partitions; ++a){
-        nx3 = nodeX[a].nodepos.x;
+        nx3 = nodeD[a].nodepos.x;
         dx_nod31 = nx3 - nx1;
         for (b=0; b<partitions; ++b){
             idx3 = a + b*partitions;
-            ny3 = nodeX[idx3].nodepos.y;
+            ny3 = nodeD[idx3].nodepos.y;
             dy_nod31 = ny3-ny1;
             for (c=0;  c<partitions; ++c){
                 idx3 = a + b*partitions + c*partitions*partitions;
-                nz3 = nodeX[idx3].nodepos.z;
+                nz3 = nodeD[idx3].nodepos.z;
                 dz_nod31 = nz3-nz1;
                 dd_nod31 = dy_nod31*dy_nod31 + dz_nod31*dz_nod31;
                 if (dd_nod31 <= d_max_node){
