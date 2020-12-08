@@ -295,6 +295,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    atomicAdd(&XXX[1],1.0);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
@@ -309,7 +310,6 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
-            printf("Non zero");
             // Counts distances within the same node
             atomicAdd(&XXX[0],1.0);
             //count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
