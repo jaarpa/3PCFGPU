@@ -385,7 +385,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
 __global__ void simmetrization(double *s_XXX,double *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-
+    s_XXX[i*bn*bn + i*bn + i] = XXX[i*bn*bn + i*bn + i];
     double v;
     for (int j=i+1; j<bn; j++){
         for (int k=j+1; k<bn; k++){

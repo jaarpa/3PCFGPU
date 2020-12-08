@@ -162,9 +162,18 @@ int main(int argc, char **argv){
     //The node classification is made in the host
     make_nodos(hnodeD, dataD, partitions, size_node, np);
     make_nodos(hnodeR, dataR, partitions, size_node, np);
+
+    int s=0;
+    for (int i=0; i<partitions; i++){
+    for (int j=0; j<partitions; j++){
+    for (int k=0; k<partitions; k++){
+        s+=hnodeD[i][j][k].len;
+    }
+    }
+    }
+    cout << "Tot number of points in the host nodes" << s << endl;
     
     //Deep copy to device memory
-
     last_pointR = 0;
     last_pointD = 0;
     for (int idx=0; idx<partitions*partitions*partitions; idx++){

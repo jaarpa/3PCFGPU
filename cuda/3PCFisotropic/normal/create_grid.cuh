@@ -28,7 +28,8 @@ struct Node{
 struct DNode{ //Defines the node in the device without using elements to avoid deep copy
     Point3D nodepos; //Position of the node
     int len;		// Number of points in the node
-    int prev_i; //prev element idx
+    int start; //prev element idx
+    int end;
 };
 
 void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
