@@ -313,6 +313,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             // Counts distances within the same node
             count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
             
+            /*
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float nx2, ny2, nz2;
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
@@ -373,7 +374,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     }
                 }
             }
-
+            */
         }
     }
 }
