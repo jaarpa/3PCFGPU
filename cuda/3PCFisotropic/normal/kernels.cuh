@@ -327,7 +327,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                 if (dd_nod12 <= d_max_node){
 
                     count_112_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max);
-                    inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
+                    //inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
 
                 }
             }
@@ -345,7 +345,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     if (dd_nod12<=d_max_node){
 
                         count_112_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max);
-                        inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
+                        //inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
 
                     }
                 }
@@ -367,7 +367,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                         if (dd_nod12<=d_max_node){
                             
                             count_112_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max);
-                            inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
+                            //inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
 
                         }
                     }
