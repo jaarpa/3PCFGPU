@@ -200,7 +200,6 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
 __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int idx, int idx2, int partitions, int bn, float ds, float d_max_node, float dd_max){
 
     //Get the node positon of this thread
-    int mom = (int) (idx/(partitions*partitions));
     int col = (int) ((idx%(partitions*partitions))/partitions);
     int row = idx%partitions;
 
@@ -214,7 +213,6 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
     float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
     float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
     float nx3=nx2, ny3=ny2, nz3;
-    float dx_nod23, dy_nod23, dz_nod23, dd_nod23; //Internodal distance
     float dx_nod31, dy_nod31, dz_nod31, dd_nod31; //Internodal distance
     float ddx31, ddy31, ddx23, ddy23;
 
@@ -313,7 +311,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             d_max_node*=d_max_node;
 
             // Counts distances within the same node
-            count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max);
+            count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
             
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float nx2, ny2, nz2;
