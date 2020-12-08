@@ -121,7 +121,6 @@ int main(int argc, char **argv){
         *(DDR+i) = 0.0;
     }
 
-    DDD[1241] = 100;
     cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
     //cucheck(cudaMemcpyAsync(d_DDD, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
     cucheck(cudaMemcpyAsync(d_RRR, RRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRRR));
