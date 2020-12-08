@@ -114,24 +114,15 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_DDR_sym, bn*bn*bn*sizeof(double)));
 
     //Restarts the main histograms in host to zero
-    for (int i = 0; i<bn*bn*bn; i++){
-        *(DDR+i) = 0.0;
-        *(RRR+i) = 0.0;
-        *(DRR+i) = 0.0;
-        *(DDR+i) = 0.0;
-    }
-
     cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
-    //cucheck(cudaMemcpyAsync(d_DDD, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
-    cucheck(cudaMemcpyAsync(d_RRR, RRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRRR));
-    cucheck(cudaMemcpyAsync(d_DRR, DRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDRR));
-    cucheck(cudaMemcpyAsync(d_DDR, DDR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDR));
+    cucheck(cudaMemsetAsync(d_RRR, 0, bn*bn*bn*sizeof(double), streamRRR));
+    cucheck(cudaMemsetAsync(d_DRR, 0, bn*bn*bn*sizeof(double), streamDRR));
+    cucheck(cudaMemsetAsync(d_DDR, 0, bn*bn*bn*sizeof(double), streamDDR));
 
     cucheck(cudaMemsetAsync(d_DDD_sym, 0, bn*bn*bn*sizeof(double), streamDDD));
-    //cucheck(cudaMemcpyAsync(d_DDD_sym, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDD));
-    cucheck(cudaMemcpyAsync(d_RRR_sym, RRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamRRR));
-    cucheck(cudaMemcpyAsync(d_DRR_sym, DRR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDRR));
-    cucheck(cudaMemcpyAsync(d_DDR_sym, DDR, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice, streamDDR));
+    cucheck(cudaMemsetAsync(d_RRR_sym, 0, bn*bn*bn*sizeof(double), streamRRR));
+    cucheck(cudaMemsetAsync(d_DRR_sym, 0, bn*bn*bn*sizeof(double), streamDRR));
+    cucheck(cudaMemsetAsync(d_DDR_sym, 0, bn*bn*bn*sizeof(double), streamDDR));
 
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMalloc(&dnodeD_DDD, partitions*partitions*partitions*sizeof(DNode)));
