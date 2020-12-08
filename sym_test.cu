@@ -38,7 +38,7 @@ struct PointW3D{
     float w;
 };
 
-void save_histogram(string name, int bns, double *histo){
+void save_histogram(string name, int bns, float *histo){
     /* This function saves a one dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
     */
