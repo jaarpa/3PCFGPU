@@ -1,6 +1,6 @@
-//nvcc test.cu -o t.out && ./t.out data_5K.dat 5000
+//nvcc sym_test.cu -o t.out && ./t.out data_5K.dat
 
-//nvcc test.cu -o t.out && ./t.out data_1GPc.dat 405224 
+//nvcc sym_test.cu -o t.out && ./t.out data_1GPc.dat
 //Spent time = 0.0334 seg (ONly host. Nodes allocation and calculation. dataD in globalmemory )
 
 #include <stdio.h>
@@ -45,6 +45,10 @@ void save_histogram(string name, int bns, double *histo){
 
     ofstream file;
     file.open(name.c_str(), ios::out | ios::binary);
+
+    string mypathto_files = "data/";
+    //This creates the full path to where I have my data files
+    name_file.insert(0,mypathto_files);
 
     if (file.fail()){
         cout << "Failed to save the the histogram in " << name << endl;
