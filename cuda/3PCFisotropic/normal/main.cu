@@ -93,7 +93,7 @@ int main(int argc, char **argv){
     open_files(argv[2], np, dataR, r_size_box);
 
     //Sets the number of partitions of the box and the size of each node
-    partitions = 35;
+    partitions = 10;
     size_node = size_box/(float)(partitions);
 
     // Allocate memory for the histogram as double
