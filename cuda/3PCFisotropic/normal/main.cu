@@ -146,7 +146,6 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&dnodeR_DRR, partitions*partitions*partitions*sizeof(DNode)));
     cucheck(cudaMalloc(&d_ordered_pointsR_DRR, np*sizeof(PointW3D)));
 
-
     hnodeD_s = new DNode[partitions*partitions*partitions];
     h_ordered_pointsD_s = new PointW3D[np];
     hnodeR_s = new DNode[partitions*partitions*partitions];
