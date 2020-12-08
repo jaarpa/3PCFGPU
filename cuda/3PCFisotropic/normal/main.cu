@@ -276,8 +276,8 @@ int main(int argc, char **argv){
     /* ==========================  Free memory ===============================*/
     /* =======================================================================*/
 
-    cout << "Tot number of points in the copied host nodes " << hnodeD_s[partitions*partitions*partitions-1].end << endl;
-    cout << "Tot number of points in the copied host nodes " << hnodeD_s[partitions*partitions*partitions-1].len << endl;
+    cout << "Last ordered D point " << h_ordered_pointsD_s[10000].x << endl;
+    cout << "Last ordered R point " << h_ordered_pointsR_s[10000].x << endl;
 
     //Free the memory
     cucheck(cudaStreamDestroy(streamDDD));
@@ -332,8 +332,8 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_ordered_pointsR_DRR));
     
     delete[] hnodeD_s;
-    cout << "Free the host  D flattened nodes" << endl;
     delete[] h_ordered_pointsD_s;
+    cout << "FreeD the host  D flattened nodes" << endl;
     delete[] hnodeR_s;
     cout << "Free the host  R flattened nodes" << endl;
     delete[] h_ordered_pointsR_s;
