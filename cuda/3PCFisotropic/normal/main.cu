@@ -276,8 +276,6 @@ int main(int argc, char **argv){
     /* ==========================  Free memory ===============================*/
     /* =======================================================================*/
 
-    cout << "Tot number of points in the copied host nodes " << hnodeD_s[partitions*partitions*partitions].end << endl;
-    
     //Free the memory
     cucheck(cudaStreamDestroy(streamDDD));
     cucheck(cudaStreamDestroy(streamDDR));
