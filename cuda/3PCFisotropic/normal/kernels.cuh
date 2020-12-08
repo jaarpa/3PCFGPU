@@ -311,7 +311,8 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             d_max_node*=d_max_node;
 
             // Counts distances within the same node
-            count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
+            atomicAdd(&XXX[0],1);
+            //count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
             
             /*
             int idx2, u=row,v=col,w=mom; // Position index of the second node
@@ -379,67 +380,9 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     }
 }
 
-
-/*
-__global__ void make_histoXXY(double *XXY, PointW3D *elementsD, DNode *nodeD, PointW3D *elementsR,  DNode *nodeR, int partitions, int bn, float dmax, float size_node){
-    /*
-    Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
-
-    args:
-    XY: (double*) The histogram where the distances are counted.
-    elementsD: (PointW3D*) Array of the points ordered coherently with the nodes.
-    nodeD: (DNode) Array of DNodes each of which define a node and the elements of elementD that correspond to that node.
-    elementsR: (PointW3D*) Array of the points ordered coherently with the nodes.
-    nodeR: (DNode) Array of RNodes each of which define a node and the elements of elementR that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
-    bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
-    
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx<(partitions*partitions*partitions)){
-        //Get the node positon in this thread
-        //int mom = (int) (idx/(partitions*partitions));
-        //int col = (int) ((idx%(partitions*partitions))/partitions);
-        //int row = idx%partitions;
-        
-        //idx = row + col*partitions + mom*partitions*partitions;
-
-        if (nodeD[idx].len > 0){
-
-            float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
-            float d_max_node = dmax + size_node*sqrtf(3.0);
-            d_max_node*=d_max_node;
-            
-            int idx2,u,v,w; //Position of the second node
-            unsigned int dx_nod12, dy_nod12, dz_nod12, dd_nod12;
-
-            //Second node mobil in XYZ
-            for(u = 0; u < partitions; u++){
-                dx_nod12 = nodeR[u].nodepos.x - nx1;
-                for(v = 0; v < partitions; v++){
-                    idx2 = u + v*partitions;
-                    dy_nod12 = nodeR[idx2].nodepos.y - ny1;
-                    for(w = 0; w < partitions; w++){
-                        idx2 = u + v*partitions + w*partitions*partitions;
-                        dz_nod12 = nodeR[idx2].nodepos.z - nz1;
-                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dd_nod12<=d_max_node){
-                            count_distancesXY(XY, elementsD, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, elementsR, nodeR[idx2].prev_i, nodeR[idx2].prev_i + nodeR[idx2].len, ds, dd_max, 1);
-                        }
-                    }
-                }
-            }
-            
-        }
-    }
-}
-*/
-
 __global__ void simmetrization(double *s_XXX,double *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    
+
     double v;
     for (int j=i+1; j<bn; j++){
         for (int k=j+1; k<bn; k++){
