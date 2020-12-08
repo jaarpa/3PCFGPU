@@ -385,18 +385,19 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
 __global__ void simmetrization(double *s_XXX,double *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    s_XXX[i*bn*bn + i*bn + i] = XXX[i*bn*bn + i*bn + i];
-    double v;
-    for (int j=i; j<bn; j++){
-        for (int k=j; k<bn; k++){
-            v = XXX[i*bn*bn + j*bn + k] + XXX[i*bn*bn + k*bn + j] + XXX[j*bn*bn + k*bn + i] + XXX[j*bn*bn + i*bn + k] + XXX[k*bn*bn + i*bn + j] + XXX[k*bn*bn + j*bn + i];
-            s_XXX[i*bn*bn + j*bn + k] = v;
-            s_XXX[i*bn*bn + k*bn + j] = v;
-            s_XXX[j*bn*bn + k*bn + i] = v;
-            s_XXX[j*bn*bn + i*bn + k] = v;
-            s_XXX[k*bn*bn + i*bn + j] = v;
-            s_XXX[k*bn*bn + j*bn + i] = v;
+    if (i<bn){
+        s_XXX[i*bn*bn + i*bn + i] = XXX[i*bn*bn + i*bn + i];
+        double v;
+        for (int j=i; j<bn; j++){
+            for (int k=j; k<bn; k++){
+                v = XXX[i*bn*bn + j*bn + k] + XXX[i*bn*bn + k*bn + j] + XXX[j*bn*bn + k*bn + i] + XXX[j*bn*bn + i*bn + k] + XXX[k*bn*bn + i*bn + j] + XXX[k*bn*bn + j*bn + i];
+                s_XXX[i*bn*bn + j*bn + k] = v;
+                s_XXX[i*bn*bn + k*bn + j] = v;
+                s_XXX[j*bn*bn + k*bn + i] = v;
+                s_XXX[j*bn*bn + i*bn + k] = v;
+                s_XXX[k*bn*bn + i*bn + j] = v;
+                s_XXX[k*bn*bn + j*bn + i] = v;
+            }
         }
     }
-    
 }

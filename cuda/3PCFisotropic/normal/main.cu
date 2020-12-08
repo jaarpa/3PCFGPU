@@ -239,7 +239,7 @@ int main(int argc, char **argv){
     //make_histoXXY<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, d_ordered_pointsR_DDR, dnodeR_DDR, partitions, bn, dmax, size_node);
 
     //Symmetrize the results
-    if (bn<64){
+    if (bn<512){
         blocks = 1;
         threads_perblock = bn;
     } else {
