@@ -295,12 +295,13 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    atomicAdd(&XXX[1],1.0);
     if (idx<(partitions*partitions*partitions)){
         //Get the node positon of this thread
         int mom = (int) (idx/(partitions*partitions));
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
+
+        printf("%i len: %i n", idx, nodeD[idx].len);
 
         //idx = row + col*partitions + mom*partitions*partitions;
 
