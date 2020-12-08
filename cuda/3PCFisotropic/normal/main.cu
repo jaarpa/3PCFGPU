@@ -197,7 +197,7 @@ int main(int argc, char **argv){
     for (int i=0; i<partitions*partitions*partitions; i++){
         s+=hnodeD_s[i].len;
     }
-    cout << "Tot number of points in the copied host nodes " << s << endl;
+    cout << "Tot number of points in the copied host nodes" << s << endl;
 
     cucheck(cudaMemcpyAsync(dnodeD_DDD, hnodeD_s, partitions*partitions*partitions*sizeof(DNode), cudaMemcpyHostToDevice, streamDDD));
     cucheck(cudaMemcpyAsync(d_ordered_pointsD_DDD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDDD));
@@ -302,7 +302,7 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_RRR_sym));
     cucheck(cudaFree(d_DRR_sym));
     cucheck(cudaFree(d_DDR_sym));
-
+    cout << "Free the regular nodes" << endl;
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
             delete[] hnodeD[i][j];
@@ -314,6 +314,7 @@ int main(int argc, char **argv){
     delete[] hnodeD;
     delete[] hnodeR;
 
+    cout << "Free the device flattened nodes" << endl;
     cucheck(cudaFree(dnodeD_DDD));
     cucheck(cudaFree(d_ordered_pointsD_DDD));
     cucheck(cudaFree(dnodeD_DDR));
@@ -328,10 +329,9 @@ int main(int argc, char **argv){
     cucheck(cudaFree(dnodeR_DRR));
     cucheck(cudaFree(d_ordered_pointsR_DRR));
     
-    cout << "Free the host  D flattened nodes" << endl;
+    cout << "Free the host flattened nodes" << endl;
     delete[] hnodeD_s;
     delete[] h_ordered_pointsD_s;
-    cout << "Free the host  R flattened nodes" << endl;
     delete[] hnodeR_s;
     delete[] h_ordered_pointsR_s;
 
