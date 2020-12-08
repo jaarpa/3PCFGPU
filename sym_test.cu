@@ -153,6 +153,10 @@ int main(int argc, char **argv){
         DDD[i] = dataD[i].x+dataD[i].y-dataD[i].z;
     }
 
+    for (int i=0; i<12; i++){
+        cout << DDD[i] <<endl;
+    }
+
     cucheck(cudaMemcpy(d_DDD, DDD, bn*bn*bn*sizeof(double), cudaMemcpyHostToDevice));
 
     start_timmer = clock();
