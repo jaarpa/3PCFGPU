@@ -276,7 +276,33 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
     */
 
 }
+__global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, int partitions, int bn, float dmax, float size_node){
+    int idx3 = blockIdx.x * blockDim.x + threadIdx.x;
 
+    if (idx3<(partitions*partitions*partitions)){
+
+        if (nodeD[idx3].len > 0){
+
+            atomicAdd(&XXX[idx3],1.0);
+
+        }
+
+    }
+
+}
+
+__global__ void make_histoXXX_child1(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int partitions, int bn, float dmax, float size_node){
+    int idx2 = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx2<(partitions*partitions*partitions)){
+
+        if (nodeD[idx2].len > 0){
+
+            make_histoXXX_child2<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx1, idx2, partitions, bn, dmax, size_node);
+        }
+
+    }
+
+}
 __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
@@ -294,83 +320,12 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
-        //Get the node positon of this thread
-        int mom = (int) (idx/(partitions*partitions));
-        int col = (int) ((idx%(partitions*partitions))/partitions);
-        int row = idx%partitions;
 
         if (nodeD[idx].len > 0){
 
-            float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
-            float d_max_node = dmax + size_node*sqrtf(3.0);
-            d_max_node*=d_max_node;
-
-            // Counts distances within the same node
-            count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
-            
-            
-            int idx2, u=row,v=col,w=mom; // Position index of the second node
-            float nx2, ny2, nz2;
-            float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
-
-            //Second node mobil in Z direction
-            for(w = mom+1; w<partitions; w++){
-                idx2 = row + col*partitions + w*partitions*partitions;
-                nz2 = nodeD[idx2].nodepos.z;
-                dz_nod12 = nz2 - nz1;
-                dd_nod12 = dz_nod12*dz_nod12;
-
-                if (dd_nod12 <= d_max_node){
-
-                    count_112_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max);
-                    inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
-
-                }
-            }
-
-            //Second node mobil in YZ
-            for(v=col+1; v<partitions; v++){
-                idx2 = row + v*partitions;
-                ny2 = nodeD[idx2].nodepos.y;
-                dy_nod12 = ny2 - ny1;
-                for(w=0; w<partitions; w++){
-                    idx2 = row + v*partitions + w*partitions*partitions;
-                    nz2 = nodeD[idx2].nodepos.z;
-                    dz_nod12 = nz2 - nz1;
-                    dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    if (dd_nod12<=d_max_node){
-
-                        count_112_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max);
-                        //inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
-
-                    }
-                }
-            }
-
-            //Second node mobil in XYZ
-            for(u = row+1; u < partitions; u++){
-                nx2 = nodeD[u].nodepos.x;
-                dx_nod12 = nx2 - nx1;
-                for(v = 0; v < partitions; v++){
-                    idx2 = u + v*partitions;
-                    ny2 = nodeD[idx2].nodepos.y;
-                    dy_nod12 = ny2 - ny1;
-                    for(w = 0; w < partitions; w++){
-                        idx2 = u + v*partitions + w*partitions*partitions;
-                        nz2 = nodeD[idx2].nodepos.z;
-                        dz_nod12 = nz2 - nz1;
-                        dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        if (dd_nod12<=d_max_node){
-                            
-                            count_112_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max);
-                            //inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
-
-                        }
-                    }
-                }
-            }
+            make_histoXXX_child1<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx, partitions, bn, dmax, size_node);
         }
+
     }
 }
 
