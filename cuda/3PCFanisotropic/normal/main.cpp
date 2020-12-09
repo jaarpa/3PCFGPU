@@ -1,3 +1,6 @@
+
+// c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
