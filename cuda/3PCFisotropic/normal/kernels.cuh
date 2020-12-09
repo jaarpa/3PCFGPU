@@ -311,7 +311,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             // Counts distances within the same node
             count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
             
-            /*
+            
             int idx2, u=row,v=col,w=mom; // Position index of the second node
             float nx2, ny2, nz2;
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
@@ -326,11 +326,12 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                 if (dd_nod12 <= d_max_node){
 
                     count_112_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, bn, ds, dd_max);
-                    //inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
+                    inner_make_histoXXX(XXX, elements, nodeD, idx, idx2, partitions, bn, ds, d_max_node, dd_max);
 
                 }
             }
 
+            /*
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
                 idx2 = row + v*partitions;

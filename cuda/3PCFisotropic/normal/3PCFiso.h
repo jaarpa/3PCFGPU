@@ -202,8 +202,8 @@ void NODE3P::make_histoXXX(double ***XXX, Node ***nodeX){
 	// Triangles between points of the same node:
 	//==================================================
 
-	count_3_N111(row, col, mom, SSS, nodeX);	
-	/*
+	count_3_N111(row, col, mom, SSS, nodeX);
+
 	//==================================================
 	// Triangles between points of the different node:
 	//==================================================
@@ -292,6 +292,8 @@ void NODE3P::make_histoXXX(double ***XXX, Node ***nodeX){
 		}
 		}
 	}
+		
+	/*
 	//=======================
 	// Mobile node2 in ZY:
 	//=======================
