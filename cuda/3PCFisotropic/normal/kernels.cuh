@@ -199,9 +199,6 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
 
 __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int idx, int idx2, int partitions, int bn, float ds, float d_max_node, float dd_max){
 
-    atomicAdd(&XXX[5],1.0);
-
-    /*    
     //Get the node positon of this thread
     int col = (int) ((idx%(partitions*partitions))/partitions);
     int row = idx%partitions;
@@ -221,9 +218,6 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
 
     ddx31 = (nx3 - nx1)*(nx3 - nx1);
     ddy31 = (ny3 - ny1)*(ny3 - ny1);
-    ddx23 = (nx3 - nx2)*(nx3 - nx2);
-    ddy23 = (ny3 - ny2)*(ny3 - ny2);
-
     //Third node mobil in Z direction
     for (c=w+1;  c<partitions; ++c){
         idx3 = row + col*partitions + c*partitions*partitions;
@@ -231,13 +225,13 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
         dz_nod31 = nz3-nz1;
         dd_nod31 = dz_nod31*dz_nod31 + ddx31 + ddy31;
         if (dd_nod31 <= d_max_node) {
-            dd_nod23 = (nz3-nz2)*(nz3-nz2) + ddx23 + ddy23;
+            dd_nod23 = (nz3-nz2)*(nz3-nz2);
             if (dd_nod23 <= d_max_node) {
                 count_123_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, nodeD[idx2].prev_i, nodeD[idx3].prev_i + nodeD[idx3].len, bn, ds, dd_max);
             }
         }
     }
-
+    /*
     //Third node mobil in YZ direction
     for (b=v+1; b<partitions; ++b){
         idx3 = row + b*partitions;
@@ -249,7 +243,7 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
             dz_nod31 = nz3-nz1;
             dd_nod31 = dy_nod31*dy_nod31 + dz_nod31*dz_nod31 + ddx31;
             if (dd_nod31 <= d_max_node){
-                dd_nod23 = (ny3-ny2)*(ny3-ny2) + (nz3-nz2)*(nz3-nz2) + ddx23;
+                dd_nod23 = (ny3-ny2)*(ny3-ny2) + (nz3-nz2)*(nz3-nz2);
                 if (dd_nod23 <= d_max_node) {
                     count_123_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, nodeD[idx2].prev_i, nodeD[idx3].prev_i + nodeD[idx3].len, bn, ds, dd_max);
                 }
