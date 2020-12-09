@@ -4,6 +4,9 @@
 // nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 180
 // nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data.dat rand0.dat 10000 20 60
 
+//For dynamic compilation
+//nvcc -arch=sm_75 -rdc=true main.cu -lcudadevrt -o par_d.out && ./par_d.out data.dat rand0.dat 10000 20 60
+
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
