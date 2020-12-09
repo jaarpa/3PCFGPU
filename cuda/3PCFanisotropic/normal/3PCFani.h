@@ -560,7 +560,7 @@ void NODE3P::count_3_N111(int row, int col, int mom, double *****XXX, Node ***no
 				
 				// Guardamos
 				W = w1*w2*w3;
-				*(*(*(*(*(XXX+0)+0)+0)+0)+0)+=1.0;
+				*(*(*(*(*(XXX+a_)+b_)+c_)+t)+p)+=W;
 				//*(*(*(*(*(XXX+c_)+a_)+b_)+p_)+q_)+=W;
 				//*(*(*(*(*(XXX+b_)+c_)+a_)+q)+t_)+=W;
 				//*(*(*(*(*(XXX+b_)+a_)+c_)+p)+t)+=W;
