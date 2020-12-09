@@ -487,9 +487,8 @@ void NODE3P::make_histoXXX(double ***XXX, Node ***nodeX){
 						if (dis_nod3 <= ddmax_nod) count_3_N123(row, col, mom, u, v, w, a, b, c, SSS, nodeX);
 						}
 						}
-						*/
 					}
-				}
+				}*/
 				}
 			}	
 		}
