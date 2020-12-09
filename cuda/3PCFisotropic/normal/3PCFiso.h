@@ -223,6 +223,7 @@ void NODE3P::make_histoXXX(double ***XXX, Node ***nodeX){
 	// 2 points in node1 and 1 point in node2
 	//==============================================
 	count_3_N112(row, col, mom, u, v, w, SSS, nodeX);
+	/*
 	//==============================================
 	// 1 point in node1, 1 point in node2 and 1 point in node3
 	//==============================================
@@ -290,6 +291,7 @@ void NODE3P::make_histoXXX(double ***XXX, Node ***nodeX){
 				}
 			}
 		}
+		*/
 		}
 	}
 		
