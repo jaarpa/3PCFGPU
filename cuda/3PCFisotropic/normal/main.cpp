@@ -120,10 +120,10 @@ int main(int argc, char **argv){
 	//save_histogram(nameRRR, bn, RRR);
 	//cout << "Save histogram RRR ..." << endl;
 	//====================================================================
-	//std::cout << "-> I'm doing DDR histogram ..." << std::endl;
-	//my_hist.make_histoXXY(DDR, my_hist.meshData(), my_hist.meshRand());
-	//save_histogram(nameDDR, bn, DDR);
-	//cout << "Save histogram DDR ..." << endl;
+	std::cout << "-> I'm doing DDR histogram ..." << std::endl;
+	my_hist.make_histoXXY(DDR, my_hist.meshData(), my_hist.meshRand());
+	save_histogram(nameDDR, bn, DDR);
+	cout << "Save histogram DDR ..." << endl;
 	//====================================================================
 	//std::cout << "-> I'm doing DRR histogram ..." << std::endl;
 	//my_hist.make_histoXXY(DRR, my_hist.meshRand(), my_hist.meshData());
