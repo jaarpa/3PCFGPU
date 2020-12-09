@@ -202,7 +202,7 @@ void NODE3P::make_histoXXX(double ***XXX, Node ***nodeX){
 	// Triangles between points of the same node:
 	//==================================================
 	if (nodeX[row][col][mom].len>0){
-		*(*(*(XXX+(int)(0))+(int)(0))+(int)(0))+=nodeX[row][col][mom].len;
+		*(*(*(XXX+(int)(0))+(int)(0))+(int)(0))+=1;
 	}
 	//count_3_N111(row, col, mom, SSS, nodeX);	
 	/*
