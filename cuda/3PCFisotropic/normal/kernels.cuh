@@ -331,7 +331,6 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                 }
             }
 
-            /*
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
                 idx2 = row + v*partitions;
@@ -373,7 +372,6 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     }
                 }
             }
-            */
         }
     }
 }
