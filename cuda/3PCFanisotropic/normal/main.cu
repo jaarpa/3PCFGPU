@@ -258,9 +258,9 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
 	save_histogram(nameDDD, bn, DDD);
-	save_histogram(nameRRR, bn, RRR);
-	save_histogram(nameDDR, bn, DDR);
-	save_histogram(nameDRR, bn, DRR);
+	//save_histogram(nameRRR, bn, RRR);
+	//save_histogram(nameDDR, bn, DDR);
+	//save_histogram(nameDRR, bn, DRR);
     cout << "Saved the histograms" << endl;
     
     /* =======================================================================*/

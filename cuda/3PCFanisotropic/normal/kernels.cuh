@@ -50,25 +50,29 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
                     x3 = elements[k].x;
                     y3 = elements[k].y;
                     z3 = elements[k].z;
-                    dz23 = (z3-z2);
-                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+dz23*dz23;
-                    if (dd23<dd_max){
-                        dd23 = sqrtf(dd23);
-                        dz31 = (z3-z1);
-                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+dz31*dz31;
-                        if (dd31<dd_max){
-
-                            dd31 = sqrtf(dd31);
+                    dz31 = (z3-z1);
+                    dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+dz31*dz31;
+                    if (dd31<dd_max){
+                        dd31 = sqrtf(dd31);
+                        dz23 = (z3-z2);
+                        dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+dz23*dz23;
+                        if (dd23<dd_max){
+                        
+                            dd23 = sqrtf(dd23);
                             v *= elements[k].w;
 
                             // angle between r and z
-                            c_th_12 = dz12/dd12 + 1;
-                            c_th_31 = dz31/dd31 + 1;
-                            c_th_23 = dz23/dd23 + 1;
+                            c_th_12 = dz12/dd12;
+                            c_th_23 = dz23/dd23;
+                            c_th_31 = dz31/dd31;
 
-                            c_th_12_ = 2 - c_th_12;
-                            c_th_31_ = 2 - c_th_31;
-                            c_th_23_ = 2 - c_th_23;
+                            c_th_12_ = 1 - c_th_12;
+                            c_th_23_ = 1 - c_th_23;
+                            c_th_31_ = 1 - c_th_31;
+                            
+                            c_th_12 += 1;
+                            c_th_23 += 1;
+                            c_th_31 += 1;
 
                             // Indices 
                             a = (int) (dd12*ds);
@@ -87,20 +91,20 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
                             bin = a*bns*bns*bns*bns + b*bns*bns*bns + c*bns*bns + t*bns + p;
                             atomicAdd(&XXX[bin],v);
 
-                            bin = a*bns*bns*bns*bns + c*bns*bns*bns + b*bns*bns + t_*bns + q;
-                            atomicAdd(&XXX[bin],v);
+                            //bin = a*bns*bns*bns*bns + c*bns*bns*bns + b*bns*bns + t_*bns + q;
+                            //atomicAdd(&XXX[bin],v);
 
-                            bin = b*bns*bns*bns*bns + c*bns*bns*bns + a*bns*bns + q*bns + t_;
-                            atomicAdd(&XXX[bin],v);
+                            //bin = b*bns*bns*bns*bns + c*bns*bns*bns + a*bns*bns + q*bns + t_;
+                            //atomicAdd(&XXX[bin],v);
 
-                            bin = b*bns*bns*bns*bns + a*bns*bns*bns + c*bns*bns + p*bns + t;
-                            atomicAdd(&XXX[bin],v);
+                            //bin = b*bns*bns*bns*bns + a*bns*bns*bns + c*bns*bns + p*bns + t;
+                            //atomicAdd(&XXX[bin],v);
 
-                            bin = c*bns*bns*bns*bns + b*bns*bns*bns + a*bns*bns + q_*bns + p_;
-                            atomicAdd(&XXX[bin],v);
+                            //bin = c*bns*bns*bns*bns + b*bns*bns*bns + a*bns*bns + q_*bns + p_;
+                            //atomicAdd(&XXX[bin],v);
 
-                            bin = c*bns*bns*bns*bns + a*bns*bns*bns + b*bns*bns + p_*bns + q_;
-                            atomicAdd(&XXX[bin],v);
+                            //bin = c*bns*bns*bns*bns + a*bns*bns*bns + b*bns*bns + p_*bns + q_;
+                            //atomicAdd(&XXX[bin],v);
                         }
                     }
                 }
