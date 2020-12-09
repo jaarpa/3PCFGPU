@@ -175,20 +175,22 @@ int main(int argc, char **argv){
         row = idx%partitions;
         
         hnodeD_s[idx].nodepos = hnodeD[row][col][mom].nodepos;
-        hnodeD_s[idx].prev_i = last_pointD;
+        hnodeD_s[idx].start = last_pointD;
         last_pointD = last_pointD + hnodeD[row][col][mom].len;
+        hnodeD_s[idx].end = last_pointD;
         hnodeD_s[idx].len = hnodeD[row][col][mom].len;
-        for (int j=hnodeD_s[idx].prev_i; j<last_pointD; j++){
-            k_element = j-hnodeD_s[idx].prev_i;
+        for (int j=hnodeD_s[idx].start; j<last_pointD; j++){
+            k_element = j-hnodeD_s[idx].start;
             h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
         }
 
         hnodeR_s[idx].nodepos = hnodeR[row][col][mom].nodepos;
-        hnodeR_s[idx].prev_i = last_pointR;
+        hnodeR_s[idx].start = last_pointR;
         last_pointR = last_pointR + hnodeR[row][col][mom].len;
+        hnodeR_s[idx].end = last_pointR;
         hnodeR_s[idx].len = hnodeR[row][col][mom].len;
-        for (int j=hnodeR_s[idx].prev_i; j<last_pointR; j++){
-            k_element = j-hnodeR_s[idx].prev_i;
+        for (int j=hnodeR_s[idx].start; j<last_pointR; j++){
+            k_element = j-hnodeR_s[idx].start;
             h_ordered_pointsR_s[j] = hnodeR[row][col][mom].elements[k_element];
         }
     }
