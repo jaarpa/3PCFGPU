@@ -312,8 +312,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
         if (nodeD[idx].len > 0){
 
-            t = (double)(nodeD[idx].len);
-            atomicAdd(&XXX[0],t);
+            atomicAdd(&XXX[0],1.0);
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
