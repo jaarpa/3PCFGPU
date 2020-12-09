@@ -474,7 +474,7 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, Po
     }
 }
 
-__global__ void simmetrization(double *s_XXX,double *XXX , int bn){
+__global__ void symmetrize(double *s_XXX,double *XXX , int bn){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i<bn){
         s_XXX[i*bn*bn + i*bn + i] = XXX[i*bn*bn + i*bn + i];

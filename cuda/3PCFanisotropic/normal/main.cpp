@@ -118,12 +118,12 @@ int main(int argc, char **argv){
 	
 	cout << "-> Estoy haciendo histograma DDD..." << endl;
 	my_hist.make_histoXXX(DDD, my_hist.meshData());
-	cout << "-> Estoy haciendo histograma RRR..." << endl; 
-	my_hist.make_histoXXX(RRR, my_hist.meshRand()); 
-	cout << "-> Estoy haciendo histograma DDR..." << endl;
-	my_hist.make_histoXXY(DDR, my_hist.meshData(), my_hist.meshRand()); 
-	cout << "-> Estoy haciendo histograma DRR..." << endl;
-	my_hist.make_histoXXY(DRR, my_hist.meshRand(), my_hist.meshData());
+	//cout << "-> Estoy haciendo histograma RRR..." << endl; 
+	//my_hist.make_histoXXX(RRR, my_hist.meshRand()); 
+	//cout << "-> Estoy haciendo histograma DDR..." << endl;
+	//my_hist.make_histoXXY(DDR, my_hist.meshData(), my_hist.meshRand()); 
+	//cout << "-> Estoy haciendo histograma DRR..." << endl;
+	//my_hist.make_histoXXY(DRR, my_hist.meshRand(), my_hist.meshData());
 	
 	clock_t c_end = clock();
 	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
@@ -138,12 +138,12 @@ int main(int argc, char **argv){
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::\n" << endl;
 	save_histogram(nameDDD, bn, DDD);
 	cout << "\nGuarde histograma DDD..." << endl;
-	save_histogram(nameRRR, bn, RRR);
-	cout << "\nGuarde histograma RRR..." << endl;
-	save_histogram(nameDDR, bn, DDR);
-	cout << "\nGuarde histograma DDR..." << endl;
-	save_histogram(nameDRR, bn, DRR);
-	cout << "\nGuarde histograma DRR..." << endl;
+	//save_histogram(nameRRR, bn, RRR);
+	//cout << "\nGuarde histograma RRR..." << endl;
+	//save_histogram(nameDDR, bn, DDR);
+	//cout << "\nGuarde histograma DDR..." << endl;
+	//save_histogram(nameDRR, bn, DRR);
+	//cout << "\nGuarde histograma DRR..." << endl;
 	
 	// Eliminamos los hitogramas
 	delete_histos(bn);
