@@ -97,11 +97,11 @@ int main(int argc, char **argv){
     open_files(argv[2], np, dataR, r_size_box);
 
     //Sets the number of partitions of the box and the size of each node
-    //partitions = 10;
-    //size_node = size_box/(float)(partitions);
-    size_box = 250; 
-    size_node =  2.17 * 250/pow(np, (double)1/3);
-	partitions = (int)(ceil(size_box/size_node));
+    partitions = 10;
+    size_node = size_box/(float)(partitions);
+    //size_box = 250; 
+    //size_node =  2.17 * 250/pow(np, (double)1/3);
+	//partitions = (int)(ceil(size_box/size_node));
 
     // Allocate memory for the histogram as double
     DDD = new double[bn*bn*bn];
@@ -228,9 +228,9 @@ int main(int argc, char **argv){
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    //make_histoXXX<<<blocks,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD_DDD, dnodeD_DDD, partitions, bn, dmax, size_node);
-    //make_histoXXX<<<blocks,threads_perblock,0,streamRRR>>>(d_RRR, d_ordered_pointsR_RRR, dnodeR_RRR, partitions, bn, dmax, size_node);
-    //make_histoXXY<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsD_DRR, dnodeD_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, partitions, bn, dmax, size_node);
+    make_histoXXX<<<blocks,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD_DDD, dnodeD_DDD, partitions, bn, dmax, size_node);
+    make_histoXXX<<<blocks,threads_perblock,0,streamRRR>>>(d_RRR, d_ordered_pointsR_RRR, dnodeR_RRR, partitions, bn, dmax, size_node);
+    make_histoXXY<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsD_DRR, dnodeD_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, partitions, bn, dmax, size_node);
     make_histoXXY<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, d_ordered_pointsR_DDR, dnodeR_DDR, partitions, bn, dmax, size_node);
 
     //Symmetrize the results
