@@ -259,7 +259,7 @@ int main(int argc, char **argv){
     /* =======================================================================*/
     int ul = partitions*partitions*partitions;
     for (int i=1; i<=ul; i++){
-        RRR[i] = (double)(nodeD[i].len);
+        RRR[i] = (double)(hnodeD_s[i].len);
     }
 
 	save_histogram(nameDDD, bn, DDD);
