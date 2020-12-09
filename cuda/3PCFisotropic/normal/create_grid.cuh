@@ -166,35 +166,3 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
     }
 }
-
-void symmetrize(double *XXX, int bns){
-    /*
-    Function to symmetrize histogram
-
-    Arg
-    XXX: array to symmetrize
-    */ 
-    float elem;
-
-    int idx1, idx2, idx3, idx4, idx5, idx6;
-
-    for (int i=0; i<bns; i++){
-        for (int j=i; j<bns; j++){
-            for (int k=j; k<bns; k++){
-                idx1 = k + j*bns + k*bns*bns;
-                idx2 = k + i*bns + j*bns*bns;
-                idx3 = i + j*bns + k*bns*bns;
-                idx4 = i + k*bns + j*bns*bns;
-                idx5 = j + k*bns + i*bns*bns;
-                idx6 = j + i*bns + k*bns*bns;
-                elem = XXX[idx1] + XXX[idx2] + XXX[idx3] + XXX[idx4] + XXX[idx5] + XXX[idx6];
-                XXX[idx1] = elem;
-                XXX[idx2] = elem;
-                XXX[idx3] = elem;
-                XXX[idx4] = elem;
-                XXX[idx5] = elem;
-                XXX[idx6] = elem;
-            }
-        }
-    }
-}

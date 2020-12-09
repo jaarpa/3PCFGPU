@@ -301,25 +301,15 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         int col = (int) ((idx%(partitions*partitions))/partitions);
         int row = idx%partitions;
 
-        //idx = row + col*partitions + mom*partitions*partitions;
-        /*if (idx==0){
-            int ul = partitions*partitions*partitions;
-            int t = (double)(nodeD[idx].len);
-            for (int i=1; i<=ul; i++){
-                atomicAdd(&XXX[i],t);
-            }
-        }*/
-
         if (nodeD[idx].len > 0){
-
-            atomicAdd(&XXX[0],1.0);
 
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
+
             // Counts distances within the same node
-            //count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
+            count_111_triangles(XXX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, bn, ds, dd_max);
             
             /*
             int idx2, u=row,v=col,w=mom; // Position index of the second node
