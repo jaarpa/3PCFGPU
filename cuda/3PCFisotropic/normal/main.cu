@@ -223,9 +223,9 @@ int main(int argc, char **argv){
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
     make_histoXXX<<<blocks,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD_DDD, dnodeD_DDD, partitions, bn, dmax, size_node);
-    //make_histoXXX<<<blocks,threads_perblock,0,streamRRR>>>(d_RRR, d_ordered_pointsR_RRR, dnodeR_RRR, partitions, bn, dmax, size_node);
-    //make_histoXXY<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsD_DRR, dnodeD_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, partitions, bn, dmax, size_node);
-    //make_histoXXY<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, d_ordered_pointsR_DDR, dnodeR_DDR, partitions, bn, dmax, size_node);
+    make_histoXXX<<<blocks,threads_perblock,0,streamRRR>>>(d_RRR, d_ordered_pointsR_RRR, dnodeR_RRR, partitions, bn, dmax, size_node);
+    make_histoXXY<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsD_DRR, dnodeD_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, partitions, bn, dmax, size_node);
+    make_histoXXY<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, d_ordered_pointsR_DDR, dnodeR_DDR, partitions, bn, dmax, size_node);
 
     //Symmetrize the results
     if (bn<512){
