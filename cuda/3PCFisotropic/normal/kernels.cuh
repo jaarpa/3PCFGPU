@@ -280,18 +280,34 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
     int idx3 = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx3<(partitions*partitions*partitions)){
         if (nodeD[idx3].len > 0){
-            int bin = idx3%2;
-            atomicAdd(&XXX[bin],1.0);
+            float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
+            float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
+            float nx3=nodeD[idx3].nodepos.x, ny3=nodeD[idx3].nodepos.y, nz3=nodeD[idx3].nodepos.z;
+            float dd_nod23 = (nx3-nx2)*(nx3-nx2)+(ny3-ny2)*(ny3-ny2)+(nz3-nz2)*(nz3-nz2)
+            float dd_nod31 = (nx3-nx1)*(nx3-nx1)+(ny3-ny1)*(ny3-ny1)+(nz3-nz1)*(nz3-nz1)
+            if (dd_nod23<=d_max_node && dd_nod31<=d_max_node){
+                int bin = idx3%2;
+                atomicAdd(&XXX[bin],1.0);
+            }
         }
     }
-
 }
 
 __global__ void make_histoXXX_child1(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int partitions, int bn, float dmax, float size_node){
     int idx2 = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx2<(partitions*partitions*partitions)){
         if (nodeD[idx2].len > 0){
-            make_histoXXX_child2<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx1, idx2, partitions, bn, dmax, size_node);
+            float d_max_node = dmax + size_node*sqrtf(3.0);
+            d_max_node*=d_max_node;
+            float dx21 = nodeD[idx2].nodepos.x - nodeD[idx1].nodepos.x;
+            float dy21 = nodeD[idx2].nodepos.y - nodeD[idx1].nodepos.y;
+            float dz21 = nodeD[idx2].nodepos.z - nodeD[idx1].nodepos.z;
+            float dd_nod21 = dx21*dx21 + dy21*dy21 + dz21*dz21;
+
+            if (dd_nod21<=d_max_node){
+                make_histoXXX_child2<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx1, idx2, partitions, bn, dmax, size_node);
+            }
+            
         }
     }
 }
