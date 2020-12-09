@@ -197,6 +197,7 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
 
 }
 
+    /*
 __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int idx, int idx2, int partitions, int bn, float ds, float d_max_node, float dd_max){
 
     //Get the node positon of this thread
@@ -231,7 +232,6 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
             }
         }
     }
-    /*
     //Third node mobil in YZ direction
     for (b=v+1; b<partitions; ++b){
         idx3 = row + b*partitions;
@@ -273,9 +273,9 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
             }
         }
     }
-    */
 
 }
+    */
 __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, int partitions, int bn, float dmax, float size_node){
     int idx3 = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -283,7 +283,7 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
 
         if (nodeD[idx3].len > 0){
 
-            atomicAdd(&XXX[idx3],1.0);
+            atomicAdd(&XXX[1],1.0);
 
         }
 
