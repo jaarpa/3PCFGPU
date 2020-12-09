@@ -89,7 +89,7 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
 
                             // Atomic adds. Considers inner symmetrization.
                             bin = a*bns*bns*bns*bns + b*bns*bns*bns + c*bns*bns + t*bns + p;
-                            atomicAdd(&XXX[bin],v);
+                            atomicAdd(&XXX[0],1.0);
 
                             //bin = a*bns*bns*bns*bns + c*bns*bns*bns + b*bns*bns + t_*bns + q;
                             //atomicAdd(&XXX[bin],v);

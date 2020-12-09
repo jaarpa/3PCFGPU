@@ -77,7 +77,7 @@ int main(int argc, char **argv){
     PointW3D *d_ordered_pointsR_RRR, *d_ordered_pointsR_DDR, *d_ordered_pointsR_DRR;
 
     // Name of the files where the results are saved
-    string nameDDD = "DDDiso.dat", nameRRR = "RRRiso.dat", nameDDR = "DDRiso.dat", nameDRR = "DRRiso.dat";
+    string nameDDD = "DDDani.dat", nameRRR = "RRRani.dat", nameDDR = "DDRani.dat", nameDRR = "DRRani.dat";
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
