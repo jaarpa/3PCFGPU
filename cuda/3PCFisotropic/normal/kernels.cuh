@@ -297,10 +297,10 @@ __global__ void make_histoXXX_child1(double *XXX, PointW3D *elements, DNode *nod
     int idx2 = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx2<(partitions*partitions*partitions)){
 
-        atomicAdd(&XXX[2],1.0);
-
+        
         if (nodeD[idx2].len > 0){
-
+            
+            atomicAdd(&XXX[2],1.0);
             make_histoXXX_child2<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx1, idx2, partitions, bn, dmax, size_node);
         }
 
@@ -325,11 +325,12 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
 
-        atomicAdd(&XXX[1],1.0);
 
         if (nodeD[idx].len > 0){
 
+            atomicAdd(&XXX[1],1.0);
             make_histoXXX_child1<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx, partitions, bn, dmax, size_node);
+
         }
 
     }
