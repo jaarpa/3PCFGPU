@@ -283,8 +283,8 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
             float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
             float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
             float nx3=nodeD[idx3].nodepos.x, ny3=nodeD[idx3].nodepos.y, nz3=nodeD[idx3].nodepos.z;
-            float dd_nod23 = (nx3-nx2)*(nx3-nx2)+(ny3-ny2)*(ny3-ny2)+(nz3-nz2)*(nz3-nz2)
-            float dd_nod31 = (nx3-nx1)*(nx3-nx1)+(ny3-ny1)*(ny3-ny1)+(nz3-nz1)*(nz3-nz1)
+            float dd_nod23 = (nx3-nx2)*(nx3-nx2)+(ny3-ny2)*(ny3-ny2)+(nz3-nz2)*(nz3-nz2);
+            float dd_nod31 = (nx3-nx1)*(nx3-nx1)+(ny3-ny1)*(ny3-ny1)+(nz3-nz1)*(nz3-nz1);
             if (dd_nod23<=d_max_node && dd_nod31<=d_max_node){
                 int bin = idx3%2;
                 atomicAdd(&XXX[bin],1.0);
