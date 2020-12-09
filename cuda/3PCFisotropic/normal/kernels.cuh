@@ -281,13 +281,12 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
 
     if (idx3<(partitions*partitions*partitions)){
 
-        atomicAdd(&XXX[3],1.0);
+        
+        if (nodeD[idx3].len > 0){
+            
+            atomicAdd(&XXX[3],1.0);
 
-        //if (nodeD[idx3].len > 0){
-
-            //atomicAdd(&XXX[1],1.0);
-
-        //}
+        }
 
     }
 
