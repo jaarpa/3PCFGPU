@@ -449,6 +449,7 @@ __global__ void make_histoXXY_child1(double *XXX, PointW3D *elementsX, DNode *no
 
             if (dd_nod21<=d_max_node){
                 count_112_triangles_XXY(XXX, elementsX, elementsY, nodeX[idx1].start, nodeX[idx1].end, nodeY[idx2].start, nodeY[idx2].end, bn, dmax);
+                /*
                 int blocks, threads_perblock;
                 if ((partitions*partitions*partitions)-idx1 < 512){
                     blocks = 1;
@@ -458,6 +459,7 @@ __global__ void make_histoXXY_child1(double *XXX, PointW3D *elementsX, DNode *no
                     blocks = (int)((((partitions*partitions*partitions)-idx1)/threads_perblock)+1);
                 }
                 make_histoXXY_child2<<<blocks,threads_perblock>>>(XXX, elementsX, nodeX, elementsY, nodeY, idx1, idx2, partitions, bn, dmax, size_node);
+                */
             }
             
         }
