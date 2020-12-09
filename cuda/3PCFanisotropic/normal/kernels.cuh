@@ -36,22 +36,22 @@ __device__ void addto_histo(double *XYZ, double v, float dz12, float d12, float 
 
     // Atomic adds. Considers inner symmetrization.
     bin = a*bns*bns*bns*bns + b*bns*bns*bns + c*bns*bns + t*bns + p;
-    atomicAdd(&XXX[bin],v);
+    atomicAdd(&XYZ[bin],v);
 
     bin = a*bns*bns*bns*bns + c*bns*bns*bns + b*bns*bns + t_*bns + q;
-    atomicAdd(&XXX[bin],v);
+    atomicAdd(&XYZ[bin],v);
 
     bin = b*bns*bns*bns*bns + c*bns*bns*bns + a*bns*bns + q*bns + t_;
-    atomicAdd(&XXX[bin],v);
+    atomicAdd(&XYZ[bin],v);
 
     bin = b*bns*bns*bns*bns + a*bns*bns*bns + c*bns*bns + p*bns + t;
-    atomicAdd(&XXX[bin],v);
+    atomicAdd(&XYZ[bin],v);
 
     bin = c*bns*bns*bns*bns + b*bns*bns*bns + a*bns*bns + q_*bns + p_;
-    atomicAdd(&XXX[bin],v);
+    atomicAdd(&XYZ[bin],v);
 
     bin = c*bns*bns*bns*bns + a*bns*bns*bns + b*bns*bns + p_*bns + q_;
-    atomicAdd(&XXX[bin],v);
+    atomicAdd(&XYZ[bin],v);
 
 }
 
@@ -257,7 +257,7 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
                             v *= elements[k].w;
                             
                             addto_histo(XXX, v, dz12, dd12, dz31, dd31, dz23, dd23, bns, dmax);
-                            
+
                         }
                     }
                 }
