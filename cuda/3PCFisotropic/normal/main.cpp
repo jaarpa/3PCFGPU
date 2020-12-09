@@ -110,10 +110,10 @@ int main(int argc, char **argv){
 	delete_dat();
 	clock_t c_start = clock();
 	//====================================================================
-	std::cout << "-> I'm doing DDD histogram ..." << std::endl;
-	my_hist.make_histoXXX(DDD, my_hist.meshData()); 
-	save_histogram(nameDDD, bn, DDD);
-	cout << "Save histogram DDD ..." << endl;
+	//std::cout << "-> I'm doing DDD histogram ..." << std::endl;
+	//my_hist.make_histoXXX(DDD, my_hist.meshData()); 
+	//save_histogram(nameDDD, bn, DDD);
+	//cout << "Save histogram DDD ..." << endl;
 	//====================================================================
 	//std::cout << "-> I'm doing RRR histogram ..." << std::endl;
 	//my_hist.make_histoXXX(RRR, my_hist.meshRand()); 
