@@ -278,16 +278,11 @@ __device__ void inner_make_histoXXX(double *XXX, PointW3D *elements, DNode *node
     */
 __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, int partitions, int bn, float dmax, float size_node){
     int idx3 = blockIdx.x * blockDim.x + threadIdx.x;
-
     if (idx3<(partitions*partitions*partitions)){
-
-        
         if (nodeD[idx3].len > 0){
-            
-            atomicAdd(&XXX[3],1.0);
-
+            int bin = idx3%2;
+            atomicAdd(&XXX[bin],1.0);
         }
-
     }
 
 }
@@ -295,16 +290,10 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
 __global__ void make_histoXXX_child1(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int partitions, int bn, float dmax, float size_node){
     int idx2 = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx2<(partitions*partitions*partitions)){
-
-        
         if (nodeD[idx2].len > 0){
-            
-            atomicAdd(&XXX[2],1.0);
             make_histoXXX_child2<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx1, idx2, partitions, bn, dmax, size_node);
         }
-
     }
-
 }
 __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     /*
@@ -323,15 +312,9 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
-
-
         if (nodeD[idx].len > 0){
-
-            atomicAdd(&XXX[1],1.0);
             make_histoXXX_child1<<<gridDim.x,blockDim.x>>>(XXX, elements, nodeD, idx, partitions, bn, dmax, size_node);
-
         }
-
     }
 }
 
