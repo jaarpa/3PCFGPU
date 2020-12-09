@@ -261,6 +261,7 @@ int main(int argc, char **argv){
         s+=DDD[i];
     }
     cout << "the total number of counts:" <<  s << endl;
+    
 	save_histogram(nameDDD, bn, DDD);
 	//save_histogram(nameRRR, bn, RRR);
 	//save_histogram(nameDDR, bn, DDR);
