@@ -235,10 +235,10 @@ __global__ void make_histoXXX_child1(double *XXX, PointW3D *elements, DNode *nod
                 int blocks, threads_perblock;
                 if ((partitions*partitions*partitions)-idx2 < 512){
                     blocks = 1;
-                    threads_perblock = (partitions*partitions*partitions)-idx;
+                    threads_perblock = (partitions*partitions*partitions)-idx2;
                 } else {
                     threads_perblock=512;
-                    blocks = (int)((((partitions*partitions*partitions)-idx)/threads_perblock)+1)
+                    blocks = (int)((((partitions*partitions*partitions)-idx2)/threads_perblock)+1);
                 }
                 make_histoXXX_child2<<<blocks,threads_perblock>>>(XXX, elements, nodeD, idx1, idx2, partitions, bn, dmax, size_node);
             }
@@ -271,7 +271,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                 threads_perblock = (partitions*partitions*partitions)-idx;
             } else {
                 threads_perblock=512;
-                blocks = (int)((((partitions*partitions*partitions)-idx)/threads_perblock)+1)
+                blocks = (int)((((partitions*partitions*partitions)-idx)/threads_perblock)+1);
             }
             make_histoXXX_child1<<<blocks,threads_perblock>>>(XXX, elements, nodeD, idx, partitions, bn, dmax, size_node);
         }
