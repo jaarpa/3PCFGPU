@@ -4,6 +4,56 @@
 //====================================================================
 //============ Kernels Section ======================================= 
 //====================================================================
+__device__ void addto_histo(double *XYZ, double v, float dz12, float d12, float dz31, float d31, float dz23, float d23, int bns, float dmax){
+    
+    int a, b, c, t, p, q, t_, p_, q_;
+    int bin;
+    float c_th_12, c_th_23, c_th_31, c_th_12_, c_th_23_, c_th_31_;
+    float ds = ((float)(bns))/dmax;
+    float ds_th = (float)(bns)*0.5;
+
+    // angle between r and z
+    c_th_12 = dz12/d12 + 1;
+    c_th_31 = dz31/d31 + 1;
+    c_th_23 = dz23/d23 + 1;
+
+    c_th_12_ = 2 - c_th_12;
+    c_th_31_ = 2 - c_th_31;
+    c_th_23_ = 2 - c_th_23;
+
+    // Indices 
+    a = (int) (d12*ds);
+    b = (int) (d31*ds);
+    c = (int) (d23*ds);
+
+    t = (int) (c_th_12*ds_th);
+    p = (int) (c_th_31*ds_th);
+    q = (int) (c_th_23*ds_th);
+
+    t_ = (int) (c_th_12_*ds_th);
+    p_ = (int) (c_th_31_*ds_th);
+    q_ = (int) (c_th_23_*ds_th);
+
+    // Atomic adds. Considers inner symmetrization.
+    bin = a*bns*bns*bns*bns + b*bns*bns*bns + c*bns*bns + t*bns + p;
+    atomicAdd(&XXX[bin],v);
+
+    bin = a*bns*bns*bns*bns + c*bns*bns*bns + b*bns*bns + t_*bns + q;
+    atomicAdd(&XXX[bin],v);
+
+    bin = b*bns*bns*bns*bns + c*bns*bns*bns + a*bns*bns + q*bns + t_;
+    atomicAdd(&XXX[bin],v);
+
+    bin = b*bns*bns*bns*bns + a*bns*bns*bns + c*bns*bns + p*bns + t;
+    atomicAdd(&XXX[bin],v);
+
+    bin = c*bns*bns*bns*bns + b*bns*bns*bns + a*bns*bns + q_*bns + p_;
+    atomicAdd(&XXX[bin],v);
+
+    bin = c*bns*bns*bns*bns + a*bns*bns*bns + b*bns*bns + p_*bns + q_;
+    atomicAdd(&XXX[bin],v);
+
+}
 
 __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, int end, int bns, float dmax){
     /*
@@ -18,8 +68,7 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
     bns: (int) number of bins per XXX dimension
     dmax: (float) The maximum distance of interest.
     */
-    int a, b, c, t, p, q, t_, p_, q_;
-    int bin;
+
     double v;
     float x1,y1,z1,w1;
     float x2,y2,z2,w2;
@@ -27,9 +76,6 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
     float dz12, dz23, dz31;
     float dd12, dd23, dd31;
     float dd_max = dmax*dmax;
-    float ds = ((float)(bns))/dmax;
-    float c_th_12, c_th_23, c_th_31, c_th_12_, c_th_23_, c_th_31_;
-    float ds_th = (float)(bns)*0.5;
 
     for (int i=start; i<end-2; i++){
         x1 = elements[i].x;
@@ -57,50 +103,11 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
                         dz23 = (z3-z2);
                         dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+dz23*dz23;
                         if (dd23<dd_max){
-                        
                             dd23 = sqrtf(dd23);
                             v *= elements[k].w;
 
-                            // angle between r and z
-                            c_th_12 = dz12/dd12 + 1;
-                            c_th_31 = dz31/dd31 + 1;
-                            c_th_23 = dz23/dd23 + 1;
+                            addto_histo(XXX, v, dz12, dd12, dz31, dd31, dz23, dd23, bns, dmax);
 
-                            c_th_12_ = 2 - c_th_12;
-                            c_th_31_ = 2 - c_th_31;
-                            c_th_23_ = 2 - c_th_23;
-
-                            // Indices 
-                            a = (int) (dd12*ds);
-                            b = (int) (dd31*ds);
-                            c = (int) (dd23*ds);
-
-                            t = (int) (c_th_12*ds_th);
-                            p = (int) (c_th_31*ds_th);
-                            q = (int) (c_th_23*ds_th);
-
-                            t_ = (int) (c_th_12_*ds_th);
-                            p_ = (int) (c_th_31_*ds_th);
-                            q_ = (int) (c_th_23_*ds_th);
-
-                            // Atomic adds. Considers inner symmetrization.
-                            bin = a*bns*bns*bns*bns + b*bns*bns*bns + c*bns*bns + t*bns + p;
-                            atomicAdd(&XXX[bin],v);
-
-                            bin = a*bns*bns*bns*bns + c*bns*bns*bns + b*bns*bns + t_*bns + q;
-                            atomicAdd(&XXX[bin],v);
-
-                            bin = b*bns*bns*bns*bns + c*bns*bns*bns + a*bns*bns + q*bns + t_;
-                            atomicAdd(&XXX[bin],v);
-
-                            bin = b*bns*bns*bns*bns + a*bns*bns*bns + c*bns*bns + p*bns + t;
-                            atomicAdd(&XXX[bin],v);
-
-                            bin = c*bns*bns*bns*bns + b*bns*bns*bns + a*bns*bns + q_*bns + p_;
-                            atomicAdd(&XXX[bin],v);
-
-                            bin = c*bns*bns*bns*bns + a*bns*bns*bns + b*bns*bns + p_*bns + q_;
-                            atomicAdd(&XXX[bin],v);
                         }
                     }
                 }
@@ -125,15 +132,14 @@ __device__ void count_112_triangles(double *XXX, PointW3D *elements, int start1,
     dmax: (float) The maximum distance of interest.
     sum: (int) State if each distance is counted twice or once
     */
-
-    int bin, bx, by;
+    
     double v;
     float x1,y1,z1,w1;
     float x2,y2,z2,w2;
     float x3,y3,z3;
+    float dz12, dz23, dz31;
     float dd12, dd23, dd31;
     float dd_max = dmax*dmax;
-    float ds = ((float)(bns))/dmax;
 
     for (int i=start1; i<end1; i++){
         x1 = elements[i].x;
@@ -145,22 +151,27 @@ __device__ void count_112_triangles(double *XXX, PointW3D *elements, int start1,
             y2 = elements[j].y;
             z2 = elements[j].z;
             w2 = elements[j].w;
-            dd12 = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+            dz12 = (z2-z1);
+            dd12 = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz12*dz12;
             if (dd12<dd_max){
-                bx = (int)(sqrtf(dd12)*ds)*bns*bns;
+                dd12 = sqrtf(dd12);
                 v = w1*w2;
                 for (int k=i+1; k<end1; k++){
                     x3 = elements[k].x;
                     y3 = elements[k].y;
                     z3 = elements[k].z;
-                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+(z3-z2)*(z3-z2);
+                    dz23 = z3-z2;
+                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+dz23*dz23;
                     if (dd23<dd_max){
-                        by = (int)(sqrtf(dd23)*ds)*bns;
-                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+(z3-z1)*(z3-z1);
+                        dd23 = sqrtf(dd23);
+                        dz31 = z3-z1;
+                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+dz31*dz31;
                         if (dd31<dd_max){
-                            bin = bx + by + (int)(sqrtf(dd31)*ds);
+                            dd31 = sqrtf(dd31);
                             v *= elements[k].w;
-                            atomicAdd(&XXX[bin],v);
+
+                            addto_histo(XXX, v, dz12, dd12, dz31, dd31, dz23, dd23, bns, dmax);
+                            
                         }
                     }
                 }
@@ -168,14 +179,18 @@ __device__ void count_112_triangles(double *XXX, PointW3D *elements, int start1,
                     x3 = elements[k].x;
                     y3 = elements[k].y;
                     z3 = elements[k].z;
-                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+(z3-z2)*(z3-z2);
+                    dz23 = z3-z2;
+                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+dz23*dz23;
                     if (dd23<dd_max){
-                        by = (int)(sqrtf(dd23)*ds)*bns;
-                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+(z3-z1)*(z3-z1);
+                        dd23 = sqrtf(dd23);
+                        dz31 = z3-z1;
+                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+dz31*dz31;
                         if (dd31<dd_max){
-                            bin = bx + by + (int)(sqrtf(dd31)*ds);
+                            dd31 = sqrtf(dd31);
                             v *= elements[k].w;
-                            atomicAdd(&XXX[bin],v);
+
+                            addto_histo(XXX, v, dz12, dd12, dz31, dd31, dz23, dd23, bns, dmax);
+                            
                         }
                     }
                 }
@@ -204,14 +219,13 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
     sum: (int) State if each distance is counted twice or once
     */
 
-    int bin, bx, by;
     double v;
     float x1,y1,z1,w1;
     float x2,y2,z2,w2;
     float x3,y3,z3;
+    float dz12, dz23, dz31;
     float dd12, dd23, dd31;
     float dd_max = dmax*dmax;
-    float ds = ((float)(bns))/dmax;
 
     for (int i=start1; i<end1; i++){
         x1 = elements[i].x;
@@ -223,22 +237,27 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
             y2 = elements[j].y;
             z2 = elements[j].z;
             w2 = elements[j].w;
-            dd12 = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+            dz12 = z2-z1;
+            dd12 = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz12*dz12;
             if (dd12<dd_max){
-                bx = (int)(sqrtf(dd12)*ds)*bns*bns;
+                dd12 = sqrtf(dd12);
                 v = w1*w2;
                 for (int k=start3; k<end3; k++){
                     x3 = elements[k].x;
                     y3 = elements[k].y;
                     z3 = elements[k].z;
-                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+(z3-z2)*(z3-z2);
+                    dz23 = z3-z2;
+                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+dz23*dz23;
                     if (dd23<dd_max){
-                        by = (int)(sqrtf(dd23)*ds)*bns;
-                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+(z3-z1)*(z3-z1);
+                        dd23 = sqrtf(dd23);
+                        dz31 = z3-z1;
+                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+dz31*dz31;
                         if (dd31<dd_max){
-                            bin = bx + by + (int)(sqrtf(dd31)*ds);
+                            dd31 = sqrtf(dd31);
                             v *= elements[k].w;
-                            atomicAdd(&XXX[bin],v);
+                            
+                            addto_histo(XXX, v, dz12, dd12, dz31, dd31, dz23, dd23, bns, dmax);
+                            
                         }
                     }
                 }
@@ -312,7 +331,6 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     if (idx<(partitions*partitions*partitions)){
         if (nodeD[idx].len > 0){
             count_111_triangles(XXX, elements, nodeD[idx].start, nodeD[idx].end, bn, dmax);
-            /*
             int blocks, threads_perblock;
             if ((partitions*partitions*partitions)-idx < 512){
                 blocks = 1;
@@ -322,7 +340,6 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                 blocks = (int)((((partitions*partitions*partitions)-idx)/threads_perblock)+1);
             }
             make_histoXXX_child1<<<blocks,threads_perblock>>>(XXX, elements, nodeD, idx, partitions, bn, dmax, size_node);
-            */
         }
     }
 }
