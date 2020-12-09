@@ -167,6 +167,7 @@ int main(int argc, char **argv){
     for (int i=0; i<partitions; i++){
     for (int j=0; j<partitions; j++){
     for (int k=0; k<partitions; k++){
+        cout << hnodeD[i][j][k].len << endl;
         s+=hnodeD[i][j][k].len;
     }
     }
