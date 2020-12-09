@@ -420,7 +420,7 @@ __device__ void count_123_triangles_XXY(double *XXX, PointW3D *elements1, PointW
 __global__ void make_histoXXY_child2(double *XXX, PointW3D *elementsX, DNode *nodeX, PointW3D *elementsY, DNode *nodeY, int idx1, int idx2, int partitions, int bn, float dmax, float size_node){
     int idx3 = blockIdx.x * blockDim.x + threadIdx.x + (idx1 + 1);
     if (idx3<(partitions*partitions*partitions)){
-        if (nodeD[idx3].len > 0){
+        if (nodeX[idx3].len > 0){
             float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
 
@@ -430,7 +430,7 @@ __global__ void make_histoXXY_child2(double *XXX, PointW3D *elementsX, DNode *no
             float dd_nod23 = (nx3-nx2)*(nx3-nx2)+(ny3-ny2)*(ny3-ny2)+(nz3-nz2)*(nz3-nz2);
             float dd_nod31 = (nx3-nx1)*(nx3-nx1)+(ny3-ny1)*(ny3-ny1)+(nz3-nz1)*(nz3-nz1);
             if (dd_nod23<=d_max_node && dd_nod31<=d_max_node){
-                count_123_triangles_XXY(XXX, elementsX, elementsY, nodeD[idx1].start, nodeD[idx1].end, nodeD[idx2].start, nodeD[idx2].end, nodeD[idx3].start, nodeD[idx3].end, bn, dmax);
+                count_123_triangles_XXY(XXX, elementsX, elementsY, nodeX[idx1].start, nodeX[idx1].end, nodeY[idx2].start, nodeY[idx2].end, nodeX[idx3].start, nodeX[idx3].end, bn, dmax);
             }
         }
     }
@@ -457,7 +457,7 @@ __global__ void make_histoXXY_child1(double *XXX, PointW3D *elementsX, DNode *no
                     threads_perblock=512;
                     blocks = (int)((((partitions*partitions*partitions)-idx1)/threads_perblock)+1);
                 }
-                make_histoXXY_child2<<<blocks,threads_perblock>>>(XXX, elements, nodeD, idx1, idx2, partitions, bn, dmax, size_node);
+                make_histoXXY_child2<<<blocks,threads_perblock>>>(XXX, elementsX, nodeX, elementsY, nodeY, idx1, idx2, partitions, bn, dmax, size_node);
             }
             
         }
