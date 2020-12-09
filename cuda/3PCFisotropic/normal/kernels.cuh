@@ -280,6 +280,9 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
     int idx3 = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx3<(partitions*partitions*partitions)){
         if (nodeD[idx3].len > 0){
+            float d_max_node = dmax + size_node*sqrtf(3.0);
+            d_max_node*=d_max_node;
+            
             float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
             float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
             float nx3=nodeD[idx3].nodepos.x, ny3=nodeD[idx3].nodepos.y, nz3=nodeD[idx3].nodepos.z;
