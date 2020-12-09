@@ -231,7 +231,7 @@ __global__ void make_histoXXX_child1(double *XXX, PointW3D *elements, DNode *nod
             float dd_nod21 = dx21*dx21 + dy21*dy21 + dz21*dz21;
 
             if (dd_nod21<=d_max_node){
-                count_112_triangles(XXX, elements, nodeD[idx1].start, nodeD[idx1].end, nodeD[idx2].start, nodeD[idx2].end, bn, ds, dd_max);
+                count_112_triangles(XXX, elements, nodeD[idx1].start, nodeD[idx1].end, nodeD[idx2].start, nodeD[idx2].end, bn, dmax);
                 int blocks, threads_perblock;
                 if ((partitions*partitions*partitions)-idx2 < 512){
                     blocks = 1;
@@ -264,7 +264,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
         if (nodeD[idx].len > 0){
-            count_111_triangles(XXX, elements, nodeD[idx].start, nodeD[idx].end, bn, ds, dd_max);
+            count_111_triangles(XXX, elements, nodeD[idx].start, nodeD[idx].end, bn, dmax);
             int blocks, threads_perblock;
             if ((partitions*partitions*partitions)-idx < 512){
                 blocks = 1;
