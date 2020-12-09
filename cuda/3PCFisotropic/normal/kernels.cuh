@@ -69,7 +69,6 @@ __device__ void count_123_triangles(double *XXX, PointW3D *elements, int start1,
 
 __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, int partitions, int bn, float dmax, float size_node){
     int idx3 = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx1==0 && idx2==0 && idx3==0){
     if (idx3<(partitions*partitions*partitions)){
         if (nodeD[idx3].len > 0){
             float d_max_node = dmax + size_node*sqrtf(3.0);
@@ -86,7 +85,6 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
                 count_123_triangles(XXX, elements, nodeD[idx1].start, nodeD[idx1].end, nodeD[idx2].start, nodeD[idx2].end, nodeD[idx3].start, nodeD[idx3].end, bn, ds, dd_max);
             }
         }
-    }
     }
 }
 
