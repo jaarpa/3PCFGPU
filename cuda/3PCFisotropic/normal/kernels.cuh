@@ -281,11 +281,13 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
 
     if (idx3<(partitions*partitions*partitions)){
 
-        if (nodeD[idx3].len > 0){
+        atomicAdd(&XXX[3],1.0);
 
-            atomicAdd(&XXX[1],1.0);
+        //if (nodeD[idx3].len > 0){
 
-        }
+            //atomicAdd(&XXX[1],1.0);
+
+        //}
 
     }
 
@@ -294,6 +296,8 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
 __global__ void make_histoXXX_child1(double *XXX, PointW3D *elements, DNode *nodeD, int idx1, int partitions, int bn, float dmax, float size_node){
     int idx2 = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx2<(partitions*partitions*partitions)){
+
+        atomicAdd(&XXX[2],1.0);
 
         if (nodeD[idx2].len > 0){
 
@@ -320,6 +324,8 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx<(partitions*partitions*partitions)){
+
+        atomicAdd(&XXX[1],1.0);
 
         if (nodeD[idx].len > 0){
 
