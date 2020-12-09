@@ -333,21 +333,6 @@ __device__ void count_112_triangles_XXY(double *XXX, PointW3D *elements1, PointW
                         }
                     }
                 }
-                for (int k=j+1; k<end2; k++){
-                    x3 = elements2[k].x;
-                    y3 = elements2[k].y;
-                    z3 = elements2[k].z;
-                    dd23 = (x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+(z3-z2)*(z3-z2);
-                    if (dd23<dd_max){
-                        by = (int)(sqrtf(dd23)*ds)*bns;
-                        dd31 = (x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+(z3-z1)*(z3-z1);
-                        if (dd31<dd_max){
-                            bin = bx + by + (int)(sqrtf(dd31)*ds);
-                            v *= elements2[k].w;
-                            atomicAdd(&XXX[bin],v);
-                        }
-                    }
-                }
             }
         }
     }
