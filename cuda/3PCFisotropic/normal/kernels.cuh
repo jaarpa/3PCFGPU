@@ -82,7 +82,7 @@ __global__ void make_histoXXX_child2(double *XXX, PointW3D *elements, DNode *nod
             if (dd_nod23<=d_max_node && dd_nod31<=d_max_node){
                 float dd_max = dmax*dmax;
                 float ds = ((float)(bn))/dmax;
-                count_123_triangles(XXX, elements, nodeD[idx1].nodepos.start, nodeD[idx1].nodepos.end, nodeD[idx2].nodepos.start, nodeD[idx2].nodepos.end, nodeD[idx3].nodepos.start, nodeD[idx3].nodepos.end, bn, ds, dd_max);
+                count_123_triangles(XXX, elements, nodeD[idx1].start, nodeD[idx1].end, nodeD[idx2].start, nodeD[idx2].end, nodeD[idx3].start, nodeD[idx3].end, bn, ds, dd_max);
             }
         }
     }
