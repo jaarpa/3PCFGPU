@@ -256,12 +256,7 @@ int main(int argc, char **argv){
     /* =======================================================================*/
     /* =======================  Save the results =============================*/
     /* =======================================================================*/
-    double s = 0;
-    for (int i=0; i<bn*bn*bn*bn*bn; i++){
-        s+=DDD[i];
-    }
-    cout << "the total number of counts:" <<  s << endl;
-    
+
 	save_histogram(nameDDD, bn, DDD);
 	//save_histogram(nameRRR, bn, RRR);
 	//save_histogram(nameDDR, bn, DDR);

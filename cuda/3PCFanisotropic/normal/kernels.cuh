@@ -62,17 +62,13 @@ __device__ void count_111_triangles(double *XXX, PointW3D *elements, int start, 
                             v *= elements[k].w;
 
                             // angle between r and z
-                            c_th_12 = dz12/dd12;
-                            c_th_31 = dz31/dd31;
-                            c_th_23 = dz23/dd23;
+                            c_th_12 = dz12/dd12 + 1;
+                            c_th_31 = dz31/dd31 + 1;
+                            c_th_23 = dz23/dd23 + 1;
 
-                            c_th_12_ = 1 - c_th_12;
-                            c_th_31_ = 1 - c_th_31;
-                            c_th_23_ = 1 - c_th_23;
-                            
-                            c_th_12 += 1;
-                            c_th_31 += 1;
-                            c_th_23 += 1;
+                            c_th_12_ = 2 - c_th_12;
+                            c_th_31_ = 2 - c_th_31;
+                            c_th_23_ = 2 - c_th_23;
 
                             // Indices 
                             a = (int) (dd12*ds);
