@@ -246,7 +246,7 @@ int main(int argc, char **argv){
     simmetrization<<<blocks,threads_perblock,0,streamDRR>>>(d_DRR_sym, d_DRR, bn);
     simmetrization<<<blocks,threads_perblock,0,streamDDR>>>(d_DDR_sym, d_DDR, bn);
 
-    cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
+    cucheck(cudaMemcpyAsync(DDD, d_DDD_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
     cucheck(cudaMemcpyAsync(RRR, d_RRR_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRRR));
     cucheck(cudaMemcpyAsync(DRR, d_DRR_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDRR));
     cucheck(cudaMemcpyAsync(DDR, d_DDR_sym, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDR));
