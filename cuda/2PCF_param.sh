@@ -3,7 +3,7 @@
 #Variar dmax [20,160]
 #Variar caja -> npts [data_512MPc, 1GPc, 2GPC]
 #bn=20
-#SH PID: 
+#SH PID: 1631
 
 touch time_results.dat
 nvcc -arch=sm_75 2PCFisotropic/normal/optimization.cu -o 2PCFisotropic/normal/opt.out
