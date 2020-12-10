@@ -222,7 +222,7 @@ int main(int argc, char **argv){
 	//save_histogram(nameDD, bn, DD);
 	//save_histogram(nameRR, bn, RR);
 	//save_histogram(nameDR, bn, DR);
-    cout << "Saved the histograms" << endl;
+    //cout << "Saved the histograms" << endl;
     
     /* =======================================================================*/
     /* ==========================  Free memory ===============================*/
