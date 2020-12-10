@@ -196,9 +196,9 @@ int main(int argc, char **argv){
     //make_histoXX<<<blocks,threads_perblock,0,streamRR>>>(d_RR, d_ordered_pointsR_s2, dnodeR_s2, partitions, bn, dmax, size_node);
     //make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_s3, dnodeD_s3, d_ordered_pointsR_s3, dnodeR_s3, partitions, bn, dmax, size_node);
 
-    cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
+    cucheck(cudaMemcpyAsync(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
+    //cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
     //cucheck(cudaMemcpyAsync(DR, d_DR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDR));
-    //cucheck(cudaMemcpyAsync(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
