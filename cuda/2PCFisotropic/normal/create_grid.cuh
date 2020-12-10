@@ -35,7 +35,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
     /* Opens the daya files. Receives the file location, number of points to read and the array of points where the data is stored */
     ifstream file;
 
-    string mypathto_files = "../../../data/";
+    string mypathto_files = "../data/";
     //This creates the full path to where I have my data files
     name_file.insert(0,mypathto_files);
 
