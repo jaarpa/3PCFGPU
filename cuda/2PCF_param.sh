@@ -17,20 +17,20 @@ do
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
     done
     for partitions in $(seq 26 44)
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
         done
     done
     for partitions in $(seq 44 3 100)
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
         done
     done
 done
@@ -44,21 +44,21 @@ do
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
         done
     done
     for partitions in $(seq 26 44)
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
         done
     done
     for partitions in $(seq 44 3 100)
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
         done
     done
 done
@@ -72,21 +72,21 @@ do
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
         done
     done
     for partitions in $(seq 24 50)
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
         done
     done
     for partitions in $(seq 44 3 100)
     do 
         for i in $(seq 1 10)
         do
-        2PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
+            2PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
         done
     done
 done
@@ -104,21 +104,21 @@ do
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
         done
     done
     for partitions in $(seq 26 44)
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
         done
     done
     for partitions in $(seq 44 3 100)
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
         done
     done
 done
@@ -132,21 +132,21 @@ do
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
         done
     done
     for partitions in $(seq 26 44)
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
         done
     done
     for partitions in $(seq 44 3 100)
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
         done
     done
 done
@@ -160,21 +160,21 @@ do
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
         done
     done
     for partitions in $(seq 24 50)
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
         done
     done
     for partitions in $(seq 44 3 100)
     do 
         for i in $(seq 1 10)
         do
-        2PCFanisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
+            2PCFanisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
         done
     done
 done
