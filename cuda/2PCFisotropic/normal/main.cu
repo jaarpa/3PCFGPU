@@ -194,26 +194,14 @@ int main(int argc, char **argv){
         }
     }
 
-    int s=0;
-    for(int i=0;i<nonzero_Rnodes;i++){
-        s+=hnodeR_s[i].len;
-    }
-    cout << "R Have a total of points;" << s << endl;
-
-    s=0;
-    for(int i=0;i<nonzero_Dnodes;i++){
-        s+=hnodeD_s[i].len;
-    }
-    cout << "D Have a total of points;" << s << endl;
-
     cucheck(cudaMemcpyAsync(d_ordered_pointsD_DD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD));
     cucheck(cudaMemcpyAsync(dnodeD_DD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
 
     cucheck(cudaMemcpyAsync(d_ordered_pointsR_RR, h_ordered_pointsR_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamRR));
-    cucheck(cudaMemcpyAsync(dnodeR_RR, hnodeR_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamRR));
+    cucheck(cudaMemcpyAsync(dnodeR_RR, hnodeR_s, nonzero_Rnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamRR));
 
     cucheck(cudaMemcpyAsync(d_ordered_pointsR_DR, h_ordered_pointsR_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDR));
-    cucheck(cudaMemcpyAsync(dnodeR_DR, hnodeR_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDR));
+    cucheck(cudaMemcpyAsync(dnodeR_DR, hnodeR_s, nonzero_Rnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDR));
     cucheck(cudaMemcpyAsync(d_ordered_pointsD_DR, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDR));
     cucheck(cudaMemcpyAsync(dnodeD_DR, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDR));
 

@@ -64,7 +64,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.x * blockDim.x + threadIdx.y;
+    int idx2 = blockIdx.y * blockDim.x + threadIdx.y;
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
