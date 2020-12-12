@@ -245,9 +245,9 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(streamDD));
     save_histogram(nameDD, bn, DD);
     cucheck(cudaStreamSynchronize(streamRR));
-	save_histogram(nameRR, bn, RR);
+    save_histogram(nameRR, bn, RR);
     cucheck(cudaStreamSynchronize(streamDR));
-	save_histogram(nameDR, bn, DR);
+    save_histogram(nameDR, bn, DR);
 
     cucheck(cudaEventRecord(stop_timmer));
     cucheck(cudaEventSynchronize(stop_timmer));
