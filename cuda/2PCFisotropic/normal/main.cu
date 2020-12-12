@@ -188,7 +188,12 @@ int main(int argc, char **argv){
             }
         }
     }
-
+    int s=0;
+    for(int i=0;i<nonzero_Dnodes;i++){
+        s+=hnodeR[row][col][mom].len;
+    }
+    cout << "Have a total of points;" << s << endl;
+    
     cucheck(cudaMemcpyAsync(d_ordered_pointsD_DD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD));
     cucheck(cudaMemcpyAsync(dnodeD_DD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
 
