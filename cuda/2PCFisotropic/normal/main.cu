@@ -220,10 +220,10 @@ int main(int argc, char **argv){
     cout << "Non zero D nodes: " << nonzero_Dnodes<<endl;
     cout << "Non zero R nodes: " << nonzero_Rnodes<<endl;
     
-    dim3 threads_perblock_D(threads_perblock_dim,threads_perblock_dim,1)
+    dim3 threads_perblock_D(threads_perblock_dim,threads_perblock_dim,1);
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
 
-    dim3 threads_perblock_R(threads_perblock_dim,threads_perblock_dim,1)
+    dim3 threads_perblock_R(threads_perblock_dim,threads_perblock_dim,1);
     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
 
     //Launch the kernels
