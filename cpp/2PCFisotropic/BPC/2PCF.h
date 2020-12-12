@@ -243,8 +243,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			// Boundary node conditions:
 			con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
 			if(con_z){
-				*(SS + (int)(1)) += 1;
-				//histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
+				histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
 			}
 		}
 		
@@ -285,8 +284,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 					con_y = ((y1D<=d_max_pm)&&(y2D>=front_pm))||((y2D<=d_max_pm)&&(y1D>=front_pm));
 					con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
 					if(con_y || con_z){ 
-						*(SS + (int)(2)) += 1;
-						//histo_front_XX(SS,nodeX,dis_nod,0.0,sqrt(dy_nod),sqrt(dz_nod),false,con_y,con_z,row,col,mom,u,v,w);
+						histo_front_XX(SS,nodeX,dis_nod,0.0,sqrt(dy_nod),sqrt(dz_nod),false,con_y,con_z,row,col,mom,u,v,w);
 					}
 			}
 		}
@@ -332,8 +330,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 					con_y = ((y1D<=d_max_pm)&&(y2D>=front_pm))||((y2D<=d_max_pm)&&(y1D>=front_pm));
 					con_z = ((z1D<=d_max_pm)&&(z2D>=front_pm))||((z2D<=d_max_pm)&&(z1D>=front_pm));
 					if(con_x || con_y || con_z){
-						*(SS + (int)(3)) += 1;
-						//histo_front_XX(SS,nodeX,dis_nod,sqrt(dx_nod),sqrt(dy_nod),sqrt(dz_nod),con_x,con_y,con_z,row,col,mom,u,v,w);
+						histo_front_XX(SS,nodeX,dis_nod,sqrt(dx_nod),sqrt(dy_nod),sqrt(dz_nod),con_x,con_y,con_z,row,col,mom,u,v,w);
 					}	
 				}
 			}
