@@ -196,13 +196,13 @@ int main(int argc, char **argv){
 
     int s=0;
     for(int i=0;i<nonzero_Rnodes;i++){
-        s+=hnodeR_s[idxR].len;
+        s+=hnodeR_s[i].len;
     }
     cout << "R Have a total of points;" << s << endl;
 
     s=0;
     for(int i=0;i<nonzero_Dnodes;i++){
-        s+=hnodeD_s[idxR].len;
+        s+=hnodeD_s[i].len;
     }
     cout << "D Have a total of points;" << s << endl;
 
