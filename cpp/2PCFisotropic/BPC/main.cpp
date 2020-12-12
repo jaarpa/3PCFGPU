@@ -27,8 +27,10 @@ int main(int argc, char **argv){
 
 	int n_pts = 32*32*32, bn = 30;
 	float d_max = 150.0, size_box = 250.0, alpha = 2.176;
-	int partitions = 35;
-	float size_node = size_box/(float)(partitions); //alpha*(size_box/pow((float)(n_pts),1/3.));
+	float size_node = alpha*(size_box/pow((float)(n_pts),1/3.));
+	int partitions = (int)(ceil(size_box/size_node));
+	//int partitions = 35;
+	//float size_node = size_box/(float)(partitions); //alpha*(size_box/pow((float)(n_pts),1/3.));
 	dataD = new PointW3D[n_pts]; 
 	dataR = new PointW3D[n_pts]; 
 	
@@ -41,6 +43,7 @@ int main(int argc, char **argv){
 	cout << "conditions (BPC)." << endl;
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	cout << "Parameters used: \n" << endl;
+	cout << "	Size of the box:     " << size_box << endl;
 	cout << "	Amount of points:     " << n_pts << endl;
 	cout << "	Histogram Bins:       " << bn << endl;
 	cout << "	Maximum distance:     " << d_max << endl;
