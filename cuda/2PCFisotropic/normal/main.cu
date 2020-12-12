@@ -69,7 +69,7 @@ int main(int argc, char **argv){
     cucheck(cudaStreamCreate(&streamDR));
     cucheck(cudaStreamCreate(&streamRR));
     DNode *dnodeD_DD, *dnodeD_DR, *dnodeR_RR, *dnodeR_DR;
-    int row, col, mom, k_element, last_pointD, last_pointR;
+    int k_element, last_pointD, last_pointR;
     PointW3D *d_ordered_pointsD_DD, *d_ordered_pointsD_DR, *d_ordered_pointsR_RR, *d_ordered_pointsR_DR;
 
     // Name of the files where the results are saved
@@ -162,27 +162,27 @@ int main(int argc, char **argv){
             for(int mom=0; mom<partitions; mom++){
         
                 if (hnodeD[row][col][mom].len>0){
-                    hnodeD_s[idx].nodepos = hnodeD[row][col][mom].nodepos;
-                    hnodeD_s[idx].prev_i = last_pointD;
+                    hnodeD_s[idxD].nodepos = hnodeD[row][col][mom].nodepos;
+                    hnodeD_s[idxD].prev_i = last_pointD;
                     last_pointD = last_pointD + hnodeD[row][col][mom].len;
-                    hnodeD_s[idx].len = hnodeD[row][col][mom].len;
-                    for (int j=hnodeD_s[idx].prev_i; j<last_pointD; j++){
-                        k_element = j-hnodeD_s[idx].prev_i;
+                    hnodeD_s[idxD].len = hnodeD[row][col][mom].len;
+                    for (int j=hnodeD_s[idxD].prev_i; j<last_pointD; j++){
+                        k_element = j-hnodeD_s[idxD].prev_i;
                         h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
                     }
-                    idxD++
+                    idxD++;
                 }
 
                 if (hnodeR[row][col][mom].len>0){
-                    hnodeR_s[idx].nodepos = hnodeR[row][col][mom].nodepos;
-                    hnodeR_s[idx].prev_i = last_pointR;
+                    hnodeR_s[idxR].nodepos = hnodeR[row][col][mom].nodepos;
+                    hnodeR_s[idxR].prev_i = last_pointR;
                     last_pointR = last_pointR + hnodeR[row][col][mom].len;
-                    hnodeR_s[idx].len = hnodeR[row][col][mom].len;
-                    for (int j=hnodeR_s[idx].prev_i; j<last_pointR; j++){
-                        k_element = j-hnodeR_s[idx].prev_i;
+                    hnodeR_s[idxR].len = hnodeR[row][col][mom].len;
+                    for (int j=hnodeR_s[idxR].prev_i; j<last_pointR; j++){
+                        k_element = j-hnodeR_s[idxR].prev_i;
                         h_ordered_pointsR_s[j] = hnodeR[row][col][mom].elements[k_element];
                     }
-                    idxR++
+                    idxR++;
                 }
 
             }
@@ -213,10 +213,10 @@ int main(int argc, char **argv){
     //Compute the dimensions of the GPU grid
     //One thread for each node
     threads_perblock_D = 32;
-    blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock))));
+    blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_D))));
 
     threads_perblock_R = 32;
-    blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock))));
+    blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_R))));
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
