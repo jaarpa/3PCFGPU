@@ -217,6 +217,8 @@ int main(int argc, char **argv){
 
     //Compute the dimensions of the GPU grid
     //One thread for each node
+    cout << "Non zero D nodes: " << nonzero_Dnodes<<endl;
+    cout << "Non zero R nodes: " << nonzero_Rnodes<<endl;
     threads_perblock_D = 32;
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_D))));
 
