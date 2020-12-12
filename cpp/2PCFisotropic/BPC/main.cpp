@@ -45,6 +45,7 @@ int main(int argc, char **argv){
 	cout << "	Histogram Bins:       " << bn << endl;
 	cout << "	Maximum distance:     " << d_max << endl;
 	cout << "	Node size:            " << size_node << endl;
+	cout << "	Partitions:            " << partitions << endl;
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	
