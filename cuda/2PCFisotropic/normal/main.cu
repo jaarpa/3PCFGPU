@@ -45,12 +45,12 @@ int main(int argc, char **argv){
 
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
 
-    float time_spent, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
+    float time_spent, d_max_node, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
 
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
-    int threads_perblock, blocks;
+    int threads_perblock_D, blocks_D, nonzero_Dnodes, idxD, threads_perblock_R, blocks_R, nonzero_Rnodes, idxR;
 
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
@@ -68,9 +68,9 @@ int main(int argc, char **argv){
     cucheck(cudaStreamCreate(&streamDD));
     cucheck(cudaStreamCreate(&streamDR));
     cucheck(cudaStreamCreate(&streamRR));
-    DNode *dnodeD_s1, *dnodeD_s3, *dnodeR_s2, *dnodeR_s3;
+    DNode *dnodeD_DD, *dnodeD_DR, *dnodeR_RR, *dnodeR_DR;
     int row, col, mom, k_element, last_pointD, last_pointR;
-    PointW3D *d_ordered_pointsD_s1, *d_ordered_pointsD_s3, *d_ordered_pointsR_s2, *d_ordered_pointsR_s3;
+    PointW3D *d_ordered_pointsD_DD, *d_ordered_pointsD_DR, *d_ordered_pointsR_RR, *d_ordered_pointsR_DR;
 
     // Name of the files where the results are saved
     string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
@@ -90,6 +90,9 @@ int main(int argc, char **argv){
     partitions = 35;
     size_node = size_box/(float)(partitions);
 
+    d_max_node = dmax + size_node*sqrt(3.0);
+    d_max_node*=d_max_node;
+
     // Allocate memory for the histogram as double
     DD = new double[bn];
     RR = new double[bn];
@@ -99,25 +102,10 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_RR, bn*sizeof(double)));
     cucheck(cudaMalloc(&d_DR, bn*sizeof(double)));
 
-    //Restarts the main histograms in host to zero
+    //Restarts the main histograms in device to zero
     cucheck(cudaMemsetAsync(d_DD, 0, bn*sizeof(double), streamDD));
     cucheck(cudaMemsetAsync(d_RR, 0, bn*sizeof(double), streamRR));
     cucheck(cudaMemsetAsync(d_DR, 0, bn*sizeof(double), streamDR));
-
-    //Allocate memory for the nodes depending of how many partitions there are.
-    cucheck(cudaMalloc(&dnodeD_s1, partitions*partitions*partitions*sizeof(DNode)));
-    cucheck(cudaMalloc(&d_ordered_pointsD_s1, np*sizeof(PointW3D)));
-    cucheck(cudaMalloc(&dnodeR_s2, partitions*partitions*partitions*sizeof(DNode)));
-    cucheck(cudaMalloc(&d_ordered_pointsR_s2, np*sizeof(PointW3D)));
-    cucheck(cudaMalloc(&dnodeD_s3, partitions*partitions*partitions*sizeof(DNode)));
-    cucheck(cudaMalloc(&d_ordered_pointsD_s3, np*sizeof(PointW3D)));
-    cucheck(cudaMalloc(&dnodeR_s3, partitions*partitions*partitions*sizeof(DNode)));
-    cucheck(cudaMalloc(&d_ordered_pointsR_s3, np*sizeof(PointW3D)));
-
-    hnodeD_s = new DNode[partitions*partitions*partitions];
-    h_ordered_pointsD_s = new PointW3D[np];
-    hnodeR_s = new DNode[partitions*partitions*partitions];
-    h_ordered_pointsR_s = new PointW3D[np];
 
     hnodeD = new Node**[partitions];
     hnodeR = new Node**[partitions];
@@ -134,45 +122,83 @@ int main(int argc, char **argv){
     //The node classification is made in the host
     make_nodos(hnodeD, dataD, partitions, size_node, np);
     make_nodos(hnodeR, dataR, partitions, size_node, np);
-    
-    //Deep copy to device memory
 
-    last_pointR = 0;
-    last_pointD = 0;
-    for (int idx=0; idx<partitions*partitions*partitions; idx++){
-        mom = (int) (idx/(partitions*partitions));
-        col = (int) ((idx%(partitions*partitions))/partitions);
-        row = idx%partitions;
-        
-        hnodeD_s[idx].nodepos = hnodeD[row][col][mom].nodepos;
-        hnodeD_s[idx].prev_i = last_pointD;
-        last_pointD = last_pointD + hnodeD[row][col][mom].len;
-        hnodeD_s[idx].len = hnodeD[row][col][mom].len;
-        for (int j=hnodeD_s[idx].prev_i; j<last_pointD; j++){
-            k_element = j-hnodeD_s[idx].prev_i;
-            h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
-        }
-
-        hnodeR_s[idx].nodepos = hnodeR[row][col][mom].nodepos;
-        hnodeR_s[idx].prev_i = last_pointR;
-        last_pointR = last_pointR + hnodeR[row][col][mom].len;
-        hnodeR_s[idx].len = hnodeR[row][col][mom].len;
-        for (int j=hnodeR_s[idx].prev_i; j<last_pointR; j++){
-            k_element = j-hnodeR_s[idx].prev_i;
-            h_ordered_pointsR_s[j] = hnodeR[row][col][mom].elements[k_element];
+    nonzero_Dnodes=0;
+    nonzero_Rnodes=0;
+    for(int row=0; row<partitions; row++){
+        for(int col=0; col<partitions; col++){
+            for(int mom=0; mom<partitions; mom++){
+                if(hnodeD[row][col][mom].len>0){
+                    nonzero_Dnodes+=1;
+                }
+                if(hnodeR[row][col][mom].len>0){
+                    nonzero_Rnodes+=1;
+                }
+            }
         }
     }
 
-    cucheck(cudaMemcpyAsync(d_ordered_pointsD_s1, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD));
-    cucheck(cudaMemcpyAsync(dnodeD_s1, hnodeD_s, partitions*partitions*partitions*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
+    //Allocate memory for the nodes depending of how many partitions there are.
+    cucheck(cudaMalloc(&dnodeD_DD, nonzero_Dnodes*sizeof(DNode)));
+    cucheck(cudaMalloc(&d_ordered_pointsD_DD, np*sizeof(PointW3D)));
+    cucheck(cudaMalloc(&dnodeR_RR, nonzero_Rnodes*sizeof(DNode)));
+    cucheck(cudaMalloc(&d_ordered_pointsR_RR, np*sizeof(PointW3D)));
+    cucheck(cudaMalloc(&dnodeD_DR, nonzero_Dnodes*sizeof(DNode)));
+    cucheck(cudaMalloc(&d_ordered_pointsD_DR, np*sizeof(PointW3D)));
+    cucheck(cudaMalloc(&dnodeR_DR, nonzero_Rnodes*sizeof(DNode)));
+    cucheck(cudaMalloc(&d_ordered_pointsR_DR, np*sizeof(PointW3D)));
 
-    cucheck(cudaMemcpyAsync(d_ordered_pointsR_s2, h_ordered_pointsR_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamRR));
-    cucheck(cudaMemcpyAsync(dnodeR_s2, hnodeR_s, partitions*partitions*partitions*sizeof(DNode), cudaMemcpyHostToDevice, streamRR));
+    hnodeD_s = new DNode[nonzero_Dnodes];
+    h_ordered_pointsD_s = new PointW3D[np];
+    hnodeR_s = new DNode[nonzero_Rnodes];
+    h_ordered_pointsR_s = new PointW3D[np];
 
-    cucheck(cudaMemcpyAsync(d_ordered_pointsR_s3, h_ordered_pointsR_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDR));
-    cucheck(cudaMemcpyAsync(dnodeR_s3, hnodeR_s, partitions*partitions*partitions*sizeof(DNode), cudaMemcpyHostToDevice, streamDR));
-    cucheck(cudaMemcpyAsync(d_ordered_pointsD_s3, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDR));
-    cucheck(cudaMemcpyAsync(dnodeD_s3, hnodeD_s, partitions*partitions*partitions*sizeof(DNode), cudaMemcpyHostToDevice, streamDR));
+    //Deep copy to device memory
+    last_pointR = 0;
+    last_pointD = 0;
+
+    for(int row=0; row<partitions; row++){
+        for(int col=0; col<partitions; col++){
+            for(int mom=0; mom<partitions; mom++){
+        
+                if (hnodeD[row][col][mom].len>0){
+                    hnodeD_s[idx].nodepos = hnodeD[row][col][mom].nodepos;
+                    hnodeD_s[idx].prev_i = last_pointD;
+                    last_pointD = last_pointD + hnodeD[row][col][mom].len;
+                    hnodeD_s[idx].len = hnodeD[row][col][mom].len;
+                    for (int j=hnodeD_s[idx].prev_i; j<last_pointD; j++){
+                        k_element = j-hnodeD_s[idx].prev_i;
+                        h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
+                    }
+                    idxD++
+                }
+
+                if (hnodeR[row][col][mom].len>0){
+                    hnodeR_s[idx].nodepos = hnodeR[row][col][mom].nodepos;
+                    hnodeR_s[idx].prev_i = last_pointR;
+                    last_pointR = last_pointR + hnodeR[row][col][mom].len;
+                    hnodeR_s[idx].len = hnodeR[row][col][mom].len;
+                    for (int j=hnodeR_s[idx].prev_i; j<last_pointR; j++){
+                        k_element = j-hnodeR_s[idx].prev_i;
+                        h_ordered_pointsR_s[j] = hnodeR[row][col][mom].elements[k_element];
+                    }
+                    idxR++
+                }
+
+            }
+        }
+    }
+
+    cucheck(cudaMemcpyAsync(d_ordered_pointsD_DD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD));
+    cucheck(cudaMemcpyAsync(dnodeD_DD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
+
+    cucheck(cudaMemcpyAsync(d_ordered_pointsR_RR, h_ordered_pointsR_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamRR));
+    cucheck(cudaMemcpyAsync(dnodeR_RR, hnodeR_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamRR));
+
+    cucheck(cudaMemcpyAsync(d_ordered_pointsR_DR, h_ordered_pointsR_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDR));
+    cucheck(cudaMemcpyAsync(dnodeR_DR, hnodeR_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDR));
+    cucheck(cudaMemcpyAsync(d_ordered_pointsD_DR, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDR));
+    cucheck(cudaMemcpyAsync(dnodeD_DR, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDR));
 
     stop_timmer_host = clock();
     time_spent = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
@@ -186,15 +212,18 @@ int main(int argc, char **argv){
 
     //Compute the dimensions of the GPU grid
     //One thread for each node
-    threads_perblock = 512;
-    blocks = (int)(ceil((float)((float)(partitions*partitions*partitions)/(float)(threads_perblock))));
+    threads_perblock_D = 32;
+    blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock))));
+
+    threads_perblock_R = 32;
+    blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock))));
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    make_histoXX<<<blocks,threads_perblock,0,streamDD>>>(d_DD, d_ordered_pointsD_s1, dnodeD_s1, partitions, bn, dmax, size_node);
-    make_histoXX<<<blocks,threads_perblock,0,streamRR>>>(d_RR, d_ordered_pointsR_s2, dnodeR_s2, partitions, bn, dmax, size_node);
-    make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_s3, dnodeD_s3, d_ordered_pointsR_s3, dnodeR_s3, partitions, bn, dmax, size_node);
+    make_histoXX<<<blocks_D,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, partitions, bn, dmax, d_max_node, size_node);
+    make_histoXX<<<blocks_R,threads_perblock_R,0,streamRR>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes, partitions, bn, dmax, d_max_node, size_node);
+    //make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_DR, dnodeD_DR, d_ordered_pointsR_DR, dnodeR_DR, partitions, bn, dmax, size_node);
 
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
     cucheck(cudaMemcpyAsync(DR, d_DR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDR));
@@ -254,14 +283,14 @@ int main(int argc, char **argv){
     delete[] hnodeD;
     delete[] hnodeR;
 
-    cucheck(cudaFree(d_ordered_pointsD_s1));
-    cucheck(cudaFree(dnodeD_s1));
-    cucheck(cudaFree(d_ordered_pointsR_s2));
-    cucheck(cudaFree(dnodeR_s2));
-    cucheck(cudaFree(d_ordered_pointsD_s3));
-    cucheck(cudaFree(dnodeD_s3));
-    cucheck(cudaFree(d_ordered_pointsR_s3));
-    cucheck(cudaFree(dnodeR_s3));
+    cucheck(cudaFree(d_ordered_pointsD_DD));
+    cucheck(cudaFree(dnodeD_DD));
+    cucheck(cudaFree(d_ordered_pointsR_RR));
+    cucheck(cudaFree(dnodeR_RR));
+    cucheck(cudaFree(d_ordered_pointsD_DR));
+    cucheck(cudaFree(dnodeD_DR));
+    cucheck(cudaFree(d_ordered_pointsR_DR));
+    cucheck(cudaFree(dnodeR_DR));
     
     delete[] hnodeD_s;
     delete[] h_ordered_pointsD_s;
