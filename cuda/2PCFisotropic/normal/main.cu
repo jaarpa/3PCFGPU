@@ -226,12 +226,15 @@ int main(int argc, char **argv){
     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
     dim3 gridR(blocks_R,blocks_R,1);
 
+    dim3 threads_perblock_DR(threads_perblock_dim,threads_perblock_dim,1);
+    dim3 gridDR(blocks_D,blocks_R,1);
+
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, partitions, bn, dmax, d_max_node, size_node);
-    make_histoXX<<<gridR,threads_perblock_R,0,streamRR>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes, partitions, bn, dmax, d_max_node, size_node);
-    //make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_DR, dnodeD_DR, d_ordered_pointsR_DR, dnodeR_DR, partitions, bn, dmax, size_node);
+    make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node);
+    make_histoXX<<<gridR,threads_perblock_R,0,streamRR>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes, bn, dmax, d_max_node);
+    make_histoXY<<<gridDR,threads_perblock_DR,0,streamDR>>>(d_DR, d_ordered_pointsD_DR, dnodeD_DR, nonzero_Dnodes, d_ordered_pointsR_DR, dnodeR_DR, nonzero_Rnodes, bn, dmax, d_max_node);
 
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
     cucheck(cudaMemcpyAsync(DR, d_DR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDR));
