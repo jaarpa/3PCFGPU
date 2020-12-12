@@ -130,159 +130,6 @@ __device__ void count_distancesXY(double *XY, PointW3D *elements1, int start1, i
         }
     }
 }
-/*
-__device__ void histo_front_XX(){
-    int i, j;
-    float dis_f,dis,d_x,d_y,d_z;
-    float x,y,z,w1;
-    //======================================================================
-    if( con_in_x ){
-    dis_f = disn + ll - 2*dn_x*size_box;
-    if (dis_f <= ddmax_nod){
-        for (i=0; i<dat[row][col][mom].len; ++i){
-        x = dat[row][col][mom].elements[i].x;
-        y = dat[row][col][mom].elements[i].y;
-        z = dat[row][col][mom].elements[i].z;
-        w1 = dat[row][col][mom].elements[i].w;
-            for (j=0; j<dat[u][v][w].len; ++j){
-            d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
-            d_y = y-dat[u][v][w].elements[j].y;
-            d_z = z-dat[u][v][w].elements[j].z;
-            dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-            if (dis < dd_max){
-            *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
-            }
-            }
-        }
-    }
-    }
-    //======================================================================		
-    if( con_in_y ){
-    dis_f = disn + ll - 2*dn_y*size_box;
-    if (dis_f <= ddmax_nod){
-        for (i=0; i<dat[row][col][mom].len; ++i){
-        x = dat[row][col][mom].elements[i].x;
-        y = dat[row][col][mom].elements[i].y;
-        z = dat[row][col][mom].elements[i].z;
-        w1 = dat[row][col][mom].elements[i].w;
-            for (j=0; j<dat[u][v][w].len; ++j){
-            d_x = x-dat[u][v][w].elements[j].x;
-            d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
-            d_z = z-dat[u][v][w].elements[j].z;
-            dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-            if (dis < dd_max){
-            *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
-            }
-            }
-        }
-    }
-    }
-    //======================================================================
-    if( con_in_z ){
-    dis_f = disn + ll - 2*dn_z*size_box;
-    if (dis_f <= ddmax_nod){
-        for (i=0; i<dat[row][col][mom].len; ++i){
-        x = dat[row][col][mom].elements[i].x;
-        y = dat[row][col][mom].elements[i].y;
-        z = dat[row][col][mom].elements[i].z;
-        w1 = dat[row][col][mom].elements[i].w;
-            for (j=0; j<dat[u][v][w].len; ++j){
-            d_x = x-dat[u][v][w].elements[j].x;
-            d_y = y-dat[u][v][w].elements[j].y;
-            d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
-            dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-            if (dis < dd_max){
-            *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
-            }
-            }
-        }
-    }
-    }
-    //======================================================================	
-    if( con_in_x && con_in_y ){
-    dis_f = disn + 2*ll - 2*(dn_x+dn_y)*size_box;
-    if (dis_f < ddmax_nod){
-        for (i=0; i<dat[row][col][mom].len; ++i){
-        x = dat[row][col][mom].elements[i].x;
-        y = dat[row][col][mom].elements[i].y;
-        z = dat[row][col][mom].elements[i].z;
-        w1 = dat[row][col][mom].elements[i].w;
-            for (j=0; j<dat[u][v][w].len; ++j){
-            d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
-            d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
-            d_z = z-dat[u][v][w].elements[j].z;
-            dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-            if (dis < dd_max){
-            *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
-            }
-            }
-        }
-    }
-    }
-    //======================================================================			
-    if( con_in_x && con_in_z ){
-    dis_f = disn + 2*ll - 2*(dn_x+dn_z)*size_box;
-    if (dis_f <= ddmax_nod){
-        for ( i=0; i<dat[row][col][mom].len; ++i){
-        x = dat[row][col][mom].elements[i].x;
-        y = dat[row][col][mom].elements[i].y;
-        z = dat[row][col][mom].elements[i].z;
-        w1 = dat[row][col][mom].elements[i].w;
-            for (j=0; j<dat[u][v][w].len; ++j){
-            d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
-            d_y = y-dat[u][v][w].elements[j].y;
-            d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
-            dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-            if (dis < dd_max){
-            *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
-            }
-            }
-        }
-    }
-    }
-    //======================================================================		
-    if( con_in_y && con_in_z ){
-    dis_f = disn + 2*ll - 2*(dn_y+dn_z)*size_box;
-    if (dis_f <= ddmax_nod){
-        for (i=0; i<dat[row][col][mom].len; ++i){
-        x = dat[row][col][mom].elements[i].x;
-        y = dat[row][col][mom].elements[i].y;
-        z = dat[row][col][mom].elements[i].z;
-        w1 = dat[row][col][mom].elements[i].w;
-            for (j=0; j<dat[u][v][w].len; ++j){
-            d_x = x-dat[u][v][w].elements[j].x;
-            d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
-            d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
-            dis = d_x*d_x + d_y*d_y + d_z*d_z; 
-            if (dis < dd_max){
-            *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
-            }
-            }
-        }
-    }
-    }
-    //======================================================================		
-    if( con_in_x && con_in_y && con_in_z ){
-    dis_f = disn + 3*ll - 2*(dn_x+dn_y+dn_z)*size_box;
-    if (dis_f <= ddmax_nod){
-        for (i=0; i<dat[row][col][mom].len; ++i){
-        x = dat[row][col][mom].elements[i].x;
-        y = dat[row][col][mom].elements[i].y;
-        z = dat[row][col][mom].elements[i].z;
-        w1 = dat[row][col][mom].elements[i].w;
-            for (j=0; j<dat[u][v][w].len; ++j){
-            d_x = fabs(x-dat[u][v][w].elements[j].x)-size_box;
-            d_y = fabs(y-dat[u][v][w].elements[j].y)-size_box;
-            d_z = fabs(z-dat[u][v][w].elements[j].z)-size_box;
-            dis = d_x*d_x + d_y*d_y + d_z*d_z;
-            if (dis < dd_max){
-            *(PP + (int)(sqrt(dis)*ds)) += 2*w1*dat[u][v][w].elements[j].w;
-            }
-            }
-        }
-    }
-    }
-}*/
 
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int partitions, int bn, float dmax, float size_node){
     /*
@@ -308,100 +155,61 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int p
 
         //idx = row + col*partitions + mom*partitions*partitions;
 
-        //if (nodeD[idx].len > 0){
+        if (nodeD[idx].len > 0){
 
-            float size_box = partitions*size_node;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
             float nx1=nodeD[idx].nodepos.x, ny1=nodeD[idx].nodepos.y, nz1=nodeD[idx].nodepos.z;
             float d_max_node = dmax + size_node*sqrtf(3.0);
             d_max_node*=d_max_node;
 
-            bool con_x, con_y, con_z;
-            float d_max_pm = dmax, front_pm = size_box - dmax - size_node;
-
-            if (idx==0){
-                printf("Len: %i\n", nodeD[idx].len);
-                printf("Size_box: %f Partitions: %i Size node: %f\n", size_box, partitions, size_node);
-                printf("front_pm: %f d_max_pm: %f\n", front_pm, d_max_pm);
-            }
             // Counts distances within the same node
-            //count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
+            count_distances11(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, ds, dd_max, 2);
             
             int idx2, u=row,v=col,w=mom; // Position index of the second node
-            float nx2, ny2, nz2;
             float dx_nod12, dy_nod12, dz_nod12, dd_nod12; //Internodal distance
 
             //Second node mobil in Z direction
             for(w = mom+1; w<partitions; w++){
                 idx2 = row + col*partitions + w*partitions*partitions;
-                nz2 = nodeD[idx2].nodepos.z;
-                dz_nod12 = nz2 - nz1;
+                dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                 dd_nod12 = dz_nod12*dz_nod12;
-                //if (dd_nod12 <= d_max_node){
-                    //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
-                //}
-
-                con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
-                if(con_z){
-                    atomicAdd(&XX[1],1);
-                    //histo_front_XX(SS,nodeX,dis_nod,0.0,0.0,fabs(dz_nod),false,false,con_z,row,col,mom,u,v,w);
+                if (dd_nod12 <= d_max_node){
+                    count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                 }
             }
 
             //Second node mobil in YZ
             for(v=col+1; v<partitions; v++){
                 idx2 = row + v*partitions;
-                ny2 = nodeD[idx2].nodepos.y;
-                dy_nod12 = ny2 - ny1;
+                dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                 for(w=0; w<partitions; w++){
                     idx2 = row + v*partitions + w*partitions*partitions;
-                    nz2 = nodeD[idx2].nodepos.z;
-                    dz_nod12 = nz2 - nz1;
+                    dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                     dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12;
-                    //if (dd_nod12<=d_max_node){
-                        //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
-                    //}
-
-                    // Boundary node conditions:
-                    con_y = ((ny1<=d_max_pm)&&(ny2>=front_pm))||((ny2<=d_max_pm)&&(ny1>=front_pm));
-                    con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
-                    if(con_y || con_z){
-                        atomicAdd(&XX[2],1);
-                        //histo_front_XX(SS,nodeX,dis_nod,0.0,sqrt(dy_nod),sqrt(dz_nod),false,con_y,con_z,row,col,mom,u,v,w);
+                    if (dd_nod12<=d_max_node){
+                        count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                     }
                 }
             }
 
             //Second node mobil in XYZ
             for(u = row+1; u < partitions; u++){
-                nx2 = nodeD[u].nodepos.x;
-                dx_nod12 = nx2 - nx1;
+                dx_nod12 = nodeD[u].nodepos.x - nx1;
                 for(v = 0; v < partitions; v++){
                     idx2 = u + v*partitions;
-                    ny2 = nodeD[idx2].nodepos.y;
-                    dy_nod12 = ny2 - ny1;
+                    dy_nod12 = nodeD[idx2].nodepos.y - ny1;
                     for(w = 0; w < partitions; w++){
                         idx2 = u + v*partitions + w*partitions*partitions;
-                        nz2 = nodeD[idx2].nodepos.z;
-                        dz_nod12 = nz2 - nz1;
+                        dz_nod12 = nodeD[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
-                        //if (dd_nod12<=d_max_node){
-                            //count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
-                        //}
-
-                        // Boundary node conditions:
-                        con_x = ((nx1<=d_max_pm)&&(nx2>=front_pm))||((nx2<=d_max_pm)&&(nx1>=front_pm));
-                        con_y = ((ny1<=d_max_pm)&&(ny2>=front_pm))||((ny2<=d_max_pm)&&(ny1>=front_pm));
-                        con_z = ((nz1<=d_max_pm)&&(nz2>=front_pm))||((nz2<=d_max_pm)&&(nz1>=front_pm));
-                        if(con_x || con_y || con_z){
-                            atomicAdd(&XX[3],1);
-                            //histo_front_XX(SS,nodeX,dis_nod,sqrt(dx_nod),sqrt(dy_nod),sqrt(dz_nod),con_x,con_y,con_z,row,col,mom,u,v,w);
+                        if (dd_nod12<=d_max_node){
+                            count_distances12(XX, elements, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, nodeD[idx2].prev_i, nodeD[idx2].prev_i + nodeD[idx2].len, ds, dd_max, 2);
                         }
                     }
                 }
             }
 
-        //}
+        }
     }
 }
 

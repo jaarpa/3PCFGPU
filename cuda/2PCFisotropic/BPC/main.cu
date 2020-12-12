@@ -1,6 +1,6 @@
 // nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data_2GPc.dat data_2GPc.dat 3241792 20 160
 // nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data_1GPc.dat data_1GPc.dat 405224 20 160
-// nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data.dat rand0.dat 32768 30 150
+// nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data.dat rand0.dat 32768 20 150
 // nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 180
 
 #include <stdio.h>
@@ -65,9 +65,9 @@ int main(int argc, char **argv){
     DNode *hnodeD_s, *hnodeR_s;
     PointW3D *h_ordered_pointsD_s, *h_ordered_pointsR_s;
     cudaStream_t streamDD, streamRR, streamDR;
-    cudaStreamCreate(&streamDD);
-    cudaStreamCreate(&streamDR);
-    cudaStreamCreate(&streamRR);
+    cucheck(cudaStreamCreate(&streamDD));
+    cucheck(cudaStreamCreate(&streamDR));
+    cucheck(cudaStreamCreate(&streamRR));
     DNode *dnodeD_s1, *dnodeD_s3, *dnodeR_s2, *dnodeR_s3;
     int row, col, mom, k_element, last_pointD, last_pointR;
     PointW3D *d_ordered_pointsD_s1, *d_ordered_pointsD_s3, *d_ordered_pointsR_s2, *d_ordered_pointsR_s3;
@@ -86,6 +86,10 @@ int main(int argc, char **argv){
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
     open_files(argv[2], np, dataR, r_size_box);
 
+    //Sets the number of partitions of the box and the size of each node
+    partitions = 35;
+    size_node = size_box/(float)(partitions);
+
     // Allocate memory for the histogram as double
     DD = new double[bn];
     RR = new double[bn];
@@ -95,22 +99,10 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_RR, bn*sizeof(double)));
     cucheck(cudaMalloc(&d_DR, bn*sizeof(double)));
 
-
     //Restarts the main histograms in host to zero
-    for (int i = 0; i<bn; i++){
-        *(DD+i) = 0.0;
-        *(RR+i) = 0.0;
-        *(DR+i) = 0.0;
-    }
-
-    cucheck(cudaMemcpyAsync(d_DD, DD, bn*sizeof(double), cudaMemcpyHostToDevice, streamDD));
-    cucheck(cudaMemcpyAsync(d_RR, RR, bn*sizeof(double), cudaMemcpyHostToDevice, streamRR));
-    cucheck(cudaMemcpyAsync(d_DR, DR, bn*sizeof(double), cudaMemcpyHostToDevice, streamDR));
-
-    //Sets the number of partitions of the box and the size of each node
-    size_box = 250;
-    partitions = 35;
-    size_node = size_box/(float)(partitions);
+    cucheck(cudaMemsetAsync(d_DD, 0, bn*sizeof(double), streamDD));
+    cucheck(cudaMemsetAsync(d_RR, 0, bn*sizeof(double), streamRR));
+    cucheck(cudaMemsetAsync(d_DR, 0, bn*sizeof(double), streamDR));
 
     //Allocate memory for the nodes depending of how many partitions there are.
     cucheck(cudaMalloc(&dnodeD_s1, partitions*partitions*partitions*sizeof(DNode)));
@@ -201,23 +193,20 @@ int main(int argc, char **argv){
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
     make_histoXX<<<blocks,threads_perblock,0,streamDD>>>(d_DD, d_ordered_pointsD_s1, dnodeD_s1, partitions, bn, dmax, size_node);
-    //make_histoXX<<<blocks,threads_perblock,0,streamRR>>>(d_RR, d_ordered_pointsR_s2, dnodeR_s2, partitions, bn, dmax, size_node);
-    //make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_s3, dnodeD_s3, d_ordered_pointsR_s3, dnodeR_s3, partitions, bn, dmax, size_node);
+    make_histoXX<<<blocks,threads_perblock,0,streamRR>>>(d_RR, d_ordered_pointsR_s2, dnodeR_s2, partitions, bn, dmax, size_node);
+    make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_s3, dnodeD_s3, d_ordered_pointsR_s3, dnodeR_s3, partitions, bn, dmax, size_node);
 
-    cucheck(cudaStreamSynchronize(streamRR));
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
-    cucheck(cudaStreamSynchronize(streamDR));
     cucheck(cudaMemcpyAsync(DR, d_DR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDR));
-    cucheck(cudaStreamSynchronize(streamDD));
     cucheck(cudaMemcpyAsync(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
 
 
-    cudaEventRecord(stop_timmer);
-    cudaEventSynchronize(stop_timmer);
-    cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer);
+    cucheck(cudaEventRecord(stop_timmer));
+    cucheck(cudaEventSynchronize(stop_timmer));
+    cucheck(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
 
     cout << "Spent "<< time_spent << " miliseconds to compute all the histograms." << endl;
     
@@ -235,9 +224,9 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Free the memory
-    cudaStreamDestroy(streamDD);
-    cudaStreamDestroy(streamDR);
-    cudaStreamDestroy(streamRR);
+    cucheck(cudaStreamDestroy(streamDD));
+    cucheck(cudaStreamDestroy(streamDR));
+    cucheck(cudaStreamDestroy(streamRR));
 
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
