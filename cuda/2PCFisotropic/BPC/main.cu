@@ -88,7 +88,7 @@ int main(int argc, char **argv){
     if (r_size_box>size_box){
         size_box=r_size_box;
     }
-    size_box = 250
+    size_box = 250;
 
     //Sets the number of partitions of the box and the size of each node
     partitions = 35;
@@ -234,7 +234,7 @@ int main(int argc, char **argv){
     //Launch the kernels
     cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
     cout << "front_pm: " <<  dmax + size_node << " , d_max_pm: " << size_box - (dmax + size_node)<< endl;
-    
+
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
     make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
