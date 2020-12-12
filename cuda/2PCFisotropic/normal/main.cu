@@ -220,11 +220,11 @@ int main(int argc, char **argv){
     
     dim3 threads_perblock_D(threads_perblock_dim,threads_perblock_dim,1);
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
-    dim3 gridD(blocks_D,blocks_D,1)
+    dim3 gridD(blocks_D,blocks_D,1);
 
     dim3 threads_perblock_R(threads_perblock_dim,threads_perblock_dim,1);
     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
-    dim3 gridR(blocks_R,blocks_R,1)
+    dim3 gridR(blocks_R,blocks_R,1);
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
