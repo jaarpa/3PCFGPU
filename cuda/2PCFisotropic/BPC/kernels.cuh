@@ -59,9 +59,9 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
 
         float f_d_max_node = dmax + size_node;
         float _f_d_max_node = size_box - f_d_max_node;
-        bool front_x=((nx1<=f_d_max_node && nx2=>_f_d_max_node)||(nx2<=f_d_max_node && nx1=>_f_d_max_node));
-        bool front_y=((ny1<=f_d_max_node && ny2=>_f_d_max_node)||(ny2<=f_d_max_node && ny1=>_f_d_max_node));
-        bool front_z=((nz1<=f_d_max_node && nz2=>_f_d_max_node)||(nz2<=f_d_max_node && nz1=>_f_d_max_node));
+        bool front_x= true;//((nx1<=f_d_max_node && nx2=>_f_d_max_node)||(nx2<=f_d_max_node && nx1=>_f_d_max_node));
+        bool front_y= true;//((ny1<=f_d_max_node && ny2=>_f_d_max_node)||(ny2<=f_d_max_node && ny1=>_f_d_max_node));
+        bool front_z= true;//((nz1<=f_d_max_node && nz2=>_f_d_max_node)||(nz2<=f_d_max_node && nz1=>_f_d_max_node));
         /*
         if (dd_nod12 <= d_max_node){
 
