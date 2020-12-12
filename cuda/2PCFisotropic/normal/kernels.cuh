@@ -4,7 +4,7 @@
 //====================================================================
 //============ Kernels Section ======================================= 
 //====================================================================
-__device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, float dd_nod, float dn_x, float dn_y, float dn_z, bool front_x, bool front_y, bool front_z, float ddmax, float ds, float d_max_node, float size_box){
+__device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, float dd_nod, float dn_x, float dn_y, float dn_z, bool front_x, bool front_y, bool front_z, float dd_max, float ds, float d_max_node, float size_box){
     
     float dd_nod_f = dd_nod + (front_x + front_y + front_z)*size_box*size_box - 2*size_box*(front_x*dn_x+front_y*dn_y+front_z*dn_z);
     if (dd_nod_f <= d_max_node){
@@ -13,7 +13,7 @@ __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int 
         float x1,y1,z1,x2,y2,z2,d;
         int start1 = nodeD[idx1].start, end1 = nodeD[idx1].end;
         int start2 = nodeD[idx2].start, end2 = nodeD[idx2].end;
-        for(int i=start1; i<end2; i++){
+        for(int i=start1; i<end1; i++){
             x1 = elements[i].x;
             y1 = elements[i].y;
             z1 = elements[i].z;
@@ -32,7 +32,7 @@ __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int 
     }
 }
 
-__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box){
+__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
 
@@ -90,50 +90,50 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
 
         if (front_x){
             //Count x proyection
-            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, false, dd_max, ds, d_max_node, size_box)
+            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, false, dd_max, ds, d_max_node, size_box);
 
             if (front_y){
                 //Counts the y proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, false, dd_max, ds, d_max_node, size_box)
+                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, false, dd_max, ds, d_max_node, size_box);
 
                 //Counts the xy proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, front_y, false, dd_max, ds, d_max_node, size_box)
+                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, front_y, false, dd_max, ds, d_max_node, size_box);
 
                 if (front_z){
                     //Counts the z proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box)
+                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
 
                     //Counts the xz proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, front_z, dd_max, ds, d_max_node, size_box)
+                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, front_z, dd_max, ds, d_max_node, size_box);
 
                     //Counts the yz proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, front_z, dd_max, ds, d_max_node, size_box)
+                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, front_z, dd_max, ds, d_max_node, size_box);
 
                     //Counts the xyz proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, front_y, front_z, dd_max, ds, d_max_node, size_box)
+                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, front_y, front_z, dd_max, ds, d_max_node, size_box);
 
                 }
             } else if (front_z) {
                 //Counts the z proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box)
+                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
                 //Counts the xz proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, front_z, dd_max, ds, d_max_node, size_box)
+                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, front_z, dd_max, ds, d_max_node, size_box);
             }
         } else if (front_y) {
             //Counts the y proyection
-            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, false, dd_max, ds, d_max_node, size_box)
+            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, false, dd_max, ds, d_max_node, size_box);
 
             if (front_z){
                 //Counts the z proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box)
+                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
 
                 //Counts the yz proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, front_z, dd_max, ds, d_max_node, size_box)
+                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, front_z, dd_max, ds, d_max_node, size_box);
 
             }
         } else if (front_z) {
             //Counts the z proyection
-            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box)
+            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
 
         }
 
