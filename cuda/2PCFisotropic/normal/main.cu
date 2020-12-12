@@ -217,20 +217,20 @@ int main(int argc, char **argv){
 
     //Compute the dimensions of the GPU grid
     //One thread for each node
-    cout << "Non zero D nodes: " << nonzero_Dnodes<<endl;
-    cout << "Non zero R nodes: " << nonzero_Rnodes<<endl;
     
     dim3 threads_perblock_D(threads_perblock_dim,threads_perblock_dim,1);
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
+    dim3 gridD(blocks_D,blocks_D,1)
 
     dim3 threads_perblock_R(threads_perblock_dim,threads_perblock_dim,1);
     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
+    dim3 gridR(blocks_R,blocks_R,1)
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    make_histoXX<<<blocks_D,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, partitions, bn, dmax, d_max_node, size_node);
-    make_histoXX<<<blocks_R,threads_perblock_R,0,streamRR>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes, partitions, bn, dmax, d_max_node, size_node);
+    make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, partitions, bn, dmax, d_max_node, size_node);
+    make_histoXX<<<gridR,threads_perblock_R,0,streamRR>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes, partitions, bn, dmax, d_max_node, size_node);
     //make_histoXY<<<blocks,threads_perblock,0,streamDR>>>(d_DR, d_ordered_pointsD_DR, dnodeD_DR, d_ordered_pointsR_DR, dnodeR_DR, partitions, bn, dmax, size_node);
 
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
