@@ -50,7 +50,7 @@ int main(int argc, char **argv){
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
-    int threads_perblock_D, blocks_D, nonzero_Dnodes, idxD=0, threads_perblock_R, blocks_R, nonzero_Rnodes, idxR=0;
+    int  blocks_D, nonzero_Dnodes, blocks_R, nonzero_Rnodes, threads_perblock_dim = 32, idxR=0, idxD=0;
 
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
@@ -219,11 +219,12 @@ int main(int argc, char **argv){
     //One thread for each node
     cout << "Non zero D nodes: " << nonzero_Dnodes<<endl;
     cout << "Non zero R nodes: " << nonzero_Rnodes<<endl;
-    threads_perblock_D = 32;
-    blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_D))));
+    
+    dim3 threads_perblock_D(threads_perblock_dim,threads_perblock_dim,1)
+    blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
 
-    threads_perblock_R = 32;
-    blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_R))));
+    dim3 threads_perblock_R(threads_perblock_dim,threads_perblock_dim,1)
+    blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
