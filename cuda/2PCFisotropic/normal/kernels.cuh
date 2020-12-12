@@ -75,14 +75,14 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
 
             float x1,y1,z1,x2,y2,z2;
             float d, ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            int bin, end1=nodeD[idx1].prev_i+nodeD[idx1].len, end2=nodeD[idx2].prev_i+nodeD[idx2].len;
+            int bin, end1=nodeD[idx1].start+nodeD[idx1].len, end2=nodeD[idx2].start+nodeD[idx2].len;
             double v;
 
-            for (int i=nodeD[idx1].prev_i; i<end1; ++i){
+            for (int i=nodeD[idx1].start; i<end1; ++i){
                 x1 = elements[i].x;
                 y1 = elements[i].y;
                 z1 = elements[i].z;
-                for (int j=nodeD[idx2].prev_i; j<end2; ++j){
+                for (int j=nodeD[idx2].start; j<end2; ++j){
                     x2 = elements[j].x;
                     y2 = elements[j].y;
                     z2 = elements[j].z;
@@ -143,7 +143,7 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, Poin
                         dz_nod12 = nodeR[idx2].nodepos.z - nz1;
                         dd_nod12 = dz_nod12*dz_nod12 + dy_nod12*dy_nod12 + dx_nod12*dx_nod12;
                         if (dd_nod12<=d_max_node){
-                            count_distancesXY(XY, elementsD, nodeD[idx].prev_i, nodeD[idx].prev_i+nodeD[idx].len, elementsR, nodeR[idx2].prev_i, nodeR[idx2].prev_i + nodeR[idx2].len, ds, dd_max, 1);
+                            count_distancesXY(XY, elementsD, nodeD[idx].start, nodeD[idx].start+nodeD[idx].len, elementsR, nodeR[idx2].start, nodeR[idx2].start + nodeR[idx2].len, ds, dd_max, 1);
                         }
                     }
                 }

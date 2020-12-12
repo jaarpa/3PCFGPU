@@ -85,6 +85,9 @@ int main(int argc, char **argv){
     // Open and read the files to store the data in the arrays
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
     open_files(argv[2], np, dataR, r_size_box);
+    if (r_size_box>size_box){
+        size_box=r_size_box;
+    }
 
     //Sets the number of partitions of the box and the size of each node
     partitions = 35;
@@ -163,11 +166,12 @@ int main(int argc, char **argv){
         
                 if (hnodeD[row][col][mom].len>0){
                     hnodeD_s[idxD].nodepos = hnodeD[row][col][mom].nodepos;
-                    hnodeD_s[idxD].prev_i = last_pointD;
-                    last_pointD = last_pointD + hnodeD[row][col][mom].len;
+                    hnodeD_s[idxD].start = last_pointD;
                     hnodeD_s[idxD].len = hnodeD[row][col][mom].len;
-                    for (int j=hnodeD_s[idxD].prev_i; j<last_pointD; j++){
-                        k_element = j-hnodeD_s[idxD].prev_i;
+                    last_pointD = last_pointD + hnodeD[row][col][mom].len;
+                    hnodeD_s[idxD].end = last_pointD;
+                    for (int j=hnodeD_s[idxD].start; j<last_pointD; j++){
+                        k_element = j-hnodeD_s[idxD].start;
                         h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
                     }
                     idxD++;
@@ -175,11 +179,12 @@ int main(int argc, char **argv){
 
                 if (hnodeR[row][col][mom].len>0){
                     hnodeR_s[idxR].nodepos = hnodeR[row][col][mom].nodepos;
-                    hnodeR_s[idxR].prev_i = last_pointR;
-                    last_pointR = last_pointR + hnodeR[row][col][mom].len;
+                    hnodeR_s[idxR].start = last_pointR;
                     hnodeR_s[idxR].len = hnodeR[row][col][mom].len;
-                    for (int j=hnodeR_s[idxR].prev_i; j<last_pointR; j++){
-                        k_element = j-hnodeR_s[idxR].prev_i;
+                    last_pointR = last_pointR + hnodeR[row][col][mom].len;
+                    hnodeR_s[idxR].end = last_pointR;
+                    for (int j=hnodeR_s[idxR].start; j<last_pointR; j++){
+                        k_element = j-hnodeR_s[idxR].start;
                         h_ordered_pointsR_s[j] = hnodeR[row][col][mom].elements[k_element];
                     }
                     idxR++;
@@ -188,12 +193,19 @@ int main(int argc, char **argv){
             }
         }
     }
+
     int s=0;
-    for(int i=0;i<nonzero_Dnodes;i++){
-        s+=hnodeR[row][col][mom].len;
+    for(int i=0;i<nonzero_Rnodes;i++){
+        s+=hnodeR_s[idxR].len;
     }
-    cout << "Have a total of points;" << s << endl;
-    
+    cout << "R Have a total of points;" << s << endl;
+
+    s=0;
+    for(int i=0;i<nonzero_Dnodes;i++){
+        s+=hnodeD_s[idxR].len;
+    }
+    cout << "D Have a total of points;" << s << endl;
+
     cucheck(cudaMemcpyAsync(d_ordered_pointsD_DD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD));
     cucheck(cudaMemcpyAsync(dnodeD_DD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
 
