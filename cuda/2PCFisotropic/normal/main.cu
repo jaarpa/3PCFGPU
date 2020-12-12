@@ -50,7 +50,7 @@ int main(int argc, char **argv){
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
-    int threads_perblock_D, blocks_D, nonzero_Dnodes, idxD, threads_perblock_R, blocks_R, nonzero_Rnodes, idxR;
+    int threads_perblock_D, blocks_D, nonzero_Dnodes, idxD=0, threads_perblock_R, blocks_R, nonzero_Rnodes, idxR=0;
 
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
