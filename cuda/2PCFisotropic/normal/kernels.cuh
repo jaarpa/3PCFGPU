@@ -97,7 +97,7 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                     if (d<=dd_max && d>0){
                         bin = (int)(sqrtf(d)*ds);
                         v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XX[bin],v);
+                        atomicAdd(&XY[bin],v);
                     }
                 }
             }
