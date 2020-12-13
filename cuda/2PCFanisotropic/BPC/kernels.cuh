@@ -283,7 +283,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
 
     }
 }
-
+/*
 __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
     /*
     Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
@@ -298,7 +298,7 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
     bn: (int) NUmber of bins in the XY histogram.
     dmax: (dmax) The maximum distance of interest between points.
     size_node: (float) Size of the nodes
-    */
+    
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
@@ -539,3 +539,4 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
 
     }
 }
+*/
