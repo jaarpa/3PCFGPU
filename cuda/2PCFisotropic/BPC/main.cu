@@ -124,6 +124,7 @@ int main(int argc, char **argv){
 
     //Classificate the data into the nodes in the host side
     //The node classification is made in the host
+    cout << "(hnodeD, dataD, partitions, size_node, np) = (" << hnodeD << ", " << dataD<< ", " << partitions << ", " << size_node<<", "<<np<<")"<<endl;
     make_nodos(hnodeD, dataD, partitions, size_node, np);
     make_nodos(hnodeR, dataR, partitions, size_node, np);
 
