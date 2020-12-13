@@ -1,5 +1,5 @@
-//For dynamic compilation
-//nvcc -arch=sm_75 -rdc=true main.cu -lcudadevrt -o par_d.out && ./par_d.out data.dat rand0.dat 10000 20 60
+//Simple compilation
+//nvcc -arch=sm_75 -o par_d.out && ./par_d.out data.dat rand0.dat 10000 20 60
 
 #include <stdio.h>
 #include <iostream>
@@ -47,7 +47,6 @@ int main(int argc, char **argv){
 
     double *DDD, *RRR, *DRR, *DDR;
     double *d_DDD, *d_RRR, *d_DRR, *d_DDR;
-    double *d_DDD_sym, *d_RRR_sym, *d_DRR_sym, *d_DDR_sym;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
     int  blocks_D, blocks_R, nonzero_Dnodes = 0, nonzero_Rnodes = 0, threads_perblock_dim = 32, idxR=0, idxD=0;
