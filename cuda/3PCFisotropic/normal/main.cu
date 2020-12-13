@@ -1,5 +1,5 @@
 //Simple compilation
-//nvcc -arch=sm_75 -o par_d.out && ./par_d.out data.dat rand0.dat 10000 20 60
+//nvcc -arch=sm_75 main.cu -o par_d.out && ./par_d.out data.dat rand0.dat 10000 20 60
 
 #include <stdio.h>
 #include <iostream>
@@ -255,13 +255,14 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDR));
 
     //Waits for all the kernels to complete
-    cucheck(cudaStreamSynchronize(streamDDD));
+    cucheck(cudaDeviceSynchronize());
+    //cucheck(cudaStreamSynchronize(streamDDD));
     save_histogram(nameDDD, bn, DDD);
-    cucheck(cudaStreamSynchronize(streamRRR));
+    //cucheck(cudaStreamSynchronize(streamRRR));
     save_histogram(nameRRR, bn, RRR);
-    cucheck(cudaStreamSynchronize(streamDRR));
+    //cucheck(cudaStreamSynchronize(streamDRR));
     save_histogram(nameDRR, bn, DRR);
-    cucheck(cudaStreamSynchronize(streamDDR));
+    //cucheck(cudaStreamSynchronize(streamDDR));
     save_histogram(nameDDR, bn, DDR);
 
     cucheck(cudaEventRecord(stop_timmer));
