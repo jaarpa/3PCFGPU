@@ -52,21 +52,21 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
-        float dx12=nx2-nx1, dy12=ny2-ny1, dz12=nz2-nz1;
-        float dd_nod12 = dx12*dx12 + dy12*dy12 + dz12*dz12;
         float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-
-        float f_d_max_node = dmax + size_node;
-        float _f_d_max_node = size_box - f_d_max_node;
-        bool front_x= ((nx1<=f_d_max_node && _f_d_max_node<=nx2)||(nx2<=f_d_max_node && _f_d_max_node<=nx1));
-        bool front_y= ((ny1<=f_d_max_node && _f_d_max_node<=ny2)||(ny2<=f_d_max_node && _f_d_max_node<=ny1));
-        bool front_z= ((nz1<=f_d_max_node && _f_d_max_node<=nz2)||(nz2<=f_d_max_node && _f_d_max_node<=nz1));
+        float dxn12=fabsf(nx2-nx1), dyn12=fabsf(ny2-ny1), dzn12=fabsf(nz2-nz1);
+        float dd_nod12 = dxn12*dxn12 + dyn12*dyn12 + dzn12*dzn12;
+        
+        float x1,y1,z1,x2,y2,z2,d;
+        float dx,dy,dz;
+        int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
+        double v;
+        
+        //Front vars
+        float f_dxn12, f_dyn12, f_dzn12, f_dd_nod12;
+        
         /*
+        //Regular histogram calculation
         if (dd_nod12 <= d_max_node){
-
-            float x1,y1,z1,x2,y2,z2,d;
-            int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
-            double v;
 
             for (int i=nodeD[idx1].start; i<end1; ++i){
                 x1 = elements[i].x;
@@ -87,53 +87,33 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
         }
         */
         
-        if (front_x){
-            //Count x proyection
-            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, false, dd_max, ds, d_max_node, size_box);
+        //Z front proyection
+        f_dzn12 = size_box-dzn12;
+        f_dd_nod12 = dxn12*dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
 
-            if (front_y){
-                //Counts the y proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, false, dd_max, ds, d_max_node, size_box);
+        if (f_dd_nod12 <= d_max_node){
 
-                //Counts the xy proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, front_y, false, dd_max, ds, d_max_node, size_box);
+            float x1,y1,z1,x2,y2,z2,d;
+            int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
+            double v;
 
-                if (front_z){
-                    //Counts the z proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
-
-                    //Counts the xz proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, front_z, dd_max, ds, d_max_node, size_box);
-
-                    //Counts the yz proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, front_z, dd_max, ds, d_max_node, size_box);
-
-                    //Counts the xyz proyection
-                    count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, front_y, front_z, dd_max, ds, d_max_node, size_box);
-
+            for (int i=nodeD[idx1].start; i<end1; ++i){
+                x1 = elements[i].x;
+                y1 = elements[i].y;
+                z1 = elements[i].z;
+                for (int j=nodeD[idx2].start; j<end2; ++j){
+                    x2 = elements[j].x;
+                    y2 = elements[j].y;
+                    z2 = elements[j].z;
+                    dz = size_box-fabsf(z2-z1);
+                    d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz*dz;
+                    if (d<=dd_max && d>0){
+                        bin = (int)(sqrtf(d)*ds);
+                        v = elements[i].w*elements[j].w;
+                        atomicAdd(&XX[bin],v);
+                    }
                 }
-            } else if (front_z) {
-                //Counts the z proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
-                //Counts the xz proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, front_z, dd_max, ds, d_max_node, size_box);
             }
-        } else if (front_y) {
-            //Counts the y proyection
-            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, false, dd_max, ds, d_max_node, size_box);
-
-            if (front_z){
-                //Counts the z proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
-
-                //Counts the yz proyection
-                count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, front_y, front_z, dd_max, ds, d_max_node, size_box);
-
-            }
-        } else if (front_z) {
-            //Counts the z proyection
-            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
-
         }
 
     }
