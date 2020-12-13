@@ -24,8 +24,6 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
     
-    atomicAdd(&XXX[1],1);
-    /*
     if (idx1<nonzero_nodes && idx2<nonzero_nodes && idx3<nonzero_nodes){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
@@ -80,5 +78,5 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             }
             
         }
-    }*/
+    }
 }
