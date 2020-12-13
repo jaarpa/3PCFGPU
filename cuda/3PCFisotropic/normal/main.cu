@@ -49,7 +49,7 @@ int main(int argc, char **argv){
     double *d_DDD, *d_RRR, *d_DRR, *d_DDR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
-    int nonzero_Dnodes = 0, nonzero_Rnodes = 0, threads_perblock_dim = 32, idxR=0, idxD=0;
+    int nonzero_Dnodes = 0, nonzero_Rnodes = 0, threads_perblock_dim = 8, idxR=0, idxD=0;
     int blocks_D, blocks_R;
 
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
@@ -233,7 +233,7 @@ int main(int argc, char **argv){
     
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
-    
+
     dim3 threads_perblock(threads_perblock_dim,threads_perblock_dim,threads_perblock_dim);
     
     dim3 gridDDD(blocks_D,blocks_D,blocks_D);
