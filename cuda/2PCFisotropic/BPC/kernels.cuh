@@ -5,7 +5,8 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, float dd_nod, float dn_x, float dn_y, float dn_z, bool front_x, bool front_y, bool front_z, float dd_max, float ds, float d_max_node, float size_box){
-    
+    atomicAdd(&XX[1],1);
+    /*
     float dd_nod_f = dd_nod + (front_x + front_y + front_z)*size_box*size_box - 2*size_box*(front_x*dn_x+front_y*dn_y+front_z*dn_z);
     if (dd_nod_f <= d_max_node){
         int bin;
@@ -30,6 +31,7 @@ __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int 
             }
         }
     }
+    */
 }
 
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
