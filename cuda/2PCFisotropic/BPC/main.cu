@@ -232,10 +232,6 @@ int main(int argc, char **argv){
     dim3 gridDR(blocks_D,blocks_R,1);
 
     //Launch the kernels
-    cout << "Non zero nodes: " << nonzero_Dnodes << endl;
-    cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << endl;
-    cout << "front_pm: " <<  size_box - (dmax + size_node) << " , d_max_pm: " << dmax + size_node << endl;
-    
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
     make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
