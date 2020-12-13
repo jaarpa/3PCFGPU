@@ -1,3 +1,6 @@
+
+//c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -23,7 +26,7 @@ int main(int argc, char **argv){
 	//int n_pts = stoi(argv[3]), bn = stoi(argv[4]);
 	//float d_max = stof(argv[5]);
 	//int n_pts = 32768, bn = 10;
-	int n_pts = 32*32*32, bn = 50;
+	int n_pts = 32*32*32, bn = 20;
 	float d_max = 150.0, size_box = 250.0, alpha = 2.176;
 	float size_node = alpha*(size_box/pow((float)(n_pts),1/3.));
 	dataD = new PointW3D[n_pts]; 
@@ -132,6 +135,11 @@ int main(int argc, char **argv){
 void open_files(string name_file, int pts, PointW3D *datos){
 	/* Función para abrir nuestros archivos de datos */
 	ifstream file;
+
+    string mypathto_files = "../../../data/";
+    //This creates the full path to where I have my data files
+    name_file.insert(0,mypathto_files);
+	
 	file.open(name_file.c_str(), ios::in | ios::binary); //le indico al programa que se trata de un archivo binario con ios::binary
 	if (file.fail()){
 		cout << "Error al cargar el archivo " << endl;
