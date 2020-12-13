@@ -63,7 +63,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
         
         //Front vars
         float f_dxn12, f_dyn12, f_dzn12, f_dd_nod12;
-        
+        /*
         //Regular histogram calculation
         if (dd_nod12 <= d_max_node){
 
@@ -84,6 +84,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                 }
             }
         }
+        */
         
         //Z front proyection
         f_dzn12 = size_box-dzn12;
