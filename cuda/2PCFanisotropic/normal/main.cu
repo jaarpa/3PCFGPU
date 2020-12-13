@@ -50,7 +50,7 @@ int main(int argc, char **argv){
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
-    int  blocks_D, nonzero_Dnodes, blocks_R, nonzero_Rnodes, threads_perblock_dim = 32, idxR=0, idxD=0;
+    int  blocks_D, blocks_R, nonzero_Dnodes = 0, nonzero_Rnodes = 0, threads_perblock_dim = 8, idxR=0, idxD=0;
 
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
@@ -126,8 +126,6 @@ int main(int argc, char **argv){
     make_nodos(hnodeD, dataD, partitions, size_node, np);
     make_nodos(hnodeR, dataR, partitions, size_node, np);
 
-    nonzero_Dnodes=0;
-    nonzero_Rnodes=0;
     for(int row=0; row<partitions; row++){
         for(int col=0; col<partitions; col++){
             for(int mom=0; mom<partitions; mom++){
@@ -157,9 +155,8 @@ int main(int argc, char **argv){
     h_ordered_pointsR_s = new PointW3D[np];
     
     //Deep copy to device memory
-    last_pointR = 0;
     last_pointD = 0;
-
+    last_pointR = 0;
     for(int row=0; row<partitions; row++){
         for(int col=0; col<partitions; col++){
             for(int mom=0; mom<partitions; mom++){
@@ -253,15 +250,6 @@ int main(int argc, char **argv){
     cucheck(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
 
     cout << "Spent "<< time_spent << " miliseconds to compute and save all the histograms." << endl;
-    
-    /* =======================================================================*/
-    /* =======================  Save the results =============================*/
-    /* =======================================================================*/
-
-	save_histogram(nameDD, bn, DD);
-	save_histogram(nameRR, bn, RR);
-	save_histogram(nameDR, bn, DR);
-    cout << "Saved the histograms" << endl;
     
     /* =======================================================================*/
     /* ==========================  Free memory ===============================*/
