@@ -164,7 +164,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 
     std::cout << "Size of the box: " << size_box << " Partitions: " << partitions << " Size node: " << size_node << std::endl;
     std::cout << "front_pm: " << front_pm << " , d_max_pm: " << d_max_pm << std::endl;
-	
+
 	#pragma omp parallel num_threads(2) 
 	{
     	
@@ -190,7 +190,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 		//==================================================
 		// Pairs of points in the same node:
 		//==================================================
-		/*
+		
 		for ( i= 0; i <nodeX[row][col][mom].len - 1; ++i){
 		x = nodeX[row][col][mom].elements[i].x;
 		y = nodeX[row][col][mom].elements[i].y;
@@ -206,7 +206,7 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 			}
 			}
 		}
-		*/
+		
 
 		//==================================================
 		// Pairs of points at different nodes
@@ -231,9 +231,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 						dy = y-nodeX[u][v][w].elements[j].y;
 						dz = z-nodeX[u][v][w].elements[j].z;
 						dis = dx*dx+dy*dy+dz*dz;
-						//if (dis <= dd_max){
-							//*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
-						//}
+						if (dis <= dd_max){
+							*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
+						}
 					}
 				}
 			}
@@ -270,9 +270,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 								dy =  y-nodeX[u][v][w].elements[j].y;
 								dz =  z-nodeX[u][v][w].elements[j].z;
 								dis = dx*dx+dy*dy+dz*dz;
-								//if (dis <= dd_max){
-									//*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
-								//}
+								if (dis <= dd_max){
+									*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
+								}
 							}
 						}
 					}
@@ -316,9 +316,9 @@ void NODE2P::make_histoXX(double *XX, Node ***nodeX){
 								dy = y-nodeX[u][v][w].elements[j].y;
 								dz = z-nodeX[u][v][w].elements[j].z;
 								dis = dx*dx + dy*dy + dz*dz;
-								//if (dis <= dd_max){
-									//*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
-								//}
+								if (dis <= dd_max){
+									*(SS + (int)(sqrt(dis)*ds)) += 2*w1*nodeX[u][v][w].elements[j].w;
+								}
 							}
 						}
 					}
