@@ -88,10 +88,9 @@ int main(int argc, char **argv){
     if (r_size_box>size_box){
         size_box=r_size_box;
     }
-    size_box = 250;
-
+    cout << "Box size" << size_box << endl;
     //Sets the number of partitions of the box and the size of each node
-    partitions = 5;
+    partitions = 35;
     size_node = size_box/(float)(partitions);
 
     d_max_node = dmax + size_node*sqrt(3.0);
