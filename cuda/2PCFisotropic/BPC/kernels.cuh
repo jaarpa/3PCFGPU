@@ -52,7 +52,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
-        
+        atomicAdd(&XX[2],1);
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
         float dx12=nx2-nx1, dy12=ny2-ny1, dz12=nz2-nz1;
