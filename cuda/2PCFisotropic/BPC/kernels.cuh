@@ -87,7 +87,10 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
             }
         }
         */
-        
+        if (front_x||front_y||front_z){
+            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, front_y, front_z, dd_max, ds, d_max_node, size_box);
+        }
+        /*
         if (front_x){
             //Count x proyection
             count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, false, dd_max, ds, d_max_node, size_box);
@@ -136,6 +139,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
             count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
 
         }
+        */
 
     }
 }
