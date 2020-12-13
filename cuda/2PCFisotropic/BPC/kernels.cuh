@@ -161,6 +161,118 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
             }
         }
         
+        
+        //XY front proyection
+        f_dxn12 = size_box-dxn12;
+        f_dyn12 = size_box-dyn12;
+        f_dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
+
+        if (f_dd_nod12 <= d_max_node){
+
+            for (int i=nodeD[idx1].start; i<end1; ++i){
+                x1 = elements[i].x;
+                y1 = elements[i].y;
+                z1 = elements[i].z;
+                for (int j=nodeD[idx2].start; j<end2; ++j){
+                    x2 = elements[j].x;
+                    y2 = elements[j].y;
+                    z2 = elements[j].z;
+                    dx = size_box-fabsf(x2-x1);
+                    dy = size_box-fabsf(y2-y1);
+                    d = dx*dx+dy*dy+(z2-z1)*(z2-z1);
+                    if (d<=dd_max && d>0){
+                        bin = (int)(sqrtf(d)*ds);
+                        v = elements[i].w*elements[j].w;
+                        atomicAdd(&XX[bin],v);
+                    }
+                }
+            }
+        }
+
+                
+        //XZ front proyection
+        f_dxn12 = size_box-dxn12;
+        f_dzn12 = size_box-dzn12;
+        f_dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
+
+        if (f_dd_nod12 <= d_max_node){
+
+            for (int i=nodeD[idx1].start; i<end1; ++i){
+                x1 = elements[i].x;
+                y1 = elements[i].y;
+                z1 = elements[i].z;
+                for (int j=nodeD[idx2].start; j<end2; ++j){
+                    x2 = elements[j].x;
+                    y2 = elements[j].y;
+                    z2 = elements[j].z;
+                    dx = size_box-fabsf(x2-x1);
+                    dz = size_box-fabsf(z2-z1);
+                    d = dx*dx+(y2-y1)*(y2-y1)+dz*dz;
+                    if (d<=dd_max && d>0){
+                        bin = (int)(sqrtf(d)*ds);
+                        v = elements[i].w*elements[j].w;
+                        atomicAdd(&XX[bin],v);
+                    }
+                }
+            }
+        }
+        
+        //YZ front proyection
+        f_dyn12 = size_box-dyn12;
+        f_dzn12 = size_box-dzn12;
+        f_dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
+
+        if (f_dd_nod12 <= d_max_node){
+
+            for (int i=nodeD[idx1].start; i<end1; ++i){
+                x1 = elements[i].x;
+                y1 = elements[i].y;
+                z1 = elements[i].z;
+                for (int j=nodeD[idx2].start; j<end2; ++j){
+                    x2 = elements[j].x;
+                    y2 = elements[j].y;
+                    z2 = elements[j].z;
+                    dy = size_box-fabsf(y2-y1);
+                    dz = size_box-fabsf(z2-z1);
+                    d = (x2-x1)*(x2-x1)+dy*dy+dz*dz;
+                    if (d<=dd_max && d>0){
+                        bin = (int)(sqrtf(d)*ds);
+                        v = elements[i].w*elements[j].w;
+                        atomicAdd(&XX[bin],v);
+                    }
+                }
+            }
+        }
+        
+        //YZ front proyection
+        f_dxn12 = size_box-dxn12;
+        f_dyn12 = size_box-dyn12;
+        f_dzn12 = size_box-dzn12;
+        f_dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
+
+        if (f_dd_nod12 <= d_max_node){
+
+            for (int i=nodeD[idx1].start; i<end1; ++i){
+                x1 = elements[i].x;
+                y1 = elements[i].y;
+                z1 = elements[i].z;
+                for (int j=nodeD[idx2].start; j<end2; ++j){
+                    x2 = elements[j].x;
+                    y2 = elements[j].y;
+                    z2 = elements[j].z;
+                    dx = size_box-fabsf(x2-x1);
+                    dy = size_box-fabsf(y2-y1);
+                    dz = size_box-fabsf(z2-z1);
+                    d = dx*dx+dy*dy+dz*dz;
+                    if (d<=dd_max && d>0){
+                        bin = (int)(sqrtf(d)*ds);
+                        v = elements[i].w*elements[j].w;
+                        atomicAdd(&XX[bin],v);
+                    }
+                }
+            }
+        }
+
     }
 }
 
