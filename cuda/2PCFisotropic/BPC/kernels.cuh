@@ -5,10 +5,11 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int idx1, int idx2, float dd_nod, float dn_x, float dn_y, float dn_z, bool front_x, bool front_y, bool front_z, float dd_max, float ds, float d_max_node, float size_box){
-    atomicAdd(&XX[1],1);
-    /*
+    
     float dd_nod_f = dd_nod + (front_x + front_y + front_z)*size_box*size_box - 2*size_box*(front_x*dn_x+front_y*dn_y+front_z*dn_z);
     if (dd_nod_f <= d_max_node){
+        atomicAdd(&XX[1],1);
+        /*
         int bin;
         double v;
         float x1,y1,z1,x2,y2,z2,d;
@@ -29,9 +30,8 @@ __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int 
                     atomicAdd(&XX[bin],v);
                 }
             }
-        }
+        }*/
     }
-    */
 }
 
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
@@ -52,7 +52,6 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
-        atomicAdd(&XX[2],1);
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
         float dx12=nx2-nx1, dy12=ny2-ny1, dz12=nz2-nz1;
