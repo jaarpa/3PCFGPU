@@ -23,6 +23,9 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
+    if (idx1==0){
+        printf("Im in");
+    }
     atomicAdd(&XXX[1],1);
     /*
     if (idx1<nonzero_nodes && idx2<nonzero_nodes && idx3<nonzero_nodes){

@@ -233,7 +233,7 @@ int main(int argc, char **argv){
     
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
-    cout << "(block_D,threads_perblock) "<< blocks_D << ", " << threads_perblock_dim << endl;
+    
     dim3 threads_perblock(threads_perblock_dim,threads_perblock_dim,threads_perblock_dim);
     
     dim3 gridDDD(blocks_D,blocks_D,blocks_D);
