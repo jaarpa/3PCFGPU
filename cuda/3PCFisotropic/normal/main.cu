@@ -233,7 +233,7 @@ int main(int argc, char **argv){
     
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes)/(float)(threads_perblock_dim))));
-    
+    cout << "(block_D,threads_perblock) "<< blocks_D << ", " << threads_perblock_dim << endl;
     dim3 threads_perblock(threads_perblock_dim,threads_perblock_dim,threads_perblock_dim);
     
     dim3 gridDDD(blocks_D,blocks_D,blocks_D);
@@ -255,14 +255,13 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDR));
 
     //Waits for all the kernels to complete
-    cucheck(cudaDeviceSynchronize());
-    //cucheck(cudaStreamSynchronize(streamDDD));
+    cucheck(cudaStreamSynchronize(streamDDD));
     save_histogram(nameDDD, bn, DDD);
-    //cucheck(cudaStreamSynchronize(streamRRR));
+    cucheck(cudaStreamSynchronize(streamRRR));
     save_histogram(nameRRR, bn, RRR);
-    //cucheck(cudaStreamSynchronize(streamDRR));
+    cucheck(cudaStreamSynchronize(streamDRR));
     save_histogram(nameDRR, bn, DRR);
-    //cucheck(cudaStreamSynchronize(streamDDR));
+    cucheck(cudaStreamSynchronize(streamDDR));
     save_histogram(nameDDR, bn, DDR);
 
     cucheck(cudaEventRecord(stop_timmer));
