@@ -35,6 +35,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
         double v;
         
         //Front vars
+        float f_dmax = dmax+size_node;
+        float _f_dmax = size_box - f_dmax;
+        bool boundx = ((nx1<=f_dmax)&&(nx2>=_f_dmax))||((nx2<=f_dmax)&&(nx1>=_f_dmax));
+        bool boundy = ((ny1<=f_dmax)&&(ny2>=_f_dmax))||((ny2<=f_dmax)&&(ny1>=_f_dmax));
+        bool boundz = ((nz1<=f_dmax)&&(nz2>=_f_dmax))||((nz2<=f_dmax)&&(nz1>=_f_dmax));
         float f_dxn12, f_dyn12, f_dzn12;
 
         //Regular histogram calculation
@@ -59,99 +64,106 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
         }
         
         //Z front proyection
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = dxn12*dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundz){
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = dxn12*dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elements[i].x;
-                y1 = elements[i].y;
-                z1 = elements[i].z;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
-                    x2 = elements[j].x;
-                    y2 = elements[j].y;
-                    z2 = elements[j].z;
-                    dz = size_box-fabsf(z2-z1);
-                    d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz*dz;
-                    if (d<=dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elements[i].w*elements[j].w;
-                        atomicAdd(&XX[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elements[i].x;
+                    y1 = elements[i].y;
+                    z1 = elements[i].z;
+                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                        x2 = elements[j].x;
+                        y2 = elements[j].y;
+                        z2 = elements[j].z;
+                        dz = size_box-fabsf(z2-z1);
+                        d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz*dz;
+                        if (d<=dd_max && d>0){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elements[i].w*elements[j].w;
+                            atomicAdd(&XX[bin],v);
+                        }
                     }
                 }
             }
         }
-        
-        //Y front proyection
-        f_dyn12 = size_box-dyn12;
-        dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
-        if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elements[i].x;
-                y1 = elements[i].y;
-                z1 = elements[i].z;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
-                    x2 = elements[j].x;
-                    y2 = elements[j].y;
-                    z2 = elements[j].z;
-                    dy = size_box-fabsf(y2-y1);
-                    d = (x2-x1)*(x2-x1)+dy*dy+(z2-z1)*(z2-z1);
-                    if (d<=dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elements[i].w*elements[j].w;
-                        atomicAdd(&XX[bin],v);
+        //Y front proyection
+        if (boundy){
+            f_dyn12 = size_box-dyn12;
+            dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
+            if (dd_nod12 <= d_max_node){
+
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elements[i].x;
+                    y1 = elements[i].y;
+                    z1 = elements[i].z;
+                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                        x2 = elements[j].x;
+                        y2 = elements[j].y;
+                        z2 = elements[j].z;
+                        dy = size_box-fabsf(y2-y1);
+                        d = (x2-x1)*(x2-x1)+dy*dy+(z2-z1)*(z2-z1);
+                        if (d<=dd_max && d>0){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elements[i].w*elements[j].w;
+                            atomicAdd(&XX[bin],v);
+                        }
                     }
                 }
             }
         }
         
         //X front proyection
-        f_dxn12 = size_box-dxn12;
-        dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+dzn12*dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx){
+            f_dxn12 = size_box-dxn12;
+            dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+dzn12*dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elements[i].x;
-                y1 = elements[i].y;
-                z1 = elements[i].z;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
-                    x2 = elements[j].x;
-                    y2 = elements[j].y;
-                    z2 = elements[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    d = dx*dx+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-                    if (d<=dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elements[i].w*elements[j].w;
-                        atomicAdd(&XX[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elements[i].x;
+                    y1 = elements[i].y;
+                    z1 = elements[i].z;
+                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                        x2 = elements[j].x;
+                        y2 = elements[j].y;
+                        z2 = elements[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        d = dx*dx+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+                        if (d<=dd_max && d>0){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elements[i].w*elements[j].w;
+                            atomicAdd(&XX[bin],v);
+                        }
                     }
                 }
             }
         }
         
-        
         //XY front proyection
-        f_dxn12 = size_box-dxn12;
-        f_dyn12 = size_box-dyn12;
-        dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx && boundy){
+            f_dxn12 = size_box-dxn12;
+            f_dyn12 = size_box-dyn12;
+            dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elements[i].x;
-                y1 = elements[i].y;
-                z1 = elements[i].z;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
-                    x2 = elements[j].x;
-                    y2 = elements[j].y;
-                    z2 = elements[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    dy = size_box-fabsf(y2-y1);
-                    d = dx*dx+dy*dy+(z2-z1)*(z2-z1);
-                    if (d<=dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elements[i].w*elements[j].w;
-                        atomicAdd(&XX[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elements[i].x;
+                    y1 = elements[i].y;
+                    z1 = elements[i].z;
+                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                        x2 = elements[j].x;
+                        y2 = elements[j].y;
+                        z2 = elements[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        dy = size_box-fabsf(y2-y1);
+                        d = dx*dx+dy*dy+(z2-z1)*(z2-z1);
+                        if (d<=dd_max && d>0){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elements[i].w*elements[j].w;
+                            atomicAdd(&XX[bin],v);
+                        }
                     }
                 }
             }
@@ -159,80 +171,86 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
 
                 
         //XZ front proyection
-        f_dxn12 = size_box-dxn12;
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx && boundz){
+            f_dxn12 = size_box-dxn12;
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elements[i].x;
-                y1 = elements[i].y;
-                z1 = elements[i].z;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
-                    x2 = elements[j].x;
-                    y2 = elements[j].y;
-                    z2 = elements[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    dz = size_box-fabsf(z2-z1);
-                    d = dx*dx+(y2-y1)*(y2-y1)+dz*dz;
-                    if (d<=dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elements[i].w*elements[j].w;
-                        atomicAdd(&XX[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elements[i].x;
+                    y1 = elements[i].y;
+                    z1 = elements[i].z;
+                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                        x2 = elements[j].x;
+                        y2 = elements[j].y;
+                        z2 = elements[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        dz = size_box-fabsf(z2-z1);
+                        d = dx*dx+(y2-y1)*(y2-y1)+dz*dz;
+                        if (d<=dd_max && d>0){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elements[i].w*elements[j].w;
+                            atomicAdd(&XX[bin],v);
+                        }
                     }
                 }
             }
         }
         
         //YZ front proyection
-        f_dyn12 = size_box-dyn12;
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundy && boundz){
+            f_dyn12 = size_box-dyn12;
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elements[i].x;
-                y1 = elements[i].y;
-                z1 = elements[i].z;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
-                    x2 = elements[j].x;
-                    y2 = elements[j].y;
-                    z2 = elements[j].z;
-                    dy = size_box-fabsf(y2-y1);
-                    dz = size_box-fabsf(z2-z1);
-                    d = (x2-x1)*(x2-x1)+dy*dy+dz*dz;
-                    if (d<=dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elements[i].w*elements[j].w;
-                        atomicAdd(&XX[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elements[i].x;
+                    y1 = elements[i].y;
+                    z1 = elements[i].z;
+                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                        x2 = elements[j].x;
+                        y2 = elements[j].y;
+                        z2 = elements[j].z;
+                        dy = size_box-fabsf(y2-y1);
+                        dz = size_box-fabsf(z2-z1);
+                        d = (x2-x1)*(x2-x1)+dy*dy+dz*dz;
+                        if (d<=dd_max && d>0){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elements[i].w*elements[j].w;
+                            atomicAdd(&XX[bin],v);
+                        }
                     }
                 }
             }
         }
         
         //XYZ front proyection
-        f_dxn12 = size_box-dxn12;
-        f_dyn12 = size_box-dyn12;
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx && boundy && boundz){
+            f_dxn12 = size_box-dxn12;
+            f_dyn12 = size_box-dyn12;
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elements[i].x;
-                y1 = elements[i].y;
-                z1 = elements[i].z;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
-                    x2 = elements[j].x;
-                    y2 = elements[j].y;
-                    z2 = elements[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    dy = size_box-fabsf(y2-y1);
-                    dz = size_box-fabsf(z2-z1);
-                    d = dx*dx+dy*dy+dz*dz;
-                    if (d<=dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elements[i].w*elements[j].w;
-                        atomicAdd(&XX[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elements[i].x;
+                    y1 = elements[i].y;
+                    z1 = elements[i].z;
+                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                        x2 = elements[j].x;
+                        y2 = elements[j].y;
+                        z2 = elements[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        dy = size_box-fabsf(y2-y1);
+                        dz = size_box-fabsf(z2-z1);
+                        d = dx*dx+dy*dy+dz*dz;
+                        if (d<=dd_max && d>0){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elements[i].w*elements[j].w;
+                            atomicAdd(&XX[bin],v);
+                        }
                     }
                 }
             }
@@ -269,6 +287,14 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
         float dx,dy,dz;
         int bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
         double v;
+        
+        //Front vars
+        float f_dmax = dmax+size_node;
+        float _f_dmax = size_box - f_dmax;
+        bool boundx = ((nx1<=f_dmax)&&(nx2>=_f_dmax))||((nx2<=f_dmax)&&(nx1>=_f_dmax));
+        bool boundy = ((ny1<=f_dmax)&&(ny2>=_f_dmax))||((ny2<=f_dmax)&&(ny1>=_f_dmax));
+        bool boundz = ((nz1<=f_dmax)&&(nz2>=_f_dmax))||((nz2<=f_dmax)&&(nz1>=_f_dmax));
+        float f_dxn12, f_dyn12, f_dzn12;
 
         //Regular no BPC counting
         if (dd_nod12 <= d_max_node){
@@ -293,72 +319,78 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
 
                 
         //Z front proyection
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = dxn12*dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundz){
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = dxn12*dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    dz = size_box-fabsf(z2-z1);
-                    d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz*dz;
-                    if (d<=dd_max){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XY[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elementsD[i].x;
+                    y1 = elementsD[i].y;
+                    z1 = elementsD[i].z;
+                    for (int j=nodeR[idx2].start; j<end2; ++j){
+                        x2 = elementsR[j].x;
+                        y2 = elementsR[j].y;
+                        z2 = elementsR[j].z;
+                        dz = size_box-fabsf(z2-z1);
+                        d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz*dz;
+                        if (d<=dd_max){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elementsD[i].w*elementsR[j].w;
+                            atomicAdd(&XY[bin],v);
+                        }
                     }
                 }
             }
         }
         
         //Y front proyection
-        f_dyn12 = size_box-dyn12;
-        dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundy){
+            f_dyn12 = size_box-dyn12;
+            dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    dy = size_box-fabsf(y2-y1);
-                    d = (x2-x1)*(x2-x1)+dy*dy+(z2-z1)*(z2-z1);
-                    if (d<=dd_max){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XY[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elementsD[i].x;
+                    y1 = elementsD[i].y;
+                    z1 = elementsD[i].z;
+                    for (int j=nodeR[idx2].start; j<end2; ++j){
+                        x2 = elementsR[j].x;
+                        y2 = elementsR[j].y;
+                        z2 = elementsR[j].z;
+                        dy = size_box-fabsf(y2-y1);
+                        d = (x2-x1)*(x2-x1)+dy*dy+(z2-z1)*(z2-z1);
+                        if (d<=dd_max){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elementsD[i].w*elementsR[j].w;
+                            atomicAdd(&XY[bin],v);
+                        }
                     }
                 }
             }
         }
         
         //X front proyection
-        f_dxn12 = size_box-dxn12;
-        dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+dzn12*dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx){
+            f_dxn12 = size_box-dxn12;
+            dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+dzn12*dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    d = dx*dx+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-                    if (d<=dd_max){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XY[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elementsD[i].x;
+                    y1 = elementsD[i].y;
+                    z1 = elementsD[i].z;
+                    for (int j=nodeR[idx2].start; j<end2; ++j){
+                        x2 = elementsR[j].x;
+                        y2 = elementsR[j].y;
+                        z2 = elementsR[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        d = dx*dx+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
+                        if (d<=dd_max){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elementsD[i].w*elementsR[j].w;
+                            atomicAdd(&XY[bin],v);
+                        }
                     }
                 }
             }
@@ -366,26 +398,28 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
         
         
         //XY front proyection
-        f_dxn12 = size_box-dxn12;
-        f_dyn12 = size_box-dyn12;
-        dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx && boundy){
+            f_dxn12 = size_box-dxn12;
+            f_dyn12 = size_box-dyn12;
+            dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+dzn12*dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    dy = size_box-fabsf(y2-y1);
-                    d = dx*dx+dy*dy+(z2-z1)*(z2-z1);
-                    if (d<=dd_max){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XY[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elementsD[i].x;
+                    y1 = elementsD[i].y;
+                    z1 = elementsD[i].z;
+                    for (int j=nodeR[idx2].start; j<end2; ++j){
+                        x2 = elementsR[j].x;
+                        y2 = elementsR[j].y;
+                        z2 = elementsR[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        dy = size_box-fabsf(y2-y1);
+                        d = dx*dx+dy*dy+(z2-z1)*(z2-z1);
+                        if (d<=dd_max){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elementsD[i].w*elementsR[j].w;
+                            atomicAdd(&XY[bin],v);
+                        }
                     }
                 }
             }
@@ -393,85 +427,90 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
 
                 
         //XZ front proyection
-        f_dxn12 = size_box-dxn12;
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx && boundz){
+            f_dxn12 = size_box-dxn12;
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = f_dxn12*f_dxn12+dyn12*dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    dz = size_box-fabsf(z2-z1);
-                    d = dx*dx+(y2-y1)*(y2-y1)+dz*dz;
-                    if (d<=dd_max){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XY[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elementsD[i].x;
+                    y1 = elementsD[i].y;
+                    z1 = elementsD[i].z;
+                    for (int j=nodeR[idx2].start; j<end2; ++j){
+                        x2 = elementsR[j].x;
+                        y2 = elementsR[j].y;
+                        z2 = elementsR[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        dz = size_box-fabsf(z2-z1);
+                        d = dx*dx+(y2-y1)*(y2-y1)+dz*dz;
+                        if (d<=dd_max){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elementsD[i].w*elementsR[j].w;
+                            atomicAdd(&XY[bin],v);
+                        }
                     }
                 }
             }
         }
         
         //YZ front proyection
-        f_dyn12 = size_box-dyn12;
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundy && boundz){
+            f_dyn12 = size_box-dyn12;
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = dxn12*dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    dy = size_box-fabsf(y2-y1);
-                    dz = size_box-fabsf(z2-z1);
-                    d = (x2-x1)*(x2-x1)+dy*dy+dz*dz;
-                    if (d<=dd_max){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XY[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elementsD[i].x;
+                    y1 = elementsD[i].y;
+                    z1 = elementsD[i].z;
+                    for (int j=nodeR[idx2].start; j<end2; ++j){
+                        x2 = elementsR[j].x;
+                        y2 = elementsR[j].y;
+                        z2 = elementsR[j].z;
+                        dy = size_box-fabsf(y2-y1);
+                        dz = size_box-fabsf(z2-z1);
+                        d = (x2-x1)*(x2-x1)+dy*dy+dz*dz;
+                        if (d<=dd_max){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elementsD[i].w*elementsR[j].w;
+                            atomicAdd(&XY[bin],v);
+                        }
                     }
                 }
             }
         }
         
         //XYZ front proyection
-        f_dxn12 = size_box-dxn12;
-        f_dyn12 = size_box-dyn12;
-        f_dzn12 = size_box-dzn12;
-        dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
-        if (dd_nod12 <= d_max_node){
+        if (boundx && boundy && boundz){
+            f_dxn12 = size_box-dxn12;
+            f_dyn12 = size_box-dyn12;
+            f_dzn12 = size_box-dzn12;
+            dd_nod12 = f_dxn12*f_dxn12+f_dyn12*f_dyn12+f_dzn12*f_dzn12;
+            if (dd_nod12 <= d_max_node){
 
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    dx = size_box-fabsf(x2-x1);
-                    dy = size_box-fabsf(y2-y1);
-                    dz = size_box-fabsf(z2-z1);
-                    d = dx*dx+dy*dy+dz*dz;
-                    if (d<=dd_max){
-                        bin = (int)(sqrtf(d)*ds);
-                        v = elementsD[i].w*elementsR[j].w;
-                        atomicAdd(&XY[bin],v);
+                for (int i=nodeD[idx1].start; i<end1; ++i){
+                    x1 = elementsD[i].x;
+                    y1 = elementsD[i].y;
+                    z1 = elementsD[i].z;
+                    for (int j=nodeR[idx2].start; j<end2; ++j){
+                        x2 = elementsR[j].x;
+                        y2 = elementsR[j].y;
+                        z2 = elementsR[j].z;
+                        dx = size_box-fabsf(x2-x1);
+                        dy = size_box-fabsf(y2-y1);
+                        dz = size_box-fabsf(z2-z1);
+                        d = dx*dx+dy*dy+dz*dz;
+                        if (d<=dd_max){
+                            bin = (int)(sqrtf(d)*ds);
+                            v = elementsD[i].w*elementsR[j].w;
+                            atomicAdd(&XY[bin],v);
+                        }
                     }
                 }
             }
         }
-
 
     }
 }
