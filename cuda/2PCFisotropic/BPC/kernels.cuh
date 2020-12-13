@@ -8,8 +8,6 @@ __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int 
     
     float dd_nod_f = dd_nod + (front_x + front_y + front_z)*size_box*size_box - 2*size_box*(front_x*dn_x+front_y*dn_y+front_z*dn_z);
     if (dd_nod_f <= d_max_node){
-        atomicAdd(&XX[1],1);
-        /*
         int bin;
         double v;
         float x1,y1,z1,x2,y2,z2,d;
@@ -30,7 +28,7 @@ __device__ void count_frontXX(double *XX, PointW3D *elements, DNode *nodeD, int 
                     atomicAdd(&XX[bin],v);
                 }
             }
-        }*/
+        }
     }
 }
 
@@ -88,10 +86,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
             }
         }
         */
-        if (front_z){
-            count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
-        }
-        /*
+        
         if (front_x){
             //Count x proyection
             count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, front_x, false, false, dd_max, ds, d_max_node, size_box);
@@ -140,7 +135,6 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
             count_frontXX(XX, elements, nodeD, idx1, idx2, dd_nod12, dx12, dy12, dz12, false, false, front_z, dd_max, ds, d_max_node, size_box);
 
         }
-        */
 
     }
 }

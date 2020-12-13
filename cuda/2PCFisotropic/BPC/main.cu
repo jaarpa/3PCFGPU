@@ -91,7 +91,7 @@ int main(int argc, char **argv){
     size_box = 250;
 
     //Sets the number of partitions of the box and the size of each node
-    partitions = 35;
+    partitions = 5;
     size_node = size_box/(float)(partitions);
 
     d_max_node = dmax + size_node*sqrt(3.0);
