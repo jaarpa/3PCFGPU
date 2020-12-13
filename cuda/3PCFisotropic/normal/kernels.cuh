@@ -128,17 +128,17 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                             w2 = elementsX[j].w;
                             v = w1*w2;
                             d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
-                            if (d12 < dd_max && d12>0){
+                            if (d12 < dd_max){
                                 d12 = sqrtf(d12);
                                 for (int k=nodeY[idx3].start; k<end3; k++){
                                     x3 = elementsY[k].x;
                                     y3 = elementsY[k].y;
                                     z3 = elementsY[k].z;
                                     d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2);
-                                    if (d23 < dd_max && d23>0){
+                                    if (d23 < dd_max){
                                         d23 = sqrtf(d23);
                                         d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
-                                        if (d31 < dd_max && d31>0){
+                                        if (d31 < dd_max){
                                             d31 = sqrtf(d31);
                                             bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
                                             v *= elementsY[k].w;
