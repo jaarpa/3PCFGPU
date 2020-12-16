@@ -258,6 +258,16 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
             }
         }
 
+        __syncthreads();
+        if (idx1==0 && idx2==0){
+            for (int i=0; i<bn; i++){
+                if (XX[i]>0){
+                    v = XX[i];
+                    atomicAdd(&g_XX[i], v);
+                }
+            }
+        }
+
     }
 }
 
