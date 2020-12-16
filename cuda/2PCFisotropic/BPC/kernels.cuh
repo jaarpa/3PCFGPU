@@ -24,6 +24,13 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     extern __shared__ double XX[];
     double v;
+    //Initialize shared memory
+    if(threadIdx.x==0 && threadIdx.y==0){
+        for (int i = 0; i < bn; i++){
+            shared_array[i] = 0.0;
+        }
+    }
+    __syncthreads();
     /*
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
 
