@@ -80,7 +80,6 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Sets the number of partitions of the box and the size of each node
-    cout << "Number of argument:" << argc <<endl;
     if (argc>6){
         //If partitions are provided by the user
         partitions = stoi(argv[7]);
@@ -88,7 +87,6 @@ int main(int argc, char **argv){
         //Calculate the optimum partition number
         partitions = 35;
     }
-    cout << "partitions" << partitions<<endl;
     size_node = size_box/(float)(partitions);
 
     start_timmer_host = clock();
