@@ -21,6 +21,7 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
 
 
     //Initialize shared memory
+    extern __shared__ double XX[];
     int idx1 = threadIdx.x + threadIdx.y;
     if(blockDim.x*blockDim.y>bn && idx1<bn){
         XX[idx1] = 0.0;
@@ -32,11 +33,10 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
         }
     }
     __syncthreads();
-    
+
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
-    extern __shared__ double XX[];
     double v;
     /*
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
