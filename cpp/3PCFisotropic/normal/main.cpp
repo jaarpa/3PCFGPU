@@ -8,8 +8,10 @@
 #include "3PCFiso.h"
 #include <omp.h>
 #include <cmath>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 void open_files(string, int, PointW3D *);
 void save_histogram(string, int, double ***);
@@ -25,9 +27,9 @@ Node ***nodeD,***nodeR;
 
 int main(int argc, char **argv){
 
-	int n_pts = 10000, bn = 20;
-	float d_max = 60.0, size_box = 250.0, size_node =  2.17 * 250/pow(n_pts, (double)1/3);
-	int partitions = (int)(ceil(size_box/size_node));
+	unsigned long n_pts = 10000, bn = 30;
+	float d_max = 150.0;
+	float size_box = 250.0, size_node =  2.17 * size_box/pow(n_pts, (double)1/3);
 	dataD = new PointW3D[n_pts]; 
 	dataR = new PointW3D[n_pts];
 	
@@ -43,7 +45,6 @@ int main(int argc, char **argv){
 	cout << "	Histogram Bins:       " << bn << endl;
 	cout << "	Maximum distance:     " << d_max << endl;
 	cout << "	Node size:            " << size_node << endl;
-	cout << "	Partitions:            " << partitions << endl;
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	
@@ -93,6 +94,7 @@ int main(int argc, char **argv){
 	open_files(argv[2],n_pts,dataR);
 	
 	// Initialize the grid
+	int partitions = (int)(ceil(size_box/size_node));
 	nodeD = new Node**[partitions];
 	nodeR = new Node**[partitions];
 	for (i=0; i<partitions; i++){
@@ -102,7 +104,10 @@ int main(int argc, char **argv){
 		*(*(nodeD+i)+j) = new Node[partitions];
 		*(*(nodeR+i)+j) = new Node[partitions];
 		}
-	}		
+	}
+	
+	auto start = high_resolution_clock::now();
+		
 	cout << "\n::::::::::::::::::::::::::::::::::::::::::::::::::::::" << endl;
 	cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::\n" << endl;
 	// Iniciamos clase
@@ -132,6 +137,8 @@ int main(int argc, char **argv){
 	//====================================================================
 	clock_t c_end = clock();
 	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<minutes>(stop-start);
 	
 	my_hist.~NODE3P();
 	
@@ -140,6 +147,7 @@ int main(int argc, char **argv){
 	
 	cout << "Finish making all histograms" << endl;
 	printf("\nCPU time used = %.4f seg.\n", time_elapsed_s );
+	cout << "Time: " << duration.count() << " min." << endl;
 	cout << "Program completed SUCCESSFULLY!" << endl;
 	cin.get();
 	return 0;
