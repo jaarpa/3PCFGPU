@@ -61,9 +61,9 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                                     z3 = elements[k].z;
                                     d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2);
                                     if (d23 < dd_max && d23>0){
-                                        d23 = sqrtf(d23);
                                         d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
                                         if (d31 < dd_max && d31>0){
+                                            d23 = sqrtf(d23);
                                             d31 = sqrtf(d31);
                                             bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
                                             v *= elements[k].w;
@@ -136,9 +136,9 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                                     z3 = elementsY[k].z;
                                     d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2);
                                     if (d23 < dd_max){
-                                        d23 = sqrtf(d23);
                                         d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
                                         if (d31 < dd_max){
+                                            d23 = sqrtf(d23);
                                             d31 = sqrtf(d31);
                                             bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
                                             v *= elementsY[k].w;
