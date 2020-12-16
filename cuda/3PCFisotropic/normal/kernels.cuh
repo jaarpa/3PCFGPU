@@ -20,15 +20,15 @@ __global__ void make_histoXXX(double *g_XXX, PointW3D *elements, DNode *nodeD, i
     */
     //Set up global memory
     extern __shared__ double XXX[];
-    int idx1 = threadIdx.x*bn*bn + threadIdx.y*bn + threadIdx.z;
-    while (idx1 < bn*bn*bn){
-        XXX[idx1]=0.0;
-        idx1 = (threadIdx.x+blockDim.x)*bn*bn + (threadIdx.y+blockDim.y)*bn + (threadIdx.z+blockDim.z); 
+    if (threadIdx.x==0&threadIdx.y==0&&threadIdx.z==0){
+        for (int i=0; i<bn*bn*bn; i++ ){
+            XXX[i]=0;
+        }
     }
     __syncthreads();
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
-    idx1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
     double v;
@@ -89,13 +89,13 @@ __global__ void make_histoXXX(double *g_XXX, PointW3D *elements, DNode *nodeD, i
     }
 
     __syncthreads();
-    idx1 = threadIdx.x*bn*bn + threadIdx.y*bn + threadIdx.z;
-    while (idx1 < bn*bn*bn){
-        v =  XXX[idx1];
-        if (v>0){
-            atomicAdd(&g_XXX[idx1],v);
+    if (threadIdx.x==0&threadIdx.y==0&&threadIdx.z==0){
+        for (int i=0; i<bn*bn*bn; i++ ){
+            v =  XXX[i];
+            if (v>0){
+                atomicAdd(&g_XXX[i],v);
+            }
         }
-        idx1 = (threadIdx.x+blockDim.x)*bn*bn + (threadIdx.y+blockDim.y)*bn + (threadIdx.z+blockDim.z); 
     }
 }
 
