@@ -82,7 +82,7 @@ int main(int argc, char **argv){
     //Sets the number of partitions of the box and the size of each node
     if (argc>6){
         //If partitions are provided by the user
-        partitions = stoi(argv[7])
+        partitions = stoi(argv[7]);
     } else {
         //Calculate the optimum partition number
         partitions = 35;
