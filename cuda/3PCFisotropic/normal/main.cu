@@ -254,7 +254,6 @@ int main(int argc, char **argv){
     dim3 gridDRR(blocks_R,blocks_R,blocks_D);
 
     //Launch the kernels
-    cout << "DRR. blocksD, blocksR, threads_perblock_dim" << blocks_D << ", " << blocks_R << ", " << threads_perblock_dim << endl;
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
     make_histoXXX<<<gridDDD,threads_perblock,bn*bn*bn*sizeof(double),streamDDD>>>(d_DDD, d_ordered_pointsD_DDD, dnodeD_DDD, nonzero_Dnodes, bn, dmax, d_max_node);
