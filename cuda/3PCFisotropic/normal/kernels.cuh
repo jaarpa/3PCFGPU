@@ -5,7 +5,7 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
+__global__ void make_histoXXX(double *g_XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
 
@@ -18,9 +18,17 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     dmax: (dmax) The maximum distance of interest between points.
     size_node: (float) Size of the nodes
     */
+    //Set up global memory
+    extern __shared__ double XXX[];
+    int idx1 = threadIdx.x*bn*bn + threadIdx.y*bn + threadIdx.z;
+    while (idx1 < bn*bn*bn){
+        XXX[idx1]=0.0;
+        idx1 = (threadIdx.x+blockDim.x)*bn*bn + (threadIdx.y+blockDim.y)*bn + (threadIdx.z+blockDim.z); 
+    }
+    __syncthreads();
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
-    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
+    idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
     
@@ -77,6 +85,13 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                 }
             }
         }
+    }
+
+    __syncthreads();
+    idx1 = threadIdx.x*bn*bn + threadIdx.y*bn + threadIdx.z;
+    while (idx1 < bn*bn*bn){
+        g_XXX[idx1] = XXX[idx1];
+        idx1 = (threadIdx.x+blockDim.x)*bn*bn + (threadIdx.y+blockDim.y)*bn + (threadIdx.z+blockDim.z); 
     }
 }
 
