@@ -19,21 +19,6 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
     size_node: (float) Size of the nodes
     */
 
-
-    //Initialize shared memory
-    extern __shared__ double XX[];
-    int idx1 = threadIdx.x + threadIdx.y;
-    if(blockDim.x*blockDim.y>bn && idx1<bn){
-        XX[idx1] = 0.0;
-    } else {
-        if (threadIdx.x==0 && threadIdx.y==0){
-            for (int i=0; i<bn; i++){
-                XX[i] = 0.0;
-            }
-        }
-    }
-    __syncthreads();
-
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
@@ -275,18 +260,9 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
 
     }
 
-    __syncthreads();
-    if (threadIdx.x==0 && threadIdx.y==0){
-        for (int i=0; i<bn; i++){
-            if (XX[i]>0){
-                v = XX[i];
-                atomicAdd(&g_XX[i], v);
-            }
-        }
-    }
 }
 
-__global__ void make_histoXY(double *g_XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
+__global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
     /*
     Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
 
@@ -301,19 +277,6 @@ __global__ void make_histoXY(double *g_XY, PointW3D *elementsD, DNode *nodeD, in
     dmax: (dmax) The maximum distance of interest between points.
     size_node: (float) Size of the nodes
     */
-    //Initialize shared memory
-    extern __shared__ double XY[];
-    int idx1 = threadIdx.x + threadIdx.y;
-    if(blockDim.x*blockDim.y>bn && idx1<bn){
-        XY[idx1] = 0.0;
-    } else {
-        if (threadIdx.x==0 && threadIdx.y==0){
-            for (int i=0; i<bn; i++){
-                XY[i] = 0.0;
-            }
-        }
-    }
-    __syncthreads();
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
@@ -549,16 +512,6 @@ __global__ void make_histoXY(double *g_XY, PointW3D *elementsD, DNode *nodeD, in
             }
         }
 
-    }
-
-    __syncthreads();
-    if (threadIdx.x==0 && threadIdx.y==0){
-        for (int i=0; i<bn; i++){
-            if (XX[i]>0){
-                v = XX[i];
-                atomicAdd(&g_XX[i], v);
-            }
-        }
     }
 
 }
