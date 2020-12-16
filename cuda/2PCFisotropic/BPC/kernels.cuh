@@ -5,7 +5,7 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
+__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
 
