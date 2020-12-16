@@ -80,7 +80,15 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Sets the number of partitions of the box and the size of each node
-    partitions = 35;
+    cout << "Number of argument:" << argc <<endl;
+    if (argc>7){
+        //If partitions are provided by the user
+        partitions = stoi(argv[7]);
+    } else {
+        //Calculate the optimum partition number
+        partitions = 35;
+    }
+    cout << "partitions" << partitions<<endl;
     size_node = size_box/(float)(partitions);
 
     start_timmer_host = clock();
@@ -94,6 +102,14 @@ int main(int argc, char **argv){
         size_box=r_size_box;
     }
 
+    if (argc>6){
+        r_size_box = stof(argv[6]);
+        cout << "Sizebox:" << r_size_box << endl;
+        if (r_size_box>0){
+            size_box = r_size_box;
+        }
+    }
+    cout << "Sizebox:" << size_box << endl;
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
 
