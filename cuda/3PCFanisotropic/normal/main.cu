@@ -89,13 +89,26 @@ int main(int argc, char **argv){
     // Open and read the files to store the data in the arrays
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
     open_files(argv[2], np, dataR, r_size_box);
+    if (r_size_box>size_box){
+        size_box=r_size_box;
+    }
+
+    if (argc>6){
+        r_size_box = stof(argv[6]);
+        if (r_size_box>0){
+            size_box=r_size_box;
+        }
+    }
 
     //Sets the number of partitions of the box and the size of each node
-    //partitions = 10;
-    //size_node = size_box/(float)(partitions);
-    size_box = 250; 
-    size_node =  2.17 * 250/pow(np, (double)1/3);
-    partitions = (int)(ceil(size_box/size_node));
+    if (argc>7){
+        //Partitions entered by the user
+        partitions = stof(argv[7]);
+    } else {
+        //Calculate optimum partitions
+        partitions = 35;
+    }
+    size_node = size_box/(float)(partitions);
 
     // Allocate memory for the histogram as double
     DDD = new double[bn*bn*bn*bn*bn];

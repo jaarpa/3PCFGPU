@@ -89,8 +89,21 @@ int main(int argc, char **argv){
         size_box=r_size_box;
     }
 
+    if (argc>6){
+        r_size_box = stof(argv[6]);
+        if (r_size_box>0){
+            size_box=r_size_box;
+        }
+    }
+
     //Sets the number of partitions of the box and the size of each node
-    partitions = 35;
+    if (argc>7){
+        //Partitions entered by the user
+        partitions = stof(argv[7]);
+    } else {
+        //Calculate optimum partitions
+        partitions = 35;
+    }
     size_node = size_box/(float)(partitions);
 
     d_max_node = dmax + size_node*sqrt(3.0);
