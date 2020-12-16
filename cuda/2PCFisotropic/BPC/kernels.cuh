@@ -24,6 +24,7 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     extern __shared__ double XX[];
     double v;
+    /*
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
 
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
@@ -258,7 +259,8 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
             }
         }
 
-    }
+    } */
+    atomicAdd(&XX[1], 1);
 
     __syncthreads();
     if (threadIdx.x==0 && threadIdx.y==0){
