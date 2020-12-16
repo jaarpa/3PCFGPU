@@ -22,7 +22,10 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    double v;
+
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
+
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
         float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
@@ -32,7 +35,6 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
         float x1,y1,z1,x2,y2,z2,d;
         float dx,dy,dz;
         int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
-        double v;
         
         //Front vars
         float f_dmax = dmax+size_node;
@@ -257,6 +259,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
         }
 
     }
+
 }
 
 __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
@@ -317,7 +320,6 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
             }
         }
 
-                
         //Z front proyection
         if (boundz){
             f_dzn12 = size_box-dzn12;
@@ -396,7 +398,6 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
             }
         }
         
-        
         //XY front proyection
         if (boundx && boundy){
             f_dxn12 = size_box-dxn12;
@@ -425,7 +426,6 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
             }
         }
 
-                
         //XZ front proyection
         if (boundx && boundz){
             f_dxn12 = size_box-dxn12;
@@ -513,4 +513,5 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
         }
 
     }
+
 }
