@@ -19,7 +19,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     size_node: (float) Size of the nodes
     */
     //Distributes all the indexes equitatively into the n_kernelc_calls.
-    idx1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
     
