@@ -103,6 +103,7 @@ int main(int argc, char **argv){
     }
 
     if (argc>6){
+        cout << "More argc than 6" << endl;
         cout << "Sizebox:" << argv[7] << endl;
         if (stof(argv[7])>0){
             size_box = stof(argv[7]);
