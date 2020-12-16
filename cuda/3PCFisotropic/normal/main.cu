@@ -230,6 +230,25 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(dnodeR_DRR, hnodeR_s, nonzero_Rnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDRR));
     cucheck(cudaMemcpyAsync(d_ordered_pointsR_DRR, h_ordered_pointsR_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDRR));
 
+    for (int i=0; i<partitions; i++){
+        for (int j=0; j<partitions; j++){
+            delete[] hnodeD[i][j];
+            delete[] hnodeR[i][j];
+        }
+        delete[] hnodeD[i];
+        delete[] hnodeR[i];
+    }    
+    delete[] hnodeD;
+    delete[] hnodeR;
+
+    delete[] dataD;
+    delete[] dataR;
+    
+    delete[] hnodeD_s;
+    delete[] h_ordered_pointsD_s;
+    delete[] hnodeR_s;
+    delete[] h_ordered_pointsR_s;
+    
     stop_timmer_host = clock();
     time_spent = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
     cout << "Succesfully readed the data. All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
@@ -295,9 +314,6 @@ int main(int argc, char **argv){
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
 
-    delete[] dataD;
-    delete[] dataR;
-
     delete[] DDD;
     delete[] RRR;
     delete[] DRR;    
@@ -307,17 +323,6 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_RRR));
     cucheck(cudaFree(d_DRR));
     cucheck(cudaFree(d_DDR));
-
-    for (int i=0; i<partitions; i++){
-        for (int j=0; j<partitions; j++){
-            delete[] hnodeD[i][j];
-            delete[] hnodeR[i][j];
-        }
-        delete[] hnodeD[i];
-        delete[] hnodeR[i];
-    }    
-    delete[] hnodeD;
-    delete[] hnodeR;
 
     cucheck(cudaFree(dnodeD_DDD));
     cucheck(cudaFree(d_ordered_pointsD_DDD));
@@ -332,11 +337,6 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_ordered_pointsR_DDR));
     cucheck(cudaFree(dnodeR_DRR));
     cucheck(cudaFree(d_ordered_pointsR_DRR));
-    
-    delete[] hnodeD_s;
-    delete[] h_ordered_pointsD_s;
-    delete[] hnodeR_s;
-    delete[] h_ordered_pointsR_s;
 
     cout << "Program terminated..." << endl;
     return 0;
