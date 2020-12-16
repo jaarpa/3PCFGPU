@@ -100,6 +100,8 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
     
     if (idx1<nonzero_Xnodes && idx2<nonzero_Xnodes && idx3<nonzero_Ynodes){
+        atomicAdd(&XXY[1],1);
+        /*
         float nx1=nodeX[idx1].nodepos.x, ny1=nodeX[idx1].nodepos.y, nz1=nodeX[idx1].nodepos.z;
         float nx2=nodeX[idx2].nodepos.x, ny2=nodeX[idx2].nodepos.y, nz2=nodeX[idx2].nodepos.z;
         float dd_nod12 = (nx2-nx1)*(nx2-nx1)+(ny2-ny1)*(ny2-ny1)+(nz2-nz1)*(nz2-nz1);
@@ -115,7 +117,8 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                     int bin;
                     float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
-                    float d12,d23,d31,v;
+                    float d12,d23,d31;
+                    double v;
                     for (int i=nodeX[idx1].start; i<end1; i++){
                         x1 = elementsX[i].x;
                         y1 = elementsX[i].y;
@@ -151,6 +154,6 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                     }
                 }
             }
-        }
+        }*/
     }
 }
