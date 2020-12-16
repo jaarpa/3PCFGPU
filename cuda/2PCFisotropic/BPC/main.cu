@@ -81,9 +81,9 @@ int main(int argc, char **argv){
 
     //Sets the number of partitions of the box and the size of each node
     cout << "Number of argument:" << argc <<endl;
-    if (argc>7){
+    if (argc>6){
         //If partitions are provided by the user
-        partitions = stoi(argv[8]);
+        partitions = stoi(argv[7]);
     } else {
         //Calculate the optimum partition number
         partitions = 35;
@@ -102,8 +102,8 @@ int main(int argc, char **argv){
         size_box=r_size_box;
     }
 
-    if (argc>6){
-        r_size_box = stof(argv[7]);
+    if (argc>5){
+        r_size_box = stof(argv[6]);
         cout << "Sizebox:" << r_size_box << endl;
         if (r_size_box>0){
             size_box = r_size_box;
