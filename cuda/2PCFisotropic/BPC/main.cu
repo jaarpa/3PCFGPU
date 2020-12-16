@@ -104,6 +104,10 @@ int main(int argc, char **argv){
         //Calculate optimum partitions
         partitions = 35;
     }
+
+    cout << "Partitions: " << partitions << endl;
+    cout << "Size box: " << size_box << endl;
+
     size_node = size_box/(float)(partitions);
 
     d_max_node = dmax + size_node*sqrt(3.0);
