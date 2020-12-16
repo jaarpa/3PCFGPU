@@ -28,7 +28,7 @@ Node ***nodeD,***nodeR;
 int main(int argc, char **argv){
 
 	unsigned long n_pts = 10000, bn = 30;
-	float d_max = 150.0;
+	float d_max = 50.0;
 	float size_box = 250.0, size_node =  2.17 * size_box/pow(n_pts, (double)1/3);
 	dataD = new PointW3D[n_pts]; 
 	dataR = new PointW3D[n_pts];
