@@ -5,7 +5,7 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void make_histoXXX(double *g_XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
+__global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
 
@@ -18,20 +18,10 @@ __global__ void make_histoXXX(double *g_XXX, PointW3D *elements, DNode *nodeD, i
     dmax: (dmax) The maximum distance of interest between points.
     size_node: (float) Size of the nodes
     */
-    //Set up global memory
-    extern __shared__ double XXX[];
-    int idx1 = threadIdx.x*bn*bn + threadIdx.y*bn + threadIdx.z;
-    while (idx1 < bn*bn*bn){
-        XXX[idx1]=0.0;
-        idx1 = (threadIdx.x+blockDim.x)*bn*bn + (threadIdx.y+blockDim.y)*bn + (threadIdx.z+blockDim.z); 
-    }
-    __syncthreads();
-
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
-    double v;
     
     if (idx1<nonzero_nodes && idx2<nonzero_nodes && idx3<nonzero_nodes){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
@@ -50,6 +40,7 @@ __global__ void make_histoXXX(double *g_XXX, PointW3D *elements, DNode *nodeD, i
                     float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
                     float d12,d23,d31;
+                    double v;
                     for (int i=nodeD[idx1].start; i<end1; i++){
                         x1 = elements[i].x;
                         y1 = elements[i].y;
@@ -86,16 +77,6 @@ __global__ void make_histoXXX(double *g_XXX, PointW3D *elements, DNode *nodeD, i
                 }
             }
         }
-    }
-
-    __syncthreads();
-    idx1 = threadIdx.x*bn*bn + threadIdx.y*bn + threadIdx.z;
-    while (idx1 < bn*bn*bn){
-        v =  XXX[idx1];
-        if (v>0){
-            atomicAdd(&g_XXX[idx1],v);
-        }
-        idx1 = (threadIdx.x+blockDim.x)*bn*bn + (threadIdx.y+blockDim.y)*bn + (threadIdx.z+blockDim.z); 
     }
 }
 
