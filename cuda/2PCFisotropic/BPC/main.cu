@@ -245,7 +245,6 @@ int main(int argc, char **argv){
     dim3 gridDR(blocks_D,blocks_R,1);
 
     //Launch the kernels
-    cout << "ddd kernel dimensions: "<<blocks_D<<", "<<threads_perblock_dim<<endl;
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
     make_histoXX<<<gridD,threads_perblock_D,bn*sizeof(double),streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
