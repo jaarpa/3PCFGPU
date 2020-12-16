@@ -90,7 +90,7 @@ int main(int argc, char **argv){
     }
 
     if (argc>6){
-        r_size_box = argv[6];
+        r_size_box = stof(argv[6]);
         if (r_size_box>0){
             size_box=r_size_box;
         }
