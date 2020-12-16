@@ -21,7 +21,7 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
 
 
     //Initialize shared memory
-    // extern __shared__ double XX[];
+    extern __shared__ double XX[];
     // int idx1 = threadIdx.x + threadIdx.y;
     // if(blockDim.x*blockDim.y>bn && idx1<bn){
     //     XX[idx1] = 0.0;
