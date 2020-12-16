@@ -103,9 +103,8 @@ int main(int argc, char **argv){
     }
 
     if (argc>6){
-        cout << "Sizebox:" << argv[7] << endl;
         if (stof(argv[7])>0){
-            size_box = stof(argv[7]);
+            size_box = stof(argv[6]);
         }
     }
     cout << "Sizebox:" << size_box << endl;
