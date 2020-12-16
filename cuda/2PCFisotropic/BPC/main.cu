@@ -105,9 +105,6 @@ int main(int argc, char **argv){
         partitions = 35;
     }
 
-    cout << "Partitions: " << partitions << endl;
-    cout << "Size box: " << size_box << endl;
-
     size_node = size_box/(float)(partitions);
 
     d_max_node = dmax + size_node*sqrt(3.0);
@@ -250,8 +247,8 @@ int main(int argc, char **argv){
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
-    make_histoXX<<<gridR,threads_perblock_R,0,streamRR>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes, bn, dmax, d_max_node, size_box, size_node);
+    make_histoXX<<<gridD,threads_perblock_D,bn*sizeof(double),streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
+    make_histoXX<<<gridR,threads_perblock_R,bn*sizeof(double),streamRR>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes, bn, dmax, d_max_node, size_box, size_node);
     make_histoXY<<<gridDR,threads_perblock_DR,0,streamDR>>>(d_DR, d_ordered_pointsD_DR, dnodeD_DR, nonzero_Dnodes, d_ordered_pointsR_DR, dnodeR_DR, nonzero_Rnodes, bn, dmax, d_max_node, size_box, size_node);
 
     cucheck(cudaMemcpyAsync(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
