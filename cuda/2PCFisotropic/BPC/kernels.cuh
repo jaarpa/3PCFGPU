@@ -27,7 +27,7 @@ __global__ void make_histoXX(double *g_XX, PointW3D *elements, DNode *nodeD, int
     //Initialize shared memory
     if(threadIdx.x==0 && threadIdx.y==0){
         for (int i = 0; i < bn; i++){
-            shared_array[i] = 0.0;
+            XX[i] = 0.0;
         }
     }
     __syncthreads();
