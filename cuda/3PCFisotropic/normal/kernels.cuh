@@ -94,7 +94,6 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
     size_node: (float) Size of the nodes
     */
 
-    //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
@@ -129,7 +128,7 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                             w2 = elementsX[j].w;
                             v = w1*w2;
                             d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
-                            if (d12 < dd_max){
+                            if (d12 < dd_max && d12>0){
                                 d12 = sqrtf(d12);
                                 for (int k=nodeY[idx3].start; k<end3; k++){
                                     x3 = elementsY[k].x;
