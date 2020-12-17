@@ -70,8 +70,8 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                                         if (d31 < dd_max && d31>0){
                                             d23 = sqrtf(d23);
                                             d31 = sqrtf(d31);
-                                            cth12 = 1 + dz1/d12;
-                                            cth31= 1 + dz2/d31;
+                                            cth12 = 1 + dz12/d12;
+                                            cth31 = 1 + dz31/d31;
                                                                                         
                                             // Indices 
                                             a = (int) (d12*ds);
@@ -81,7 +81,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                                             p = (int) (cth31*ds_th);
 
                                             //Atomic add
-                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p
+                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
                                             v *= elements[k].w;
                                             atomicAdd(&XXX[bin],v);
                                         }
@@ -161,8 +161,8 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                                         if (d31 < dd_max){
                                             d23 = sqrtf(d23);
                                             d31 = sqrtf(d31);
-                                            cth12 = 1 + dz1/d12;
-                                            cth31= 1 + dz2/d31;
+                                            cth12 = 1 + dz12/d12;
+                                            cth31 = 1 + dz31/d31;
                                                                                         
                                             // Indices 
                                             a = (int) (d12*ds);
@@ -172,9 +172,9 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                                             p = (int) (cth31*ds_th);
 
                                             //Atomic add
-                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p
+                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
                                             v *= elements[k].w;
-                                            atomicAdd(&XXX[bin],v);
+                                            atomicAdd(&XXY[bin],v);
                                         }
                                     }
                                 }
