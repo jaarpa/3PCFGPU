@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <cmath>
@@ -47,7 +46,7 @@ class NODE3P{
 		float dd_max;
 		float corr;
 		float front;
-		float ds;
+		double ds;
 		float ds_th;
 		float ddmax_nod;
 		
@@ -71,7 +70,8 @@ class NODE3P{
 			dd_max = d_max*d_max;
 			front = size_box - d_max;
 			corr = size_node*sqrt(3);
-			ds = ((float)(bn))/d_max;
+			ds = floor(((double)(bn)/d_max)*1000000)/1000000;
+			//ds = (float)(bn)/d_max;
 			ds_th = (float)(bn)/2;
 			ddmax_nod = (d_max+corr)*(d_max+corr);
 			partitions = (int)(ceil(size_box/size_node));
@@ -161,7 +161,8 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 	DDD: arreglo donde se creará el histograma DDD.
 	*/ 
 	int i, j, k, row, col, mom, u, v, w, a ,b, c;
-	float dis, dis_nod, dis_nod2, dis_nod3;
+	double dis;
+	float dis_nod, dis_nod2, dis_nod3;
 	float x1N, y1N, z1N, x2N, y2N, z2N, x3N, y3N, z3N;
 	float x, y, z;
 	float dx, dy, dz, dx_nod, dy_nod, dz_nod, dx_nod2, dy_nod2, dz_nod2, dx_nod3, dy_nod3, dz_nod3;
@@ -178,7 +179,6 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 	// Triángulos entre puntos del mismo nodo:
 	//==================================================
 	count_3_N111(row, col, mom, XXX, nodeX);		
-	
 	//==================================================
 	// Triángulos entre puntos del diferente nodo:
 	//==================================================
@@ -193,7 +193,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 		z2N = nodeX[u][v][w].nodepos.z;
 		dz_nod = z2N-z1N;
 		dis_nod = dz_nod*dz_nod;
-		if (dis_nod <= ddmax_nod){
+		if (dis_nod < ddmax_nod){
 		//==============================================
 		// 2 puntos en N y 1 punto en N'
 		//==============================================
@@ -210,7 +210,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 			z3N = nodeX[a][b][c].nodepos.z; 
 			dz_nod2 = z3N-z1N;
 			dis_nod2 = dz_nod2*dz_nod2;
-			if (dis_nod2 <= ddmax_nod){
+			if (dis_nod2 < ddmax_nod){
 			count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 			}
 		}
@@ -227,13 +227,13 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 				dz_nod2 = z3N-z1N;
 				dz_nod2 *= dz_nod2;
 				dis_nod2 = dy_nod2 + dz_nod2;
-				if (dis_nod2 <= ddmax_nod){
+				if (dis_nod2 < ddmax_nod){
 				dy_nod3 = y3N-y2N;
 				dy_nod3 *= dy_nod3;
 				dz_nod3 = z3N-z2N;
 				dz_nod3 *= dz_nod3;
 				dis_nod3 = dy_nod3 + dz_nod3;
-				if (dis_nod3 <= ddmax_nod){
+				if (dis_nod3 < ddmax_nod){
 				count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 				}
 				}
@@ -255,7 +255,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 					dz_nod2 = z3N-z1N;
 					dz_nod2 *= dz_nod2;
 					dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-					if (dis_nod2 <= ddmax_nod){
+					if (dis_nod2 < ddmax_nod){
 					dx_nod3 = x3N-x2N;
 					dx_nod3 *= dx_nod3;
 					dy_nod3 = y3N-y2N;
@@ -263,7 +263,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 					dz_nod3 = z3N-z2N;
 					dz_nod3 *= dz_nod3;
 					dis_nod3 = dx_nod3 + dy_nod3 + dz_nod3;
-					if (dis_nod3 <= ddmax_nod){
+					if (dis_nod3 < ddmax_nod){
 					count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 					}
 					}
@@ -284,7 +284,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 			dz_nod = z2N-z1N;
 			dz_nod *= dz_nod;
 			dis_nod = dy_nod + dz_nod;
-			if (dis_nod <= ddmax_nod){
+			if (dis_nod < ddmax_nod){
 			//==============================================
 			// 2 puntos en N y 1 punto en N'
 			//==============================================
@@ -305,10 +305,10 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 				dz_nod2 = z3N-z1N;
 				dz_nod2 *= dz_nod2;
 				dis_nod2 = dy_nod2 + dz_nod2;
-				if (dis_nod2 <= ddmax_nod){
+				if (dis_nod2 < ddmax_nod){
 				dz_nod3 = z3N-z2N;
 				dis_nod3 = dz_nod3*dz_nod3;
-				if (dis_nod3 <= ddmax_nod){
+				if (dis_nod3 < ddmax_nod){
 				count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 				}
 				}
@@ -325,13 +325,13 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 					dz_nod2 = z3N-z1N;
 					dz_nod2 *= dz_nod2;
 					dis_nod2 = dy_nod2 + dz_nod2;
-					if (dis_nod2 <= ddmax_nod){
+					if (dis_nod2 < ddmax_nod){
 					dy_nod3 = y3N-y2N;
 					dy_nod3 *= dy_nod3;
 					dz_nod3 = z3N-z2N;
 					dz_nod3 *= dz_nod3;
 					dis_nod3 = dy_nod3 + dz_nod3;
-					if (dis_nod3 <= ddmax_nod){
+					if (dis_nod3 < ddmax_nod){
 					count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 					}
 					}
@@ -353,7 +353,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 						dz_nod2 = z3N-z1N;
 						dz_nod2 *= dz_nod2;
 						dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-						if (dis_nod2 <= ddmax_nod){
+						if (dis_nod2 < ddmax_nod){
 						dx_nod3 = x3N-x2N;
 						dx_nod3 *= dx_nod3;
 						dy_nod3 = y3N-y2N;
@@ -361,7 +361,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 						dz_nod3 = z3N-z2N;
 						dz_nod3 *= dz_nod3;
 						dis_nod3 = dx_nod3 + dy_nod3 + dz_nod3;
-						if (dis_nod3 <= ddmax_nod){
+						if (dis_nod3 < ddmax_nod){
 						count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 						}
 						}
@@ -387,7 +387,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 				dz_nod = z2N-z1N;
 				dz_nod *= dz_nod;
 				dis_nod = dx_nod + dy_nod + dz_nod;
-				if (dis_nod <= ddmax_nod){
+				if (dis_nod < ddmax_nod){
 				//==============================================
 				// 2 puntos en N y 1 punto en N'
 				//==============================================
@@ -411,10 +411,10 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 					dz_nod2 = z3N-z1N;
 					dz_nod2 *= dz_nod2;
 					dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-					if (dis_nod2 <= ddmax_nod){
+					if (dis_nod2 < ddmax_nod){
 					dz_nod3 = z3N-z2N;
 					dis_nod3 = dz_nod3*dz_nod3;
-					if (dis_nod3 <= ddmax_nod){
+					if (dis_nod3 < ddmax_nod){
 					count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 					}
 					}
@@ -431,13 +431,13 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 						dz_nod2 = z3N-z1N;
 						dz_nod2 *= dz_nod2;
 						dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-						if (dis_nod2 <= ddmax_nod){
+						if (dis_nod2 < ddmax_nod){
 						dy_nod3 = y3N-y2N;
 						dy_nod3 *= dy_nod3;
 						dz_nod3 = z3N-z2N;
 						dz_nod3 *= dz_nod3;
 						dis_nod3 = dy_nod3 + dz_nod3;
-						if (dis_nod3 <= ddmax_nod){
+						if (dis_nod3 < ddmax_nod){
 						count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 						}
 						}
@@ -459,7 +459,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 							dz_nod2 = z3N-z1N;
 							dz_nod2 *= dz_nod2;
 							dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-							if (dis_nod2 <= ddmax_nod){
+							if (dis_nod2 < ddmax_nod){
 							dx_nod3 = x3N-x2N;
 							dx_nod3 *= dx_nod3;
 							dy_nod3 = y3N-y2N;
@@ -467,7 +467,7 @@ void NODE3P::make_histoXXX(double *****XXX, Node ***nodeX){
 							dz_nod3 = z3N-z2N;
 							dz_nod3 *= dz_nod3;
 							dis_nod3 = dx_nod3 + dy_nod3 + dz_nod3;
-							if (dis_nod3 <= ddmax_nod){
+							if (dis_nod3 < ddmax_nod){
 							count_3_N123(row, col, mom, u, v, w, a, b, c, XXX, nodeX);
 							}
 							}
@@ -494,7 +494,7 @@ void NODE3P::count_3_N111(int row, int col, int mom, double *****XXX, Node ***no
 	int a_,b_,c_;
 	int t,p,q, t_,p_,q_;
 	float dx,dy,dz1,dz2,dz3;
-	float d12,d13,d23;
+	double d12,d13,d23;
 	float cth1,cth2,cth3, cth1_,cth2_,cth3_;
 	float x1,y1,z1,x2,y2,z2,x3,y3,z3,w1,w2,w3,W;
 
@@ -524,12 +524,12 @@ void NODE3P::count_3_N111(int row, int col, int mom, double *****XXX, Node ***no
 			dz2 = z3-z1;
 			d13 = dx*dx+dy*dy+dz2*dz2;
 			if (d13<dd_max){
-			d13 = sqrt(d13);
 			dx = x3-x2;
 			dy = y3-y2;
 			dz3 = z3-z2;
 			d23 = dx*dx+dy*dy+dz3*dz3;
 			if (d23<dd_max){
+			d13 = sqrt(d13);
 			d23 = sqrt(d23);
 				
 				// ángulo entre r y ẑ
@@ -588,7 +588,7 @@ void NODE3P::count_3_N112(int row, int col, int mom, int u, int v, int w, double
 	int a_,b_,c_;
 	int t,p,q, t_,p_,q_;
 	float dx,dy,dz1,dz2,dz3;
-	float d12,d13,d23;
+	double d12,d13,d23;
 	float cth1,cth2,cth3, cth1_,cth2_,cth3_;
 	float x1,y1,z1,x2,y2,z2,x3,y3,z3,w1,w2,w3,W;
 
@@ -621,12 +621,12 @@ void NODE3P::count_3_N112(int row, int col, int mom, int u, int v, int w, double
 			dz2 = z3-z1;
 			d13 = dx*dx+dy*dy+dz2*dz2;
 			if (d13<dd_max){
-			d13 = sqrt(d13);
 			dx = x3-x2;
 			dy = y3-y2;
 			dz3 = z3-z2;
 			d23 = dx*dx+dy*dy+dz3*dz3;
 			if (d23<dd_max){
+			d13 = sqrt(d13);
 			d23 = sqrt(d23);
 				
 				// ángulo entre r y ẑ
@@ -678,12 +678,12 @@ void NODE3P::count_3_N112(int row, int col, int mom, int u, int v, int w, double
 			dz2 = z3-z1;
 			d13 = dx*dx+dy*dy+dz2*dz2;
 			if (d13<dd_max){
-			d13 = sqrt(d13);
 			dx = x3-x2;
 			dy = y3-y2;
 			dz3 = z3-z2;
 			d23 = dx*dx+dy*dy+dz3*dz3;
 			if (d23<dd_max){
+			d13 = sqrt(d13);
 			d23 = sqrt(d23);
 				
 				// ángulo entre r y ẑ
@@ -744,7 +744,7 @@ void NODE3P::count_3_N123(int row, int col, int mom, int u, int v, int w, int a,
 	int a_,b_,c_;
 	int t,p,q, t_,p_,q_;
 	float dx,dy,dz1,dz2,dz3;
-	float d12,d13,d23;
+	double d12,d13,d23;
 	float cth1,cth2,cth3, cth1_,cth2_,cth3_;
 	float x1,y1,z1,x2,y2,z2,x3,y3,z3,w1,w2,w3,W;
 	
@@ -777,12 +777,12 @@ void NODE3P::count_3_N123(int row, int col, int mom, int u, int v, int w, int a,
 			dz2 = z3-z1;
 			d13 = dx*dx+dy*dy+dz2*dz2;
 			if (d13<dd_max){
-			d13 = sqrt(d13);
 			dx = x3-x2;
 			dy = y3-y2;
 			dz3 = z3-z2;
 			d23 = dx*dx+dy*dy+dz3*dz3;
 			if (d23<dd_max){
+			d13 = sqrt(d13);
 			d23 = sqrt(d23);
 				
 				// ángulo entre r y ẑ
@@ -840,7 +840,8 @@ void NODE3P::make_histoXXY(double *****XXY, Node ***nodeX, Node ***nodeY){
 	
 	*/ 
 	int i, j, k, row, col, mom, u, v, w, a, b, c;
-	float dis, dis_nod, dis_nod2, dis_nod3;
+	double dis;
+	float dis_nod, dis_nod2, dis_nod3;
 	float x1N, y1N, z1N, x2N, y2N, z2N, x3N, y3N, z3N;
 	float x, y, z;
 	float dx, dy, dz, dx_nod, dy_nod, dz_nod, dx_nod2, dy_nod2, dz_nod2, dx_nod3, dy_nod3, dz_nod3;
@@ -870,7 +871,7 @@ void NODE3P::make_histoXXY(double *****XXY, Node ***nodeX, Node ***nodeY){
 			dz_nod = z2N-z1N;
 			dz_nod *= dz_nod;
 			dis_nod = dx_nod + dy_nod + dz_nod;
-			if (dis_nod <= ddmax_nod){
+			if (dis_nod < ddmax_nod){
 			//==============================================
 			// 2 puntos en N y 1 punto en N'
 			//==============================================
@@ -894,10 +895,10 @@ void NODE3P::make_histoXXY(double *****XXY, Node ***nodeX, Node ***nodeY){
 				dz_nod2 = z3N-z1N;
 				dz_nod2 *= dz_nod2;
 				dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-				if (dis_nod2 <= ddmax_nod){
+				if (dis_nod2 < ddmax_nod){
 				dz_nod3 = z3N-z2N;
 				dis_nod3 = dz_nod3*dz_nod3;
-				if (dis_nod3 <= ddmax_nod){
+				if (dis_nod3 < ddmax_nod){
 					count_3_N123_xxy(row, col, mom, u, v, w, a, b, c, XXY, nodeX, nodeY);
 				}
 				}
@@ -914,13 +915,13 @@ void NODE3P::make_histoXXY(double *****XXY, Node ***nodeX, Node ***nodeY){
 					dz_nod2 = z3N-z1N;
 					dz_nod2 *= dz_nod2;
 					dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-					if (dis_nod2 <= ddmax_nod){
+					if (dis_nod2 < ddmax_nod){
 					dy_nod3 = y3N-y2N;
 					dy_nod3 *= dy_nod3;
 					dz_nod3 = z3N-z2N;
 					dz_nod3 *= dz_nod3;
 					dis_nod3 = dy_nod3 + dz_nod3;
-					if (dis_nod3 <= ddmax_nod){
+					if (dis_nod3 < ddmax_nod){
 						count_3_N123_xxy(row, col, mom, u, v, w, a, b, c, XXY, nodeX, nodeY);
 					}
 					}
@@ -942,7 +943,7 @@ void NODE3P::make_histoXXY(double *****XXY, Node ***nodeX, Node ***nodeY){
 						dz_nod2 = z3N-z1N;
 						dz_nod2 *= dz_nod2;
 						dis_nod2 = dx_nod2 + dy_nod2 + dz_nod2;
-						if (dis_nod2 <= ddmax_nod){
+						if (dis_nod2 < ddmax_nod){
 						dx_nod3 = x3N-x2N;
 						dx_nod3 *= dx_nod3;
 						dy_nod3 = y3N-y2N;
@@ -950,7 +951,7 @@ void NODE3P::make_histoXXY(double *****XXY, Node ***nodeX, Node ***nodeY){
 						dz_nod3 = z3N-z2N;
 						dz_nod3 *= dz_nod3;
 						dis_nod3 = dx_nod3 + dy_nod3 + dz_nod3;
-						if (dis_nod3 <= ddmax_nod){
+						if (dis_nod3 < ddmax_nod){
 							count_3_N123_xxy(row, col, mom, u, v, w, a, b, c, XXY, nodeX, nodeY);
 						}
 						}
@@ -978,7 +979,7 @@ void NODE3P::count_3_N112_xxy(int row, int col, int mom, int u, int v, int w, do
 	int a_,b_,c_;
 	int t,p, p_,q_;
 	float dx,dy,dz1,dz2,dz3;
-	float d12,d13,d23;
+	double d12,d13,d23;
 	float cth1,cth2, cth2_,cth3_;
 	float x1,y1,z1,x2,y2,z2,x3,y3,z3,w1,w2,w3,W;
 
@@ -1011,12 +1012,12 @@ void NODE3P::count_3_N112_xxy(int row, int col, int mom, int u, int v, int w, do
 			dz2 = z3-z1;
 			d13 = dx*dx+dy*dy+dz2*dz2;
 			if (d13<dd_max){
-			d13 = sqrt(d13);
 			dx = x3-x2;
 			dy = y3-y2;
 			dz3 = z3-z2;
 			d23 = dx*dx+dy*dy+dz3*dz3;
 			if (d23<dd_max){
+			d13 = sqrt(d13);
 			d23 = sqrt(d23);
 				
 				// ángulo entre r y ẑ
@@ -1070,7 +1071,7 @@ void NODE3P::count_3_N123_xxy(int row, int col, int mom, int u, int v, int w, in
 	int a_,b_,c_;
 	int t,p, p_,q_;
 	float dx,dy,dz1,dz2,dz3;
-	float d12,d13,d23;
+	double d12,d13,d23;
 	float cth1,cth2, cth2_,cth3_;
 	float x1,y1,z1,x2,y2,z2,x3,y3,z3,w1,w2,w3,W;
 
@@ -1103,12 +1104,12 @@ void NODE3P::count_3_N123_xxy(int row, int col, int mom, int u, int v, int w, in
 				dz2 = z3-z1;
 				d13 = dx*dx+dy*dy+dz2*dz2;
 				if (d13<dd_max){
-				d13 = sqrt(d13);
 				dx = x3-x2;
 				dy = y3-y2;
 				dz3 = z3-z2;
 				d23 = dx*dx+dy*dy+dz3*dz3;
 				if (d23<dd_max){
+				d13 = sqrt(d13);
 				d23 = sqrt(d23);
 				
 					// ángulo entre r y ẑ
