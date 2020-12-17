@@ -36,9 +36,11 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     int end1 = nodeD[idx1].end;
                     int end2 = nodeD[idx2].end;
                     int end3 = nodeD[idx3].end;
-                    int bin;
+                    int a,b,c,t,p,bin;
                     float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+                    float ds_th= (float)(bn)/2;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
+                    float dz12,dz23,dz31,cth12,cth31;
                     float d12,d23,d31;
                     double v;
                     for (int i=nodeD[idx1].start; i<end1; i++){
@@ -52,20 +54,34 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                             z2 = elements[j].z;
                             w2 = elements[j].w;
                             v = w1*w2;
-                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+                            dz12 = z2-z1;
+                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + dz12*dz12;
                             if (d12 < dd_max && d12>0){
                                 d12 = sqrtf(d12);
                                 for (int k=nodeD[idx3].start; k<end3; k++){
                                     x3 = elements[k].x;
                                     y3 = elements[k].y;
                                     z3 = elements[k].z;
-                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2);
+                                    dz23 = z3-z2;
+                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + dz23*dz23;
                                     if (d23 < dd_max && d23>0){
-                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
+                                        dz31 = z3-z1;
+                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + dz31*dz31;
                                         if (d31 < dd_max && d31>0){
                                             d23 = sqrtf(d23);
                                             d31 = sqrtf(d31);
-                                            bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
+                                            cth12 = 1 + dz1/d12;
+                                            cth31= 1 + dz2/d31;
+                                                                                        
+                                            // Indices 
+                                            a = (int) (d12*ds);
+                                            b = (int) (d31*ds);
+                                            c = (int) (d23*ds);
+                                            t = (int) (cth12*ds_th);
+                                            p = (int) (cth31*ds_th);
+
+                                            //Atomic add
+                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p
                                             v *= elements[k].w;
                                             atomicAdd(&XXX[bin],v);
                                         }
@@ -111,9 +127,11 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                     int end1 = nodeX[idx1].end;
                     int end2 = nodeX[idx2].end;
                     int end3 = nodeY[idx3].end;
-                    int bin;
+                    int a,b,c,t,p,bin;
                     float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+                    float ds_th= (float)(bn)/2;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
+                    float dz12,dz23,dz31,cth12,cth31;
                     float d12,d23,d31;
                     double v;
                     for (int i=nodeX[idx1].start; i<end1; i++){
@@ -127,22 +145,36 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                             z2 = elementsX[j].z;
                             w2 = elementsX[j].w;
                             v = w1*w2;
-                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+                            dz12 = z2-z1;
+                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + dz12*dz12;
                             if (d12 < dd_max && d12>0){
                                 d12 = sqrtf(d12);
                                 for (int k=nodeY[idx3].start; k<end3; k++){
                                     x3 = elementsY[k].x;
                                     y3 = elementsY[k].y;
                                     z3 = elementsY[k].z;
-                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2);
+                                    dz23 = z3-z2;
+                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + dz23*dz23;
                                     if (d23 < dd_max){
-                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
+                                        dz31 = z3-z1;
+                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + dz31*dz31;
                                         if (d31 < dd_max){
                                             d23 = sqrtf(d23);
                                             d31 = sqrtf(d31);
-                                            bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
-                                            v *= elementsY[k].w;
-                                            atomicAdd(&XXY[bin],v);
+                                            cth12 = 1 + dz1/d12;
+                                            cth31= 1 + dz2/d31;
+                                                                                        
+                                            // Indices 
+                                            a = (int) (d12*ds);
+                                            b = (int) (d31*ds);
+                                            c = (int) (d23*ds);
+                                            t = (int) (cth12*ds_th);
+                                            p = (int) (cth31*ds_th);
+
+                                            //Atomic add
+                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p
+                                            v *= elements[k].w;
+                                            atomicAdd(&XXX[bin],v);
                                         }
                                     }
                                 }
