@@ -173,7 +173,7 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
 
                                             //Atomic add
                                             bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
-                                            v *= elements[k].w;
+                                            v *= elementsY[k].w;
                                             atomicAdd(&XXY[bin],v);
                                         }
                                     }
