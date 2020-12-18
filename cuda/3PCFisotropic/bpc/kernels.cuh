@@ -56,7 +56,7 @@ __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, 
     }
 }
 
-__global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
+__global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
 
@@ -94,7 +94,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             if (dd_nod23 <= d_max_node){
                 dd_nod31 = dxn31*dxn31+dyn31*dyn31+dzn31*dzn31;
                 if (dd_nod31 <= d_max_node){
-                    count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, false){
+                    count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, false);
                 }
             }
         }
