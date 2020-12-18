@@ -79,16 +79,13 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         int start1 = nodeD[idx1].start, start2 = nodeD[idx2].start, start3 = nodeD[idx3].start;
         float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
 
-        float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
-        float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
-        float nx3=nodeD[idx3].nodepos.x, ny3=nodeD[idx3].nodepos.y, nz3=nodeD[idx3].nodepos.z;
-
         //Vas aquí y te falta considerar las proyecciones de los nodos para ver si se llama count123 o no
-        float dxn12 = fabsf(nx2-nx1), dyn12 = fabsf(ny2-ny1), dzn12 = fabsf(nz2-nz1);
-        float dxn23 = fabsf(nx3-nx2), dyn23 = fabsf(ny3-ny2), dzn23 = fabsf(nz3-nz2);
-        float dxn31 = fabsf(nx1-nx3), dyn31 = fabsf(ny1-ny3), dzn31 = fabsf(nz1-nz3);
+        float dxn12 = fabsf(nodeD[idx2].nodepos.x-nodeD[idx1].nodepos.x), dyn12 = fabsf(nodeD[idx2].nodepos.y-nodeD[idx1].nodepos.y), dzn12 = fabsf(nodeD[idx2].nodepos.z-nodeD[idx1].nodepos.z);
+        float dxn23 = fabsf(nodeD[idx3].nodepos.x-nodeD[idx2].nodepos.x), dyn23 = fabsf(nodeD[idx3].nodepos.y-nodeD[idx2].nodepos.y), dzn23 = fabsf(nodeD[idx3].nodepos.z-nodeD[idx2].nodepos.z);
+        float dxn31 = fabsf(nodeD[idx1].nodepos.x-nodeD[idx3].nodepos.x), dyn31 = fabsf(nodeD[idx1].nodepos.y-nodeD[idx3].nodepos.y), dzn31 = fabsf(nodeD[idx1].nodepos.z-nodeD[idx3].nodepos.z);
 
         float dd_nod23, dd_nod31, dd_nod12 = dxn12*dxn12+dyn12*dyn12+dzn12*dzn12;
+        
         if (dd_nod12 <= d_max_node){
             dd_nod23 = dxn23*dxn23+dyn23*dyn23+dzn23*dzn23;
             if (dd_nod23 <= d_max_node){
