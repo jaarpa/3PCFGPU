@@ -1,6 +1,3 @@
-
-// c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
-
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -146,6 +143,10 @@ void save_histogram(string name, int bns, double *histo){
 	Function to save our histogram files
 	*/
 
+    string mypathto_files = "../../../results/";
+    //This creates the full path to where I have my data files
+    name.insert(0,mypathto_files);
+	
 	ofstream file2;
 	file2.open(name.c_str(), ios::out | ios::binary);
 	
