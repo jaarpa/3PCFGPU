@@ -104,11 +104,14 @@ int main(int argc, char **argv){
 	clock_t c_start = clock();
 	//====================================================================
 	my_hist.make_histoXXX(DDD, my_hist.meshData());
+	clock_t c_end = clock();
+	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
+	printf("\nCPU time used only DDD = %.4f seg.\n", time_elapsed_s );
 	//====================================================================
 	my_hist.make_histo_analitic(DDR, RRR, my_hist.meshData() );
 	//====================================================================
-	clock_t c_end = clock();
-	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
+	c_end = clock();
+	time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
 	
 	my_hist.~NODE3P();
 	
