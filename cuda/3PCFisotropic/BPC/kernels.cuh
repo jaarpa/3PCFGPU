@@ -181,7 +181,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         }
         
         //============ Only node 2 proyections ================
-        /*
+        
         if (dd_nod31 <= d_max_node && (fx_2 || fy_2 || fz_2)){
             //x proyection
             if (fx_2){
@@ -253,7 +253,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     }
                 }
             }
-        }*/
+        }
         
         //============ Both nodes are proyected ===============
         if ((fx_2 || fy_2 || fz_2) && (fx_3 || fy_3 || fz_3)){
