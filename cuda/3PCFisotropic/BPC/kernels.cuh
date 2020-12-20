@@ -493,7 +493,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     if (fx_3 && fy_3){
                         f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
                         if (f_dd_nod31 <= d_max_node){
-                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dy23 + dz23)*size_box;
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
                                 count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, false);
                             }
@@ -731,7 +731,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
             }
             //node 2 xyz proyection
             if (fx_2 && fy_2 && fz_2){
-                f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dz12)*size_box;
+                f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dzn12)*size_box;
                 if (f_dd_nod12 <= d_max_node){
                     //node 3 x proyection
                     if (fx_3){
