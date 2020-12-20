@@ -33,9 +33,9 @@ __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, 
                     x3 = elements[k].x;
                     y3 = elements[k].y;
                     z3 = elements[k].z;
-                    dx23 = fabsf(x3-x2) + (size_box*fx_2 - size_box*fx_3);
-                    dy23 = fabsf(y3-y2) + (size_box*fy_2 - size_box*fy_3);
-                    dz23 = fabsf(z3-z2) + (size_box*fz_2 - size_box*fz_3);
+                    dx23 = fabsf(x3-x2) - fabsf(size_box*fx_2 - size_box*fx_3);
+                    dy23 = fabsf(y3-y2) - fabsf(size_box*fy_2 - size_box*fy_3);
+                    dz23 = fabsf(z3-z2) - fabsf(size_box*fz_2 - size_box*fz_3);
                     d23 = dx23*dx23 + dy23*dy23 + dz23*dz23;
                     if (d23 < dd_max && d23>0){
                         dx31 = fabsf(x3-x1) - size_box*fx_3;
@@ -181,6 +181,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         }
         
         //============ Only node 2 proyections ================
+        /*
         if (dd_nod31 <= d_max_node && (fx_2 || fy_2 || fz_2)){
             //x proyection
             if (fx_2){
@@ -252,7 +253,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     }
                 }
             }
-        }
+        }*/
         
         //============ Both nodes are proyected ===============
         if ((fx_2 || fy_2 || fz_2) && (fx_3 || fy_3 || fz_3)){
@@ -331,6 +332,469 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                 }
             }
 
+            //====== Both nodes are proyected differently =======
+            //node 2 x proyection
+            if (fx_2){
+                f_dd_nod12 = dd_nod12 + size_box2 - 2*dxn12*size_box;
+                if (f_dd_nod12 <= d_max_node){
+                    //node 3 y proyection
+                    if (fy_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, false);
+                            }
+                        }
+                    }
+                    //node 3 z proyection
+                    if (fz_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, true);
+                            }
+                        }
+                    }
+                    //node 3 xy proyection
+                    if (fx_3 && fy_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, false);
+                            }
+                        }
+                    }
+                    //node 3 xz proyection
+                    if (fx_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, true);
+                            }
+                        }
+                    }
+                    //node 3 yz proyection
+                    if (fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, true);
+                            }
+                        }
+                    }
+                    //node 3 xyz proyection
+                    if (fx_3 && fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true);
+                            }
+                        }
+                    }
+                }
+            }
+            //node 2 y proyection
+            if (fy_2){
+                f_dd_nod12 = dd_nod12 + size_box2 - 2*dyn12*size_box;
+                if (f_dd_nod12 <= d_max_node){
+                    //node 3 x proyection
+                    if (fx_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, false);
+                            }
+                        }
+                    }
+                    //node 3 z proyection
+                    if (fz_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, true);
+                            }
+                        }
+                    }
+                    //node 3 xy proyection
+                    if (fx_3 && fy_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, true, false);
+                            }
+                        }
+                    }
+                    //node 3 xz proyection
+                    if (fx_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, true);
+                            }
+                        }
+                    }
+                    //node 3 yz proyection
+                    if (fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, true);
+                            }
+                        }
+                    }
+                    //node 3 xyz proyection
+                    if (fx_3 && fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true);
+                            }
+                        }
+                    }
+                }
+            }
+            //node 2 z proyection
+            if (fz_2){
+                f_dd_nod12 = dd_nod12 + size_box2 - 2*dzn12*size_box;
+                if (f_dd_nod12 <= d_max_node){
+                    //node 3 x proyection
+                    if (fx_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, false);
+                            }
+                        }
+                    }
+                    //node 3 y proyection
+                    if (fy_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, false);
+                            }
+                        }
+                    }
+                    //node 3 xy proyection
+                    if (fx_3 && fy_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dy23 + dz23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, false);
+                            }
+                        }
+                    }
+                    //node 3 xz proyection
+                    if (fx_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, true);
+                            }
+                        }
+                    }
+                    //node 3 yz proyection
+                    if (fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, true);
+                            }
+                        }
+                    }
+                    //node 3 xyz proyection
+                    if (fx_3 && fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, true);
+                            }
+                        }
+                    }
+                }
+            }
+            //xy proyection
+            if (fx_2 && fy_2){
+                f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dyn12)*size_box;
+                if (f_dd_nod12 <= d_max_node){
+                    //node 3 x proyection
+                    if (fx_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, false);
+                            }
+                        }
+                    }
+                    //node 3 y proyection
+                    if (fy_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, false);
+                            }
+                        }
+                    }
+                    //node 3 z proyection
+                    if (fz_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dzn23 + dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, true);
+                            }
+                        }
+                    }
+                    //node 3 xz proyection
+                    if (fx_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, true);
+                            }
+                        }
+                    }
+                    //node 3 yz proyection
+                    if (fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, true);
+                            }
+                        }
+                    }
+                    //node 3 xyz proyection
+                    if (fx_3 && fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, true);
+                            }
+                        }
+                    }
+                }
+            }
+            //node 2 xz proyection
+            if (fx_2 && fz_2){
+                f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dzn12)*size_box;
+                if (f_dd_nod12 <= d_max_node){
+                    //node 3 x proyection
+                    if (fx_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, false);
+                            }
+                        }
+                    }
+                    //node 3 y proyection
+                    if (fy_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, false);
+                            }
+                        }
+                    }
+                    //node 3 z proyection
+                    if (fz_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, true);
+                            }
+                        }
+                    }
+                    //node 3 xy proyection
+                    if (fx_3 && fy_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, false);
+                            }
+                        }
+                    }
+                    //node 3 yz proyection
+                    if (fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, true);
+                            }
+                        }
+                    }
+                    //node 3 xyz proyection
+                    if (fx_3 && fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, true);
+                            }
+                        }
+                    }
+                }
+            }
+            //node 2 yz proyection
+            if (fy_2 && fz_2){
+                f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dzn12 + dyn12)*size_box;
+                if (f_dd_nod12 <= d_max_node){
+                    //node 3 x proyection
+                    if (fx_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, false);
+                            }
+                        }
+                    }
+                    //node 3 y proyection
+                    if (fy_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, false);
+                            }
+                        }
+                    }
+                    //node 3 z proyection
+                    if (fz_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, true);
+                            }
+                        }
+                    }
+                    //node 3 xy proyection
+                    if (fx_3 && fy_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, false);
+                            }
+                        }
+                    }
+                    //node 3 xz proyection
+                    if (fx_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, true);
+                            }
+                        }
+                    }
+                    //node 3 xyz proyection
+                    if (fx_3 && fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, true);
+                            }
+                        }
+                    }
+                }
+            }
+            //node 2 xyz proyection
+            if (fx_2 && fy_2 && fz_2){
+                f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dz12)*size_box;
+                if (f_dd_nod12 <= d_max_node){
+                    //node 3 x proyection
+                    if (fx_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, false);
+                            }
+                        }
+                    }
+                    //node 3 y proyection
+                    if (fy_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, false);
+                            }
+                        }
+                    }
+                    //node 3 z proyection
+                    if (fz_3){
+                        f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, true);
+                            }
+                        }
+                    }
+                    //node 3 xy proyection
+                    if (fx_3 && fy_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, false);
+                            }
+                        }
+                    }
+                    //node 3 xz proyection
+                    if (fx_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dyn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, true);
+                            }
+                        }
+                    }
+                    //node 3 yz proyection
+                    if (fy_3 && fz_3){
+                        f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
+                        if (f_dd_nod31 <= d_max_node){
+                            f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
+                            if (f_dd_nod23 <= d_max_node){
+                                count123(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, true);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
     }

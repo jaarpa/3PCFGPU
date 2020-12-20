@@ -1,3 +1,6 @@
+
+// c++ main.cpp -o serial.out && ./serial.out data.dat rand0.dat 32768
+
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -22,7 +25,7 @@ Node ***nodeD;
 
 int main(int argc, char **argv){
 
-	int n_pts = 10000, bn = 40;
+	int n_pts = 5000, bn = 30;
 	float d_max = 60.0, size_box = 250.0, size_node =  2.17 * 250/pow(n_pts, (double)1/3);
 	dataD = new PointW3D[n_pts]; 
 	
@@ -137,6 +140,11 @@ void open_files(string name_file, int pts, PointW3D *datos, float size_box, floa
 	/* 
 	Function to open our data files 
 	*/
+
+    string mypathto_files = "../../../data/";
+    //This creates the full path to where I have my data files
+    name_file.insert(0,mypathto_files);
+
 	ifstream file;
 	file.open(name_file.c_str(), ios::in | ios::binary);
 	if (file.fail()){
