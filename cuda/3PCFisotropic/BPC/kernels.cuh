@@ -4,6 +4,8 @@
 //====================================================================
 //============ Kernels Section ======================================= 
 //====================================================================
+
+//DDD pure histogram
 __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, int start2, int end2, int start3, int end3, int bn, float ds, float dd_max, float size_box, bool fx_2, bool fy_2, bool fz_2, bool fx_3, bool fy_3, bool fz_3){
     int bin;
     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
@@ -799,3 +801,5 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
     }
 }
+
+//Analytic formulas for RRR and mixed histograms
