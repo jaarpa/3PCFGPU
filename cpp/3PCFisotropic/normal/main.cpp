@@ -179,6 +179,11 @@ void save_histogram(string name, int bns, double ***histo){
 	/* 
 	Function to save our histogram files
 	*/
+
+    string mypathto_files = "../../../results/";
+    //This creates the full path to where I have my data files
+    name.insert(0,mypathto_files);
+	
 	int i, j, k;
 	ofstream file;
 	file.open(name.c_str(),ios::out | ios::binary);
