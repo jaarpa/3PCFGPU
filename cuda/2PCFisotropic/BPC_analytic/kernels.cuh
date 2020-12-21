@@ -270,5 +270,4 @@ __global__ void make_histoRR(double *RR, double alpha, int bn){
         RR[idx] = alpha*((double)(dr));
     }
 
-	}
 }
