@@ -73,7 +73,7 @@ int main(int argc, char **argv){
     PointW3D *d_ordered_pointsD_DD, *d_ordered_pointsD_DR, *d_ordered_pointsR_RR, *d_ordered_pointsR_DR;
 
     // Name of the files where the results are saved
-    string nameDD = "DDiso_", nameRR = "RRiso_", nameDR = "DRiso_";
+    string nameDD = "DDiso_BPC_", nameRR = "RRiso_BPC_", nameDR = "DRiso_BPC_";
     string data_name = argv[1], rand_name = argv[2];
     nameDD.append(data_name);
     nameRR.append(rand_name);
