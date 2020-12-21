@@ -266,7 +266,7 @@ __global__ void make_histoRR(double *RR, double alpha, int bn){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     
     if (idx<bn){
-        int dr = 3*idx*idx + 3*idx +1
+        int dr = 3*idx*idx + 3*idx +1;
         RR[idx] = alpha*((double)(dr));
     }
 

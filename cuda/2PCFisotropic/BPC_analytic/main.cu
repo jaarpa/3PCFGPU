@@ -106,7 +106,7 @@ int main(int argc, char **argv){
 
     dr = (dmax/bn);
     beta1 = (np*np)/(size_box*size_box*size_box);
-    alpha = 8*dr*dr*dr*(acos(0.0))*(beta1)/3;
+    alpha1 = 8*dr*dr*dr*(acos(0.0))*(beta1)/3;
     
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
@@ -201,7 +201,7 @@ int main(int argc, char **argv){
     cudaEventRecord(start_timmer);
     make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
     cucheck(cudaMemcpyAsync(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
-    make_histoRR<<<blocks_analytic,threads_perblock_analytic,0,streamRR>>>(d_RR, alpha, bn);
+    make_histoRR<<<blocks_analytic,threads_perblock_analytic,0,streamRR>>>(d_RR, alpha1, bn);
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
     
     cucheck(cudaStreamSynchronize(streamDD));
