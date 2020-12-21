@@ -47,7 +47,7 @@ int main(int argc, char **argv){
 
     float time_spent, d_max_node, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
 
-    double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
+    double *DD, *RR, *d_DD, *d_RR;
     double alpha1, beta1, dr; //For analytic RR
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
@@ -64,19 +64,17 @@ int main(int argc, char **argv){
     Node ***hnodeD;
     DNode *hnodeD_s;
     PointW3D *h_ordered_pointsD_s;
-    cudaStream_t streamDD, streamRR, streamDR;
+    cudaStream_t streamDD, streamRR;
     cucheck(cudaStreamCreate(&streamDD));
-    cucheck(cudaStreamCreate(&streamDR));
     cucheck(cudaStreamCreate(&streamRR));
     DNode *dnodeD_DD;
     int k_element, last_pointD;
     PointW3D *d_ordered_pointsD_DD;
 
     // Name of the files where the results are saved
-    string nameDD = "DDiso_", nameRR = "RRiso_", nameDR = "DRiso_";
+    string nameDD = "DDiso_BPCanalytic_", nameDR = "DRiso_BPCanalytic_";
     string data_name = argv[1], rand_name = argv[2];
     nameDD.append(data_name);
-    nameRR.append(rand_name);
     nameDR.append(data_name);
 
     /* =======================================================================*/
@@ -114,16 +112,13 @@ int main(int argc, char **argv){
     // Allocate memory for the histogram as double
     DD = new double[bn];
     RR = new double[bn];
-    DR = new double[bn];
 
     cucheck(cudaMalloc(&d_DD, bn*sizeof(double)));
     cucheck(cudaMalloc(&d_RR, bn*sizeof(double)));
-    cucheck(cudaMalloc(&d_DR, bn*sizeof(double)));
 
     //Restarts the main histograms in device to zero
     cucheck(cudaMemsetAsync(d_DD, 0, bn*sizeof(double), streamDD));
     cucheck(cudaMemsetAsync(d_RR, 0, bn*sizeof(double), streamRR));
-    cucheck(cudaMemsetAsync(d_DR, 0, bn*sizeof(double), streamDR));
 
     hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
@@ -204,16 +199,11 @@ int main(int argc, char **argv){
     make_histoRR<<<blocks_analytic,threads_perblock_analytic,0,streamRR>>>(d_RR, alpha1, bn);
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
     
-    cucheck(cudaStreamSynchronize(streamDD));
-    //make_histoDR<<<blocks_analytic,threads_perblock_analytic,0,streamDR>>>(d_DR, d_DD, dnodeD_DR, nonzero_Dnodes, d_ordered_pointsR_DR, dnodeR_DR, nonzero_Rnodes, bn, dmax, d_max_node, size_box, size_node);
-    //cucheck(cudaMemcpyAsync(DR, d_DR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDR));
-    
     //Waits for all the kernels to complete
+    cucheck(cudaStreamSynchronize(streamDD));
     save_histogram(nameDD, bn, DD);
     cucheck(cudaStreamSynchronize(streamRR));
     save_histogram(nameRR, bn, RR);
-    cucheck(cudaStreamSynchronize(streamDR));
-    save_histogram(nameDR, bn, DR);
 
     cucheck(cudaEventRecord(stop_timmer));
     cucheck(cudaEventSynchronize(stop_timmer));
@@ -227,7 +217,6 @@ int main(int argc, char **argv){
 
     //Free the memory
     cucheck(cudaStreamDestroy(streamDD));
-    cucheck(cudaStreamDestroy(streamDR));
     cucheck(cudaStreamDestroy(streamRR));
 
     cucheck(cudaEventDestroy(start_timmer));
@@ -236,11 +225,9 @@ int main(int argc, char **argv){
     delete[] dataD;
 
     delete[] DD;
-    delete[] RR;    
-    delete[] DR;    
+    delete[] DR;
     
     cucheck(cudaFree(d_DD));
-    cucheck(cudaFree(d_RR));
     cucheck(cudaFree(d_DR));
 
     for (int i=0; i<partitions; i++){
