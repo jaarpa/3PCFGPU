@@ -72,10 +72,10 @@ int main(int argc, char **argv){
     PointW3D *d_ordered_pointsD_DD;
 
     // Name of the files where the results are saved
-    string nameDD = "DDiso_BPCanalytic_", nameDR = "DRiso_BPCanalytic_";
+    string nameDD = "DDiso_BPCanalytic_", nameRR = "RRiso_BPCanalytic_";
     string data_name = argv[1], rand_name = argv[2];
     nameDD.append(data_name);
-    nameDR.append(data_name);
+    nameRR.append(data_name);
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
@@ -225,10 +225,10 @@ int main(int argc, char **argv){
     delete[] dataD;
 
     delete[] DD;
-    delete[] DR;
+    delete[] RR;
     
     cucheck(cudaFree(d_DD));
-    cucheck(cudaFree(d_DR));
+    cucheck(cudaFree(d_RR));
 
     for (int i=0; i<partitions; i++){
         for (int j=0; j<partitions; j++){
