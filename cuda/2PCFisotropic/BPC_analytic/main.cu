@@ -48,7 +48,7 @@ int main(int argc, char **argv){
     float time_spent, d_max_node, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
 
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
-    double alpha, dr; //For analytic RR
+    double alpha1, beta1, dr; //For analytic RR
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
     int  blocks_D, blocks_analytic, nonzero_Dnodes, threads_perblock_dim = 32, threads_perblock_analytic = 512, idxD=0;
@@ -104,9 +104,9 @@ int main(int argc, char **argv){
 
     size_node = size_box/(float)(partitions);
 
-    dr = (d_max/bn);
-	alph = 4*(2*acos(0.0))*(beta1)/3;
-    alpha *= dr*dr*dr*(np*np)/(size_box*size_box*size_box);
+    dr = (dmax/bn);
+    beta1 = (np*np)/(size_box*size_box*size_box);
+    alpha = 8*dr*dr*dr*(acos(0.0))*(beta1)/3;
     
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
@@ -154,8 +154,6 @@ int main(int argc, char **argv){
 
     hnodeD_s = new DNode[nonzero_Dnodes];
     h_ordered_pointsD_s = new PointW3D[np];
-    hnodeR_s = new DNode[nonzero_Rnodes];
-    h_ordered_pointsR_s = new PointW3D[np];
 
     //Deep copy to device memory
     last_pointD = 0;
@@ -203,7 +201,7 @@ int main(int argc, char **argv){
     cudaEventRecord(start_timmer);
     make_histoXX<<<gridD,threads_perblock_D,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
     cucheck(cudaMemcpyAsync(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
-    make_histoRR<<<blocks_analytic,threads_perblock_analytic,0,streamRR>>>(d_RR, d_DD, alpha, bn);
+    make_histoRR<<<blocks_analytic,threads_perblock_analytic,0,streamRR>>>(d_RR, alpha, bn);
     cucheck(cudaMemcpyAsync(RR, d_RR, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR));
     
     cucheck(cudaStreamSynchronize(streamDD));
