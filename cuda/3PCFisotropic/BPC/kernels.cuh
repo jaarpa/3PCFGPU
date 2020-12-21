@@ -50,11 +50,6 @@ __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, 
                             v *= elements[k].w;
                             bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
                             atomicAdd(&XXX[bin],v);
-                            if (!(fx_2 || fy_2 || fz_2)){
-                                //If it is only one node proyection
-                                bin = (int)(d31*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d12*ds);
-                                atomicAdd(&XXX[bin],v);
-                            }
                         }
                     }
                 }
@@ -188,7 +183,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
         }
         
         //============ Only node 2 proyections ================
-        /*
+        
         if (dd_nod31 <= d_max_node && (fx_2 || fy_2 || fz_2)){
             //x proyection
             if (fx_2){
@@ -260,7 +255,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                     }
                 }
             }
-        }*/
+        }
         
         //============ Both nodes are proyected ===============
         if ((fx_2 || fy_2 || fz_2) && (fx_3 || fy_3 || fz_3)){
