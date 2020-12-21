@@ -262,7 +262,18 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
 
 }
 
-__global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
+__global__ voit make_histoRR(double *RR, double alpha, int bn){
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if (idx<bn){
+        int dr = 3*idx*idx + 3*idx +1
+        RR[idx] = alpha*((double)(dr))
+    }
+
+	}
+}
+
+__global__ void make_histoXY(double *XY, double *DD, int bn,){
     /*
     Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
 

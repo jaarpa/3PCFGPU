@@ -73,7 +73,11 @@ int main(int argc, char **argv){
     PointW3D *d_ordered_pointsD_DD, *d_ordered_pointsD_DR, *d_ordered_pointsR_RR, *d_ordered_pointsR_DR;
 
     // Name of the files where the results are saved
-    string nameDD = "DDiso.dat", nameRR = "RRiso.dat", nameDR = "DRiso.dat";
+    string nameDD = "DDiso_", nameRR = "RRiso_", nameDR = "DRiso_";
+    string data_name = argv[1], rand_name = argv[2];
+    nameDD.append(data_name);
+    nameRR.append(rand_name);
+    nameDR.append(data_name);
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
@@ -83,8 +87,8 @@ int main(int argc, char **argv){
     dataR = new PointW3D[np];
 
     // Open and read the files to store the data in the arrays
-    open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
-    open_files(argv[2], np, dataR, r_size_box);
+    open_files(data_name, np, dataD, size_box); //This function also gets the real size of the box
+    open_files(rand_name, np, dataR, r_size_box);
     if (r_size_box>size_box){
         size_box=r_size_box;
     }
