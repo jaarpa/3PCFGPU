@@ -135,7 +135,7 @@ void save_histogram(string name, int bns, double *histo){
 		cout << "Failed to save file! " << endl;
 		exit(1);
 	}
-	for (int i=0; i<bns; ++i) file2 << histo[i] << endl;
+	for (int i=0; i<bns; ++i) file2 << setprecision(12) << histo[i] << endl;
 	file2.close();
 }
 //====================================================================
@@ -153,6 +153,6 @@ void save_histogram_analitic(string name, int bns, double *histo){
 		cout << "Failed to save file! " << endl;
 		exit(1);
 	}
-	for (int i=0; i<bns; ++i) file2 << histo[i] << endl;
+	for (int i=0; i<bns; ++i) file2 << setprecision(12) << histo[i] << endl;
 	file2.close();
 }
