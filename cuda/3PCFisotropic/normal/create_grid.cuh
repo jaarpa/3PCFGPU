@@ -84,6 +84,10 @@ void save_histogram(string name, int bns, double *histo){
     Receives the name of the file, number of bins in the histogram and the histogram array
     */
 
+    string mypathto_files = "../../../results/";
+    //This creates the full path to where I have my data files
+    name.insert(0,mypathto_files);
+
     ofstream file;
     file.open(name.c_str(), ios::out | ios::binary);
 
