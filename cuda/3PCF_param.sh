@@ -34,7 +34,7 @@ for ((dmax=20;dmax<=60;dmax+=10))
 do 
 	for ((partitions=20;partitions<=60;partitions+=5))
 	do
-			3PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 50653 20 $dmax $partitions
+			3PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax $partitions
 	done	
 done
 
@@ -45,7 +45,7 @@ for ((dmax=20;dmax<=60;dmax+=10))
 do 
 	for ((partitions=20;partitions<=60;partitions+=5))
 	do
-			3PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 50653 20 $dmax $partitions
+			3PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax $partitions
 	done	
 done
 
