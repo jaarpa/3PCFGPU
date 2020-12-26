@@ -51,11 +51,13 @@ int main(int argc, char **argv){
 
     double *DDD, *RRR, *DDR;
     double *d_DDD, *d_RRR, *d_DDR;
-    double *d_DD_ff_av, *d_RR_ff_av, *d_DD_ff_av_ref, *d_RR_av_ref;
+    double *d_DD_ff_av, *d_RR_ff_av, *d_DD_ff_av_ref, *d_RR_ff_av_ref;
+    double dr_ff_av, alpha_ff_av, dr_ff_av_ref, alpha_ff_av_ref, beta = (np*np)/(size_box*size_box*size_box);
 
     int nonzero_Dnodes = 0, threads_perblock_dim = 8, idxD=0;
+    int gridRR_ff_av, gridRR_ff_av_ref, threads_perblock_RR_ff_av, threads_perblock_RR_ff_av_ref;
     int blocks_D;
-
+    
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
     cucheck(cudaEventCreate(&stop_timmer));
@@ -68,9 +70,11 @@ int main(int argc, char **argv){
     Node ***hnodeD;
     DNode *hnodeD_s;
     PointW3D *h_ordered_pointsD_s;
-    cudaStream_t streamDDD, streamDD;
+    cudaStream_t streamDDD, streamDD, streamRR_ff_av, streamRR_ff_av_ref;
     cucheck(cudaStreamCreate(&streamDDD));
     cucheck(cudaStreamCreate(&streamDD));
+    cucheck(cudaStreamCreate(&streamRR_ff_av));
+    cucheck(cudaStreamCreate(&streamRR_ff_av_ref));
     DNode *dnodeD;
     PointW3D *d_ordered_pointsD;
 
@@ -110,6 +114,11 @@ int main(int argc, char **argv){
     size_node = size_box/(float)(partitions);
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
+    
+    dr_ff_av = (dmax/bn_XX_ff_av);
+    alpha_ff_av = 8*dr_ff_av*dr_ff_av*dr_ff_av*(acos(0.0))*(beta)/3;
+    dr_ff_av_ref = (dmax/bn_XX_ff_av_ref);
+    alpha_ff_av_ref = 8*dr_ff_av_ref*dr_ff_av_ref*dr_ff_av_ref*(acos(0.0))*(beta)/3;
 
     // Allocate memory for the histogram as double
     DDD = new double[bn*bn*bn];
@@ -121,12 +130,16 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_DDR, bn*bn*bn*sizeof(double)));
 
     cucheck(cudaMalloc(&d_DD_ff_av, bn_XX_ff_av*sizeof(double)));
+    cucheck(cudaMalloc(&d_RR_ff_av, bn_XX_ff_av*sizeof(double)));
     cucheck(cudaMalloc(&d_DD_ff_av_ref, bn_XX_ff_av_ref*sizeof(double)));
+    cucheck(cudaMalloc(&d_RR_ff_av_ref, bn_XX_ff_av_ref*sizeof(double)));
 
     //Restarts the main histograms in host to zero
     cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
     cucheck(cudaMemsetAsync(d_DD_ff_av, 0, bn_XX_ff_av*sizeof(double), streamDD));
     cucheck(cudaMemsetAsync(d_DD_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamDD));
+    cucheck(cudaMemsetAsync(d_RR_ff_av, 0, bn_XX_ff_av*sizeof(double), streamRR_ff_av));
+    cucheck(cudaMemsetAsync(d_RR_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamRR_ff_av_ref));
 
     hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
@@ -218,11 +231,25 @@ int main(int argc, char **argv){
     dim3 threads_perblockDD(threads_perblock_dim,threads_perblock_dim,1);
     dim3 gridDD(blocks_D,blocks_D,1);
 
+    threads_perblock_RR_ff_av = (bn_XX_ff_av<1024)*bn_XX_ff_av + (bn_XX_ff_av>=1024)*512;
+    gridRR_ff_av = (int)(ceil((float)((float)(bn_XX_ff_av)/(float)(threads_perblock_RR_ff_av))));
+    threads_perblock_RR_ff_av_ref = (bn_XX_ff_av_ref<1024)*bn_XX_ff_av_ref + (bn_XX_ff_av_ref>=1024)*512;
+    gridRR_ff_av_ref = (int)(ceil((float)((float)(bn_XX_ff_av_ref)/(float)(threads_perblock_RR_ff_av_ref))));
+
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
     make_histoXXX<<<gridDDD,threads_perblockDDD,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
+
     make_histoDD<<<gridDD,threads_perblockDD,0,streamDD>>>(d_DD_ff_av_ref, d_DD_ff_av, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn_XX_ff_av_ref, bn_XX_ff_av, dmax, d_max_node, size_box, size_node);
+    make_histoRR<<<gridRR_ff_av,threads_perblock_RR_ff_av,0,streamRR_ff_av>>>(d_RR_ff_av, alpha_ff_av, bn_XX_ff_av);
+    make_histoRR<<<gridRR_ff_av_ref,threads_perblock_RR_ff_av_ref,0,streamRR_ff_av_ref>>>(d_RR_ff_av_ref, alpha_ff_av_ref, bn_XX_ff_av_ref);
+    
+    //Wait for the 2PCF histograms to be finished. The DDD could not be finished yet
+    cucheck(cudaStreamSynchronize(streamDD));
+    cucheck(cudaStreamSynchronize(streamRR_ff_av));
+    cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
+
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
 
@@ -243,6 +270,8 @@ int main(int argc, char **argv){
     //Free the memory
     cucheck(cudaStreamDestroy(streamDDD));
     cucheck(cudaStreamDestroy(streamDD));
+    cucheck(cudaStreamDestroy(streamRR_ff_av));
+    cucheck(cudaStreamDestroy(streamRR_ff_av_ref));
 
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
@@ -255,7 +284,9 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_RRR));
     cucheck(cudaFree(d_DDR));
     cucheck(cudaFree(d_DD_ff_av_ref));
+    cucheck(cudaFree(d_RR_ff_av_ref));
     cucheck(cudaFree(d_DD_ff_av));
+    cucheck(cudaFree(d_RR_ff_av));
 
     cucheck(cudaFree(dnodeD));
     cucheck(cudaFree(d_ordered_pointsD));
