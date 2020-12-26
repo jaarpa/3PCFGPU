@@ -47,8 +47,8 @@ int main(int argc, char **argv){
 
     float time_spent, d_max_node, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
 
-    double *DDD, *RRR, *DRR, *DDR;
-    double *d_DDD, *d_RRR, *d_DRR, *d_DDR;
+    double *DDD, *RRR, *DDR;
+    double *d_DDD, *d_RRR, *d_DDR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
     int nonzero_Dnodes = 0, threads_perblock_dim = 8, idxD=0;
@@ -67,21 +67,19 @@ int main(int argc, char **argv){
     DNode *hnodeD_s;
     PointW3D *h_ordered_pointsD_s;
 
-    cudaStream_t streamDDD, streamDDR, streamDRR, streamRRR;
+    cudaStream_t streamDDD, streamDDR, streamRRR;
     cucheck(cudaStreamCreate(&streamDDD));
     cucheck(cudaStreamCreate(&streamDDR));
-    cucheck(cudaStreamCreate(&streamDRR));
     cucheck(cudaStreamCreate(&streamRRR));
     DNode *dnodeD;
     PointW3D *d_ordered_pointsD;
 
     // Name of the files where the results are saved
-    string nameDDD = "DDDiso_BPCanalytic_", nameRRR = "RRRiso_BPCanalytic_", nameDDR = "DDRiso_BPCanalytic_", nameDRR = "DRRiso_BPCanalytic_";
+    string nameDDD = "DDDiso_BPCanalytic_", nameRRR = "RRRiso_BPCanalytic_", nameDDR = "DDRiso_BPCanalytic_";
     string data_name = argv[1];
     nameDDD.append(data_name);
     nameRRR.append(data_name);
     nameDDR.append(data_name);
-    nameDRR.append(data_name);
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
@@ -117,11 +115,9 @@ int main(int argc, char **argv){
     DDD = new double[bn*bn*bn];
     RRR = new double[bn*bn*bn];
     DDR = new double[bn*bn*bn];
-    DRR = new double[bn*bn*bn];
 
     cucheck(cudaMalloc(&d_DDD, bn*bn*bn*sizeof(double)));
     cucheck(cudaMalloc(&d_RRR, bn*bn*bn*sizeof(double)));
-    cucheck(cudaMalloc(&d_DRR, bn*bn*bn*sizeof(double)));
     cucheck(cudaMalloc(&d_DDR, bn*bn*bn*sizeof(double)));
 
     //Restarts the main histograms in host to zero
@@ -222,7 +218,6 @@ int main(int argc, char **argv){
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
     cucheck(cudaMemcpyAsync(RRR, d_RRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRRR));
-    cucheck(cudaMemcpyAsync(DRR, d_DRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDRR));
     cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDR));
 
     //Waits for all the kernels to complete
@@ -230,8 +225,6 @@ int main(int argc, char **argv){
     save_histogram(nameDDD, bn, DDD);
     cucheck(cudaStreamSynchronize(streamRRR));
     save_histogram(nameRRR, bn, RRR);
-    cucheck(cudaStreamSynchronize(streamDRR));
-    save_histogram(nameDRR, bn, DRR);
     cucheck(cudaStreamSynchronize(streamDDR));
     save_histogram(nameDDR, bn, DDR);
 
@@ -248,7 +241,6 @@ int main(int argc, char **argv){
     //Free the memory
     cucheck(cudaStreamDestroy(streamDDD));
     cucheck(cudaStreamDestroy(streamDDR));
-    cucheck(cudaStreamDestroy(streamDRR));
     cucheck(cudaStreamDestroy(streamRRR));
 
     cucheck(cudaEventDestroy(start_timmer));
@@ -256,12 +248,10 @@ int main(int argc, char **argv){
 
     delete[] DDD;
     delete[] RRR;
-    delete[] DRR;    
-    delete[] DDR;    
+    delete[] DDR;
     
     cucheck(cudaFree(d_DDD));
     cucheck(cudaFree(d_RRR));
-    cucheck(cudaFree(d_DRR));
     cucheck(cudaFree(d_DDR));
 
     cucheck(cudaFree(dnodeD));
