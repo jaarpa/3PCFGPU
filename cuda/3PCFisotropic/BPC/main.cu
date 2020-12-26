@@ -44,13 +44,15 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
+    int ptt = 100, bn_ref = 200;
+    int bn_XX_ff_av = ptt*bn, bn_XX_ff_av_ref = ptt*bn_ref*bn;;
 
     float time_spent, d_max_node, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
 
     double *DDD, *RRR, *DDR;
     double *d_DDD, *d_RRR, *d_DDR;
+    double *d_DD_ff_av, *d_RR_ff_av, *d_DD_ff_av_ref, *d_RR_av_ref;
 
-    //n_kernel_calls should depend of the number of points, its density, and the number of bins
     int nonzero_Dnodes = 0, threads_perblock_dim = 8, idxD=0;
     int blocks_D;
 
@@ -66,11 +68,9 @@ int main(int argc, char **argv){
     Node ***hnodeD;
     DNode *hnodeD_s;
     PointW3D *h_ordered_pointsD_s;
-
-    cudaStream_t streamDDD, streamDDR, streamRRR;
+    cudaStream_t streamDDD, streamDD;
     cucheck(cudaStreamCreate(&streamDDD));
-    cucheck(cudaStreamCreate(&streamDDR));
-    cucheck(cudaStreamCreate(&streamRRR));
+    cucheck(cudaStreamCreate(&streamDD));
     DNode *dnodeD;
     PointW3D *d_ordered_pointsD;
 
@@ -120,8 +120,13 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_RRR, bn*bn*bn*sizeof(double)));
     cucheck(cudaMalloc(&d_DDR, bn*bn*bn*sizeof(double)));
 
+    cucheck(cudaMalloc(&d_DD_ff_av, bn_XX_ff_av*sizeof(double)));
+    cucheck(cudaMalloc(&d_DD_ff_av_ref, bn_XX_ff_av_ref*sizeof(double)));
+
     //Restarts the main histograms in host to zero
     cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
+    cucheck(cudaMemsetAsync(d_DD_ff_av, 0, bn_XX_ff_av*sizeof(double), streamDD));
+    cucheck(cudaMemsetAsync(d_DD_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamDD));
 
     hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
@@ -208,25 +213,22 @@ int main(int argc, char **argv){
     
     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
 
-    dim3 threads_perblock(threads_perblock_dim,threads_perblock_dim,threads_perblock_dim);
+    dim3 threads_perblockDDD(threads_perblock_dim,threads_perblock_dim,threads_perblock_dim);
     dim3 gridDDD(blocks_D,blocks_D,blocks_D);
+    dim3 threads_perblockDD(threads_perblock_dim,threads_perblock_dim,1);
+    dim3 gridDD(blocks_D,blocks_D,1);
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    make_histoXXX<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
+    make_histoXXX<<<gridDDD,threads_perblockDDD,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
+    make_histoDD<<<gridDD,threads_perblockDD,0,streamDD>>>(d_DD_ff_av_ref, d_DD_ff_av, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn_XX_ff_av_ref, bn_XX_ff_av, dmax, d_max_node, size_box, size_node);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
-    cucheck(cudaMemcpyAsync(RRR, d_RRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRRR));
-    cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDR));
 
     //Waits for all the kernels to complete
     cucheck(cudaStreamSynchronize(streamDDD));
     save_histogram(nameDDD, bn, DDD);
-    cucheck(cudaStreamSynchronize(streamRRR));
-    save_histogram(nameRRR, bn, RRR);
-    cucheck(cudaStreamSynchronize(streamDDR));
-    save_histogram(nameDDR, bn, DDR);
 
     cucheck(cudaEventRecord(stop_timmer));
     cucheck(cudaEventSynchronize(stop_timmer));
@@ -240,8 +242,7 @@ int main(int argc, char **argv){
 
     //Free the memory
     cucheck(cudaStreamDestroy(streamDDD));
-    cucheck(cudaStreamDestroy(streamDDR));
-    cucheck(cudaStreamDestroy(streamRRR));
+    cucheck(cudaStreamDestroy(streamDD));
 
     cucheck(cudaEventDestroy(start_timmer));
     cucheck(cudaEventDestroy(stop_timmer));
@@ -253,6 +254,8 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_DDD));
     cucheck(cudaFree(d_RRR));
     cucheck(cudaFree(d_DDR));
+    cucheck(cudaFree(d_DD_ff_av_ref));
+    cucheck(cudaFree(d_DD_ff_av));
 
     cucheck(cudaFree(dnodeD));
     cucheck(cudaFree(d_ordered_pointsD));

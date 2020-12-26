@@ -804,7 +804,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 
 //Analytic formulas for RRR and mixed histograms
 
-__global__ void make_histoXX(double *XX_ff_av_ref, double *XX_ff_av, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn_ff_av_ref, int bn_ff_av, float dmax, float d_max_node, float size_box, float size_node){
+__global__ void make_histoDD(double *XX_ff_av_ref, double *XX_ff_av, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn_ff_av_ref, int bn_ff_av, float dmax, float d_max_node, float size_box, float size_node){
     /*
     Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
 
