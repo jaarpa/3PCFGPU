@@ -1144,14 +1144,15 @@ __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float 
         int i_ = i*bn_ref;
         double rj = j*dr_ref;
         int j_ = j*ptt;
+        double dr_ptt_ref = d_max/(double)(ptt*bn_ref*bn);
         double rk = (k+0.5)*dr_ptt_ref;
-        double f_av += (ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1)/(double)(ptt);
+        double f_av = (ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1)/(double)(ptt);
         atomicAdd(&ff_av_ref[i_+j], f_av);
     }
 
 }
 
-__global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, double *ff_av_ref, float dmax, int bn, int bn_ref){
+__global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, double *ff_av_ref, double alpha, double gama, float dmax, int bn, int bn_ref){
     /*
     */
 
@@ -1190,7 +1191,7 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             f += ff_av[i]/(3*(ri+dr2));
             f += ff_av[j]/(3*(rj+dr2));
             f += ff_av[k]/(3*(rk+dr2));
-            f *= v;
+            f *= s;
             atomicAdd(&XXY[i][j][k],f);
 
         } else if (v_in<8){
