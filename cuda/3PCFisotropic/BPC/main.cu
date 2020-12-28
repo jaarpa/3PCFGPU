@@ -70,9 +70,9 @@ int main(int argc, char **argv){
     Node ***hnodeD;
     DNode *hnodeD_s;
     PointW3D *h_ordered_pointsD_s;
-    cudaStream_t streamDDD, streamDD, streamRR_ff_av, streamRR_ff_av_ref;
+    cudaStream_t streamDDD, stream_analytic, streamRR_ff_av, streamRR_ff_av_ref;
     cucheck(cudaStreamCreate(&streamDDD));
-    cucheck(cudaStreamCreate(&streamDD));
+    cucheck(cudaStreamCreate(&stream_analytic));
     cucheck(cudaStreamCreate(&streamRR_ff_av));
     cucheck(cudaStreamCreate(&streamRR_ff_av_ref));
     DNode *dnodeD;
@@ -136,8 +136,8 @@ int main(int argc, char **argv){
 
     //Restarts the main histograms in host to zero
     cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
-    cucheck(cudaMemsetAsync(d_DD_ff_av, 0, bn_XX_ff_av*sizeof(double), streamDD));
-    cucheck(cudaMemsetAsync(d_DD_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamDD));
+    cucheck(cudaMemsetAsync(d_DD_ff_av, 0, bn_XX_ff_av*sizeof(double), stream_analytic));
+    cucheck(cudaMemsetAsync(d_DD_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), stream_analytic));
     cucheck(cudaMemsetAsync(d_RR_ff_av, 0, bn_XX_ff_av*sizeof(double), streamRR_ff_av));
     cucheck(cudaMemsetAsync(d_RR_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamRR_ff_av_ref));
 
@@ -241,12 +241,12 @@ int main(int argc, char **argv){
     cudaEventRecord(start_timmer);
     make_histoXXX<<<gridDDD,threads_perblockDDD,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
 
-    make_histoDD<<<gridDD,threads_perblockDD,0,streamDD>>>(d_DD_ff_av_ref, d_DD_ff_av, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn_XX_ff_av_ref, bn_XX_ff_av, dmax, d_max_node, size_box, size_node);
+    make_histoDD<<<gridDD,threads_perblockDD,0,stream_analytic>>>(d_DD_ff_av_ref, d_DD_ff_av, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn_XX_ff_av_ref, bn_XX_ff_av, dmax, d_max_node, size_box, size_node);
     make_histoRR<<<gridRR_ff_av,threads_perblock_RR_ff_av,0,streamRR_ff_av>>>(d_RR_ff_av, alpha_ff_av, bn_XX_ff_av);
     make_histoRR<<<gridRR_ff_av_ref,threads_perblock_RR_ff_av_ref,0,streamRR_ff_av_ref>>>(d_RR_ff_av_ref, alpha_ff_av_ref, bn_XX_ff_av_ref);
     
     //Wait for the 2PCF histograms to be finished. The DDD could not be finished yet
-    cucheck(cudaStreamSynchronize(streamDD));
+    cucheck(cudaStreamSynchronize(stream_analytic));
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
 
@@ -269,7 +269,7 @@ int main(int argc, char **argv){
 
     //Free the memory
     cucheck(cudaStreamDestroy(streamDDD));
-    cucheck(cudaStreamDestroy(streamDD));
+    cucheck(cudaStreamDestroy(stream_analytic));
     cucheck(cudaStreamDestroy(streamRR_ff_av));
     cucheck(cudaStreamDestroy(streamRR_ff_av_ref));
 
