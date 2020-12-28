@@ -56,6 +56,7 @@ int main(int argc, char **argv){
     double dr_ff_av, alpha_ff_av, dr_ff_av_ref, alpha_ff_av_ref, beta = (np*np)/(size_box*size_box*size_box);
 
     int nonzero_Dnodes = 0, threads_perblock_dim = 8, idxD=0;
+    int threads_bn_ff_av=16, threads_ptt_ff_av=64;
     int gridRR_ff_av, gridRR_ff_av_ref, threads_perblock_RR_ff_av, threads_perblock_RR_ff_av_ref;
     int blocks_D;
     
@@ -238,9 +239,11 @@ int main(int argc, char **argv){
     gridRR_ff_av = (int)(ceil((float)((float)(bn_XX_ff_av)/(float)(threads_perblock_RR_ff_av))));
     threads_perblock_RR_ff_av_ref = (bn_XX_ff_av_ref<1024)*bn_XX_ff_av_ref + (bn_XX_ff_av_ref>=1024)*512;
     gridRR_ff_av_ref = (int)(ceil((float)((float)(bn_XX_ff_av_ref)/(float)(threads_perblock_RR_ff_av_ref))));
-
-    dim3 threads_perblockff_av(16,64,1);
-    dim3 gridff_av((int)(ceil((float)((float)(bn)/(float)(16)))),(int)(ceil((float)((float)(ptt)/(float)(64)))),1);
+    
+    dim3 threads_perblockff_av(threads_bn_ff_av,threads_ptt_ff_av,1);
+    dim3 gridff_av((int)(ceil((float)((float)(bn)/(float)(threads_bn_ff_av)))),(int)(ceil((float)((float)(ptt)/(float)(threads_ptt_ff_av)))),1);
+    cout << threads_perblockff_av.x << endl;
+    cout << gridff_av.x << endl;
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
