@@ -1233,9 +1233,9 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             }
 
             if (con){
-                S_av *= alph_ref;
+                S_av *= alpha_ref;
                 atomicAdd(&RRR[i*bn*bn + j*bn + k],S_av);
-                f_av *= alph_ref;
+                f_av *= alpha_ref;
                 atomicAdd(&XXY[i*bn*bn + j*bn + k],f_av);
             }
         }

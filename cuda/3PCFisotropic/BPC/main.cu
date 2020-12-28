@@ -282,7 +282,7 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
 
-    make_histo_analitic<<<gridanalytic,threads_perblockDDD,0,stream_analytic>>>(d_DDR, d_RRR, d_ff_av, d_ff_av_ref, alpha, alpha_ref, dmax, bn, bn_ref)
+    make_histo_analitic<<<gridanalytic,threads_perblockDDD,0,stream_analytic>>>(d_DDR, d_RRR, d_ff_av, d_ff_av_ref, alpha, alpha_ref, dmax, bn, bn_ref);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
     cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, stream_analytic));
