@@ -1100,16 +1100,6 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
     
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
-    /*
-    extern __shared__ int s_ff_av[];
-    //Initialize shared memory
-    int lidx = threadIdx.x;
-    double v;
-    while (lidx < bn){
-        s_ff_av[lidx] = 0.0;
-        lidx += blockDim.x;
-    }
-    __syncthreads();*/
 
     if (i<bn && j<ptt){
         int i_ = i*ptt;
@@ -1118,18 +1108,8 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
         v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1)/(double)(ptt);
         
         atomicAdd(&ff_av[i],v);
-        //atomicAdd(&s_ff_av[i],v);
 
     }
-    /*
-    __syncthreads();
-    //Add up into global var
-    lidx = threadIdx.x;
-    while (lidx < bn){
-        v = s_ff_av[lidx]/(double)(ptt);
-        atomicAdd(&ff_av[lidx],v);
-        lidx += blockDim.x;
-    }*/
 
 }
 
@@ -1159,7 +1139,10 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     int k = blockIdx.z * blockDim.z + threadIdx.z;
-
+    if (i==0 && j==0 && k ==0){
+        printf("ff_av_ref: %f, %f, %f", ff_av_ref[0], ff_av_ref[1], ff_av_ref[2] );
+        printf("ff_av: %f, %f, %f", ff_av[0], ff_av[1], ff_av[2] );
+    }
     if (i<bn && j<bn && k<bn){
 
         double dr = dmax/(double)bn;
