@@ -239,6 +239,9 @@ int main(int argc, char **argv){
     threads_perblock_RR_ff_av_ref = (bn_XX_ff_av_ref<1024)*bn_XX_ff_av_ref + (bn_XX_ff_av_ref>=1024)*512;
     gridRR_ff_av_ref = (int)(ceil((float)((float)(bn_XX_ff_av_ref)/(float)(threads_perblock_RR_ff_av_ref))));
 
+    dim3 threads_perblockff_av(16,64,1);
+    dim3 gridff_av((int)(ceil((float)((float)(bn)/(float)(16)))),(int)(ceil((float)((float)(ptt)/(float)(64)))),1);
+
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
@@ -253,7 +256,7 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
     
-    make_ff_av(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
+    make_ff_av<<<gridff_av,threads_perblockff_av,bn*sizeof(double),streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
 
