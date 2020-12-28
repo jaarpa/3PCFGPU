@@ -147,6 +147,8 @@ int main(int argc, char **argv){
 
     //Restarts the main histograms in host to zero
     cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
+    cucheck(cudaMemsetAsync(d_DDR, 0, bn*bn*bn*sizeof(double), stream_analytic));
+    cucheck(cudaMemsetAsync(d_RRR, 0, bn*bn*bn*sizeof(double), stream_analytic));
     cucheck(cudaMemsetAsync(d_DD_ff_av, 0, bn_XX_ff_av*sizeof(double), stream_analytic));
     cucheck(cudaMemsetAsync(d_DD_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), stream_analytic));
     cucheck(cudaMemsetAsync(d_RR_ff_av, 0, bn_XX_ff_av*sizeof(double), streamRR_ff_av));
