@@ -245,7 +245,7 @@ int main(int argc, char **argv){
     
     dim3 threads_perblockff_av(threads_bn_ff_av,threads_ptt_ff_av,1);
     dim3 gridff_av((int)(ceil((float)((float)(bn)/(float)(threads_bn_ff_av)))),(int)(ceil((float)((float)(ptt)/(float)(threads_ptt_ff_av)))),1);
-    
+
     dim3 threads_perblockff_av_ref(threadsff_av_ref_x,threadsff_av_ref_y,threadsff_av_ref_z);
     gridff_av_ref_x = (int)(ceil((float)((float)(bn)/(float)(threadsff_av_ref_x))));
     gridff_av_ref_y = (int)(ceil((float)((float)(bn_ref)/(float)(threadsff_av_ref_y))));
@@ -268,7 +268,7 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
     
     make_ff_av<<<gridff_av,threads_perblockff_av,bn*sizeof(double),streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
-    make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt)
+    make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
 
