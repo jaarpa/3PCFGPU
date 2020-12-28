@@ -54,12 +54,13 @@ int main(int argc, char **argv){
     double *d_DD_ff_av, *d_RR_ff_av, *d_DD_ff_av_ref, *d_RR_ff_av_ref;
     double *d_ff_av, *d_ff_av_ref;
     double dr_ff_av, alpha_ff_av, dr_ff_av_ref, alpha_ff_av_ref, beta = (np*np)/(size_box*size_box*size_box);
+    double dr, dr_ref, V, beta_3D, gama, alpha, alpha_ref;
 
     int nonzero_Dnodes = 0, threads_perblock_dim = 8, idxD=0;
     int threads_bn_ff_av=16, threads_ptt_ff_av=64;
     int gridRR_ff_av, gridRR_ff_av_ref, threads_perblock_RR_ff_av, threads_perblock_RR_ff_av_ref;
     int gridff_av_ref_x, gridff_av_ref_y, gridff_av_ref_z, threadsff_av_ref_x = 8, threadsff_av_ref_y = 16, threadsff_av_ref_z = 8;
-    int blocks_D;
+    int blocks_D, blocks_analytic;
     
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
@@ -122,6 +123,11 @@ int main(int argc, char **argv){
     alpha_ff_av = 8*dr_ff_av*dr_ff_av*dr_ff_av*(acos(0.0))*(beta)/3;
     dr_ff_av_ref = (dmax/bn_XX_ff_av_ref);
     alpha_ff_av_ref = 8*dr_ff_av_ref*dr_ff_av_ref*dr_ff_av_ref*(acos(0.0))*(beta)/3;
+
+    dr = dmax/(double)bn, dr_ref = dr/bn_ref, V = size_box*size_box, beta_3D = np/V;
+    gama = 8*(4*acos(0.0)*acos(0.0))*(np*beta_3D*beta_3D);
+    gama /= V;
+    alpha_ref = gama*dr_ref*dr_ref*dr_ref, alpha = gama*dr*dr*dr;
 
     // Allocate memory for the histogram as double
     DDD = new double[bn*bn*bn];
@@ -252,6 +258,8 @@ int main(int argc, char **argv){
     gridff_av_ref_z = (int)(ceil((float)((float)(ptt)/(float)(threadsff_av_ref_z))));
     dim3 gridff_av_ref(gridff_av_ref_x,gridff_av_ref_y,gridff_av_ref_z);
 
+    blocks_analytic = (int)(ceil((float)((float)(bn)/(float)(threads_perblock_dim))));
+    dim3 gridanalytic(blocks_analytic,blocks_analytic,blocks_analytic);
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
@@ -270,11 +278,22 @@ int main(int argc, char **argv){
     make_ff_av<<<gridff_av,threads_perblockff_av,bn*sizeof(double),streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
     make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt);
 
+    //Waits to finish the ff_av and ff_av_ref histograms
+    cucheck(cudaStreamSynchronize(streamRR_ff_av));
+    cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
+
+    make_histo_analitic<<<gridanalytic,threads_perblockDDD,0,stream_analytic>>>(d_DDR, d_RRR, d_ff_av, d_ff_av_ref, alpha, alpha_ref, dmax, bn, bn_ref)
+
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
+    cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, stream_analytic));
+    cucheck(cudaMemcpyAsync(RRR, d_RRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, stream_analytic));
 
     //Waits for all the kernels to complete
     cucheck(cudaStreamSynchronize(streamDDD));
     save_histogram(nameDDD, bn, DDD);
+    cucheck(cudaStreamSynchronize(stream_analytic));
+    save_histogram(nameDDR, bn, DDR);
+    save_histogram(nameRRR, bn, RRR);
 
     cucheck(cudaEventRecord(stop_timmer));
     cucheck(cudaEventSynchronize(stop_timmer));
