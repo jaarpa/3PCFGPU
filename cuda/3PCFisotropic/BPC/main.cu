@@ -277,7 +277,7 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
     
-    make_ff_av<<<gridff_av,threads_perblockff_av,bn*sizeof(double),streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
+    make_ff_av<<<gridff_av,threads_perblockff_av,0,streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
     make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt);
 
     //Waits to finish the ff_av and ff_av_ref histograms

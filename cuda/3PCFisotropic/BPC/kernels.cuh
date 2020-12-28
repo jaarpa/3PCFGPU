@@ -1100,7 +1100,7 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
     
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
-    
+    /*
     extern __shared__ int s_ff_av[];
     //Initialize shared memory
     int lidx = threadIdx.x;
@@ -1109,17 +1109,19 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
         s_ff_av[lidx] = 0.0;
         lidx += blockDim.x;
     }
-    __syncthreads();
+    __syncthreads();*/
 
     if (i<bn && j<ptt){
         int i_ = i*ptt;
         double ri = i*dmax/(double)bn;
         double rj = (j+0.5)*dmax/(double)bn_ff_av;
-        v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1);
+        v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1)/(double)(ptt);
         
-        atomicAdd(&s_ff_av[i],v);
-    }
+        atomicAdd(&ff_av[i],v);
+        //atomicAdd(&s_ff_av[i],v);
 
+    }
+    /*
     __syncthreads();
     //Add up into global var
     lidx = threadIdx.x;
@@ -1127,7 +1129,7 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
         v = s_ff_av[lidx]/(double)(ptt);
         atomicAdd(&ff_av[lidx],v);
         lidx += blockDim.x;
-    }
+    }*/
 
 }
 
