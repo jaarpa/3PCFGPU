@@ -1,6 +1,6 @@
 //Simple compilation
 // 01:07
-//nvcc -arch=sm_75 main.cu -o par_d.out && ./par_d.out data.dat rand0.dat 5000 30 60
+//nvcc -arch=sm_75 main.cu -o par_d.out && ./par_d.out data.dat rand0.dat 5000 30 60 250
 //nvcc -arch=sm_75 main.cu -o par_d.out && ./par_d.out data_1GPc.dat rand_1GPc.dat 405224 30 150 1024
 
 #include <stdio.h>

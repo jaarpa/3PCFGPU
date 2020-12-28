@@ -1182,14 +1182,14 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
 
         if (v_in==8){
             double s = alpha*(ri+dr2)*(rj+dr2)*(rk+dr2);
-            RRR[i*bn*bn + j*bn + k] = s
+            RRR[i*bn*bn + j*bn + k] = s;
             
             double f = 1;
             f += ff_av[i]/(3*(ri+dr2));
             f += ff_av[j]/(3*(rj+dr2));
             f += ff_av[k]/(3*(rk+dr2));
             f *= s;
-            XXY[i*bn*bn + j*bn + k] = f
+            XXY[i*bn*bn + j*bn + k] = f;
 
         } else if (v_in<8){
             bool con = false;
@@ -1234,9 +1234,9 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
 
             if (con){
                 S_av *= alpha_ref;
-                RRR[i*bn*bn + j*bn + k] = S_av
+                RRR[i*bn*bn + j*bn + k] = S_av;
                 f_av *= alpha_ref;
-                XXY[i*bn*bn + j*bn + k] = f_av
+                XXY[i*bn*bn + j*bn + k] = f_av;
             }
         }
     }
