@@ -1139,14 +1139,11 @@ __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float 
 
     if (i<bn && j<bn_ref && k<ptt){
         double dr = dmax/(double)bn;
-        double dr_ref = dr/bn_ref;
-        double ri = i*dr;
-        int i_ = i*bn_ref;
-        double rj = j*dr_ref;
-        int j_ = j*ptt;
-        double dr_ptt_ref = dmax/(double)(ptt*bn_ref*bn);
-        double rk = (k+0.5)*dr_ptt_ref;
+        double ri = i*dr, rj = j*dr/bn_ref, rk = (k+0.5)*dmax/(double)(ptt*bn_ref*bn);
+        int i_ = i*bn_ref, j_ = j*ptt;
+
         double f_av = (ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1)/(double)(ptt);
+        
         atomicAdd(&ff_av_ref[i_+j], f_av);
     }
 
