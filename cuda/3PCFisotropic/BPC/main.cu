@@ -52,6 +52,7 @@ int main(int argc, char **argv){
     double *DDD, *RRR, *DDR;
     double *d_DDD, *d_RRR, *d_DDR;
     double *d_DD_ff_av, *d_RR_ff_av, *d_DD_ff_av_ref, *d_RR_ff_av_ref;
+    double *d_ff_av;//, *d_ff_av_ref
     double dr_ff_av, alpha_ff_av, dr_ff_av_ref, alpha_ff_av_ref, beta = (np*np)/(size_box*size_box*size_box);
 
     int nonzero_Dnodes = 0, threads_perblock_dim = 8, idxD=0;
@@ -133,6 +134,7 @@ int main(int argc, char **argv){
     cucheck(cudaMalloc(&d_RR_ff_av, bn_XX_ff_av*sizeof(double)));
     cucheck(cudaMalloc(&d_DD_ff_av_ref, bn_XX_ff_av_ref*sizeof(double)));
     cucheck(cudaMalloc(&d_RR_ff_av_ref, bn_XX_ff_av_ref*sizeof(double)));
+    cucheck(cudaMalloc(&d_ff_av, bn*sizeof(double)));
 
     //Restarts the main histograms in host to zero
     cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
@@ -140,6 +142,7 @@ int main(int argc, char **argv){
     cucheck(cudaMemsetAsync(d_DD_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), stream_analytic));
     cucheck(cudaMemsetAsync(d_RR_ff_av, 0, bn_XX_ff_av*sizeof(double), streamRR_ff_av));
     cucheck(cudaMemsetAsync(d_RR_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamRR_ff_av_ref));
+    cucheck(cudaMemsetAsync(d_ff_av, 0, bn*sizeof(double), streamRR_ff_av);
 
     hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
@@ -249,7 +252,8 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(stream_analytic));
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
-
+    
+    make_ff_av(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
 

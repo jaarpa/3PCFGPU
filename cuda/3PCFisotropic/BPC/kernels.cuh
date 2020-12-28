@@ -1096,7 +1096,7 @@ __global__ void make_histoRR(double *RR, double alpha, int bn){
 }
 
 
-__global__ void make_ff_av(double *ff_av, double *XX, double *YY, double dr, float dmax, int bn, int bn_ff_av, int ptt){
+__global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, int bn, int bn_ff_av, int ptt){
     
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1113,9 +1113,9 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, double dr, flo
 
     if (i<bn && j<ptt){
         int i_ = i*ptt;
-        double ri = i*dr;
+        double ri = i*d_max/(double)bn;
         double rj = (j+0.5)*dmax/(double)bn_ff_av;
-        v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1)/(double)(ptt);
+        v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1);
         
         atomicAdd(&s_ff_av[i],v);
     }
@@ -1124,7 +1124,7 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, double dr, flo
     //Add up into global var
     lidx = threadIdx.x;
     while (lidx < bn){
-        v = s_ff_av[lidx];
+        v = s_ff_av[lidx]/(double)(ptt);
         atomicAdd(&ff_av[lidx],v);
         lidx += blockDim.x;
     }
