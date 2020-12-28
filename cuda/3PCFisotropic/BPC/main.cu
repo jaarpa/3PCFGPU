@@ -291,6 +291,7 @@ int main(int argc, char **argv){
     cucheck(cudaFree(d_RR_ff_av_ref));
     cucheck(cudaFree(d_DD_ff_av));
     cucheck(cudaFree(d_RR_ff_av));
+    cucheck(cudaFree(d_ff_av));
 
     cucheck(cudaFree(dnodeD));
     cucheck(cudaFree(d_ordered_pointsD));
