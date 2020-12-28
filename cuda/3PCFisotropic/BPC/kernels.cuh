@@ -1105,7 +1105,7 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
         int i_ = i*ptt;
         double ri = i*dmax/(double)bn;
         double rj = (j+0.5)*dmax/(double)bn_ff_av;
-        v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1)/(double)(ptt);
+        double v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1)/(double)(ptt);
         
         atomicAdd(&ff_av[i],v);
 
