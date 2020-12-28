@@ -1113,7 +1113,7 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
 
     if (i<bn && j<ptt){
         int i_ = i*ptt;
-        double ri = i*d_max/(double)bn;
+        double ri = i*dmax/(double)bn;
         double rj = (j+0.5)*dmax/(double)bn_ff_av;
         v = (ri + rj)*((*(XX+i_+j)/(*(YY+i_+j))) - 1);
         
