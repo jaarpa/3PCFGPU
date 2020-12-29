@@ -119,8 +119,8 @@ int main(int argc, char **argv){
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
 
-    beta = (np*np)/(size_box*size_box*size_box)
-    
+    beta = (np*np)/(size_box*size_box*size_box);
+
     dr_ff_av = (dmax/bn_XX_ff_av);
     alpha_ff_av = 8*dr_ff_av*dr_ff_av*dr_ff_av*(acos(0.0))*(beta)/3;
 
