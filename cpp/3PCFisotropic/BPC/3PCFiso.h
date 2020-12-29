@@ -1584,8 +1584,6 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	delete[] RR;
 	
 	//=====================================================================
-	std::cout << "ff_av_ref: " << *(ff_av_ref+0) << *(ff_av_ref+1) << *(ff_av_ref+2) << std::endl;
-	std::cout << "ff_av: " << *(ff_av+0) << *(ff_av+1) << *(ff_av+2) << std::endl;
 	double alph_ref = gama*dr_ref*dr_ref*dr_ref;
 	double dr2 = dr/2;
 	double dr_ptt2 = dr_ptt/2;
@@ -1600,6 +1598,11 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	bool con;
 			double c_RRR;
 	
+	std::cout << "ff_av_ref, ff_av"<< std::endl;
+	for (int pr=0; pr<25; pr++){
+		std::cout << *(ff_av_ref+pr) << ", " << *(ff_av+pr) << std::endl;
+	}
+
 	for(i=0; i<bn; ++i) {
 	ri = i*dr;
 	i_ = i*bn_ref;

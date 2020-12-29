@@ -103,7 +103,7 @@ int main(int argc, char **argv){
 	delete_dat();
 	clock_t c_start = clock();
 	//====================================================================
-	my_hist.make_histoXXX(DDD, my_hist.meshData());
+	//my_hist.make_histoXXX(DDD, my_hist.meshData());
 	clock_t c_end = clock();
 	float time_elapsed_s = ((float)(c_end-c_start))/CLOCKS_PER_SEC;
 	printf("\nCPU time used only DDD = %.4f seg.\n", time_elapsed_s );
