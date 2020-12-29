@@ -1213,9 +1213,13 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                     }
                 }
             }
-            if (i==0 && j==0 && k==0){
-                printf("(0,0,0)");
-                printf("alpha_ref: %f, dr_ref: %f, bn_ref: %i \n", alpha_ref, dr_ref, bn_ref);
+            if (i==0 && j==1 && k==1){
+                printf("(0,1,1) \n");
+                printf("alpha_ref: %f, dr_ref: %f, bn_ref: %i, S_av: %f \n", alpha_ref, dr_ref, bn_ref, S_av*alpha_ref);
+            }
+            if (i==3 && j==3 && k==3){
+                printf("(3,3,3) \n");
+                printf("alpha_ref: %f, dr_ref: %f, bn_ref: %i, S_av: %f \n", alpha_ref, dr_ref, bn_ref, S_av*alpha_ref);
             }
             if (con){
                 S_av *= alpha_ref;
