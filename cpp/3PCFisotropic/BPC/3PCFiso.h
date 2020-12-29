@@ -1660,8 +1660,12 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 				}
 				if (v_in==8){
 
-					if (i==0 && j==0 && k==0){
-						*(*(*(XXY+0)+0)+3) += 1;
+
+					if (u==7 && v==7 && w==7){
+						printf("u,v,w, 7,7,7 \n");
+						printf("(*(ff_av_ref+i_+u)/(3*(ru+dr_ref2))), %f \n", (*(ff_av_ref+i_+u)/(3*(ru+dr_ref2))));
+						printf("(*(ff_av_ref+j_+v)/(3*(rv+dr_ref2))), %f \n", (*(ff_av_ref+j_+v)/(3*(rv+dr_ref2))));
+						printf("(*(ff_av_ref+k_+w)/(3*(rw+dr_ref2))), %f \n", (*(ff_av_ref+(k*bn_ref)+w)/(3*(rw+dr_ref2))));
 					}
 					c_RRR = (ru+dr_ref2)*(rv+dr_ref2)*(rw+dr_ref2);
 					S_av += c_RRR;
