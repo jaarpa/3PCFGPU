@@ -1173,7 +1173,7 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             f *= s;
             XXY[i*bn*bn + j*bn + k] = f;
 
-        } else if (v_in<8){
+        } /*else if (v_in<8 && v_in>0){
             bool con = false;
             double dr_ref = dr/bn_ref;
             double dr_ref2 = dr_ref*0.5;
@@ -1220,6 +1220,6 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                 f_av *= alpha_ref;
                 XXY[i*bn*bn + j*bn + k] = f_av;
             }
-        }
+        }*/
     }
 }
