@@ -1630,7 +1630,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
             printf("30.8450536858 \n");
             printf("v_in: %f \n", v_in);
         }
-		
+		/*
 		if (v_in==8){
 			*(*(*(XXX+i)+j)+k) += alph*(ri+dr2)*(rj+dr2)*(rk+dr2);
 			f = 1;
@@ -1686,7 +1686,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 				*(*(*(XXX+i)+j)+k) += alph_ref*S_av;
 				*(*(*(XXY+i)+j)+k) += alph_ref*f_av;
 			}
-		}
+		}*/
 	}
 	}
 	}
