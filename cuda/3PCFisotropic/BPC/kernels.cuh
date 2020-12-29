@@ -1171,7 +1171,7 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             f += ff_av[j]/(3*(rj+dr2));
             f += ff_av[k]/(3*(rk+dr2));
             f *= s;
-            XXY[i*bn*bn + j*bn + k] = f;
+            atomicAdd(&XXY[i*bn*bn + j*bn + k],f);
 
         } else if (v_in<8 && v_in>0){
             bool con = false;
