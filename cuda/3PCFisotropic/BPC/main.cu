@@ -45,7 +45,7 @@ int main(int argc, char **argv){
 
     unsigned int np = stoi(argv[3]), bn = stoi(argv[4]), partitions;
     int ptt = 100, bn_ref = 200;
-    int bn_XX_ff_av = ptt*bn, bn_XX_ff_av_ref = ptt*bn_ref*bn;;
+    int bn_XX_ff_av = ptt*bn, bn_XX_ff_av_ref = ptt*bn_ref*bn;
 
     float time_spent, d_max_node, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
 
