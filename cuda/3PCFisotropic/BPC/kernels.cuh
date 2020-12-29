@@ -1200,7 +1200,7 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                         }
 
                         if (v_in==8){
-                            if (i==1 && j==2 && k==3){
+                            if (i==0 && j==0 && k==0){
                                 atomicAdd(&XXY[0*bn*bn + 0*bn + 3], 1);
                             }
                             c_RRR = (ru+dr_ref2)*(rv+dr_ref2)*(rw+dr_ref2);
