@@ -1100,13 +1100,13 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
     
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
-
+    /*
     if (i==0 && j==0){
         printf("DD_ff_av \n");
         for(int a=0; a<15; a++){
             printf("%f \n", XX[a]);
         }
-    }
+    }*/
     
     if (i<bn && j<ptt){
         int i_ = i*ptt;
