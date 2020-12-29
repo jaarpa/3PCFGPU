@@ -1157,7 +1157,8 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                 r2 = rj + ((double)(b)*dr);
                 for (int c = 0; c < 2; ++c){
                     r3 = rk + ((double)(c)*dr);
-                    v_in += (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1);
+                    //v_in += (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1);
+                    if (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1) ++v_in;
                 }
             }
         }
@@ -1194,7 +1195,8 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                                 r2 = rv + ((double)(b)*dr_ref);
                                 for (int c = 0; c < 2; ++c){
                                     r3 = rw + ((double)(c)*dr_ref);
-                                    v_in += (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1);
+                                    //v_in += (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1);
+                                    if (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1) ++v_in;
                                 }
                             }
                         }
