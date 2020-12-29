@@ -1581,7 +1581,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	//std::cout << "=>" << *(ff_av_ref+i) << std::endl;
 	}
 	
-	for (i=0; i<bn_ref*bn; ++i) *(ff_av_ref+i) = 1.1;
+	for (i=0; i<bn_ref*bn; ++i) *(ff_av_ref+i) = 1.0;
 
 	delete[] DD;
 	delete[] RR;
