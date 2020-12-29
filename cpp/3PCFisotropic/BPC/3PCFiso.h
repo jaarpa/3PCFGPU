@@ -1633,7 +1633,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 
             if (i==3 && j==3 && k==3){
                 printf("(3,3,3) \n");
-                printf("f: %f, s: %f \n", f, s);
+                printf("f: %f, s: %f \n", f, alph*(ri+dr2)*(rj+dr2)*(rk+dr2));
             }
 		}
 		
