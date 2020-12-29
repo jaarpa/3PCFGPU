@@ -1162,16 +1162,6 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             }
         }
 
-        if (i==1 && j==1 && k==0){
-            printf("-33.434730629 \n");
-            printf("v_in: %f \n", v_in);
-        }
-        if (i==0 && j==0 && k==0){
-            printf("30.8450536858 \n");
-            printf("v_in: %f \n", v_in);
-        }
-
-        /*
         if (v_in==8){
             double s = alpha*(ri+dr2)*(rj+dr2)*(rk+dr2);
             RRR[i*bn*bn + j*bn + k] = s;
@@ -1230,6 +1220,6 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                 f_av *= alpha_ref;
                 XXY[i*bn*bn + j*bn + k] = f_av;
             }
-        } */
+        }
     }
 }
