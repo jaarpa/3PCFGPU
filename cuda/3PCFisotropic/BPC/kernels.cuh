@@ -1100,13 +1100,13 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
     
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
-    /*
+    
     if (i==0 && j==0){
         printf("DD_ff_av \n");
-        for(int a=0; a<15; a++){
+        for(int a=2989; a<3000; a++){
             printf("%f \n", XX[a]);
         }
-    }*/
+    }
     
     if (i<bn && j<ptt){
         int i_ = i*ptt;
@@ -1125,13 +1125,6 @@ __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float 
     int k = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     int i = blockIdx.z * blockDim.z + threadIdx.z;
-
-    if (i==0 && j==0 && k ==0){
-        printf("DD_ff_av_ref \n");
-        for(int a=100*200*30; a>599900; a--){
-            printf("%f \n", DD[a]);
-        }
-    }
 
     if (i<bn && j<bn_ref && k<ptt){
         double dr = dmax/(double)bn;
