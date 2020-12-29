@@ -1533,6 +1533,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	//std::cout << "=>" << f_av/(double)(ptt) << std::endl;
 	*(ff_av+i) += f_av/(double)(ptt);
 	}
+	for (i=0; i<bn; ++i) *(ff_av+i) = 0.0;
 	delete[] DD;
 	delete[] RR;
 	
