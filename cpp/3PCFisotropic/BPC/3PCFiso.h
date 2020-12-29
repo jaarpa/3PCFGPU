@@ -1631,10 +1631,6 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 			f *= *(*(*(XXX+i)+j)+k);
 			*(*(*(XXY+i)+j)+k) += f;
 
-            if (i==3 && j==3 && k==3){
-                printf("(3,3,3) \n");
-                printf("f: %f, s: %f \n", f, alph*(ri+dr2)*(rj+dr2)*(rk+dr2));
-            }
 		}
 		
 		else if (v_in < 8 && v_in > 0){
@@ -1663,6 +1659,10 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 				}
 				}
 				if (v_in==8){
+
+					if (i==1 && j==2 && k==3){
+						*(*(*(XXY+0)+0)+3) += 1;
+					}
 					c_RRR = (ru+dr_ref2)*(rv+dr_ref2)*(rw+dr_ref2);
 					S_av += c_RRR;
 					f = 1;
@@ -1677,15 +1677,6 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 			}
 			}
 			}
-			
-            if (i==0 && j==1 && k==1){
-                printf("(0,1,1) \n");
-				printf("alpha_ref: %.12f, con: %d, f_av: %f \n", alph_ref, con, f_av);
-            }
-            if (i==1 && j==2 && k==3){
-                printf("(1,2,3) \n");
-				printf("alpha_ref: %.12f, con: %d, f_av: %f \n", alph_ref, con, f_av);
-            }
 
 			if (con){
 				*(*(*(XXX+i)+j)+k) += alph_ref*S_av;
