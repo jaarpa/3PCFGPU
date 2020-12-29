@@ -1665,9 +1665,9 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 					c_RRR = (ru+dr_ref2)*(rv+dr_ref2)*(rw+dr_ref2);
 					S_av += c_RRR;
 					f = 1;
-					f += (*(ff_av_ref+i_+u);//(3*(ru+dr_ref2)));
-					f += (*(ff_av_ref+j_+v);//(3*(rv+dr_ref2)));
-					f += (*(ff_av_ref+(k*bn_ref)+w);//(3*(rw+dr_ref2)));
+					f += (*(ff_av_ref+i_+u));//(3*(ru+dr_ref2)));
+					f += (*(ff_av_ref+j_+v));//(3*(rv+dr_ref2)));
+					f += (*(ff_av_ref+(k*bn_ref)+w));//(3*(rw+dr_ref2)));
 					f *= c_RRR;
 					f_av += f;
 					//if(i_+u > bn_ref*bn) std::cout << i_+u << std::endl;
