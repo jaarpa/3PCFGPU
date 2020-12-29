@@ -1141,9 +1141,9 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
     int k = blockIdx.z * blockDim.z + threadIdx.z;
 
     if (i==0 && j==0 && k==0){
-        printf("ff_av, ff_av_ref \n");
-        for (int pr=0;pr<10;pr++){
-            printf("%f, %f \n", ff_av[pr],ff_av_ref[pr]);
+        printf("ff_av_ref, ff_av \n");
+        for (int pr=0;pr<20;pr++){
+            printf("%f, %f \n", ff_av_ref[pr], ff_av[pr]);
         }
     }
 
