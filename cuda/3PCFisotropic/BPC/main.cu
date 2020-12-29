@@ -53,7 +53,7 @@ int main(int argc, char **argv){
     double *d_DDD, *d_RRR, *d_DDR;
     double *d_DD_ff_av, *d_RR_ff_av, *d_DD_ff_av_ref, *d_RR_ff_av_ref;
     double *d_ff_av, *d_ff_av_ref;
-    double dr_ff_av, alpha_ff_av, dr_ff_av_ref, alpha_ff_av_ref, beta = (np*np)/(size_box*size_box*size_box);
+    double dr_ff_av, alpha_ff_av, dr_ff_av_ref, alpha_ff_av_ref, beta;
     double dr, dr_ref, V, beta_3D, gama, alpha, alpha_ref;
 
     int nonzero_Dnodes = 0, threads_perblock_dim = 8, idxD=0;
@@ -118,6 +118,8 @@ int main(int argc, char **argv){
     size_node = size_box/(float)(partitions);
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
+
+    beta = (np*np)/(size_box*size_box*size_box)
     
     dr_ff_av = (dmax/bn_XX_ff_av);
     alpha_ff_av = 8*dr_ff_av*dr_ff_av*dr_ff_av*(acos(0.0))*(beta)/3;
