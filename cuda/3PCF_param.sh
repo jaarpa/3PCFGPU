@@ -7,31 +7,31 @@
 #N_bins --> 20
 
 
-touch time_results.dat #Abrimos archivo
+#touch time_results.dat #Abrimos archivo
 nvcc -arch=sm_75 3PCFisotropic/normal/optimization.cu -o 3PCFisotropic/normal/opt.out
 
 # ------------------- Encabezado del archivo ----------------------------------------
 
-echo "3PCF isotropica. Sin BPC. Histograma DDD \n" >> time_results.dat
-echo "caja 512MPc \n" >> time_results.dat
-echo "n_points, size_box, d_max, partitions, time [s] \n" >> time_results.dat
+#echo "3PCF isotropica. Sin BPC. Histograma DDD \n" >> time_results.dat
+#echo "caja 512MPc \n" >> time_results.dat
+#echo "n_points, size_box, d_max, partitions, time [s] \n" >> time_results.dat
 
 # ------------------- Cuerpo del archivo --------------------------------------------
 
 # ------------------- Para caja de 512MPc -------------------------------------------
 
-for dmax in $(seq 20 10 60)
-do 
-	for partitions in $(seq 20 5 60)
-	do
-			3PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax -1 $partitions
-	done	
-done
+#for dmax in $(seq 20 10 60)
+#do 
+	#for partitions in $(seq 20 5 60)
+	#do
+			#3PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax -1 $partitions
+	#done	
+#done
 
 
 # ------------------- Para caja de 1GPc --------------------------------------------
 
-for dmax in $(seq 20 10 60)
+for dmax in $(seq 30 10 60)
 do 
 	for partitions in $(seq 20 5 60)
 	do
