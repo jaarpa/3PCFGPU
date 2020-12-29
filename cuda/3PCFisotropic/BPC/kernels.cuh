@@ -1203,9 +1203,9 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                             c_RRR = (ru+dr_ref2)*(rv+dr_ref2)*(rw+dr_ref2);
                             S_av += c_RRR;
                             f = 1;
-                            f += (ff_av_ref[i_+u])/(3*(ru+dr_ref2)));
-                            f += (ff_av_ref[j_+v])/(3*(rv+dr_ref2)));
-                            f += (ff_av_ref[k_+w])/(3*(rw+dr_ref2)));
+                            f += (ff_av_ref[i_+u])/(3*(ru+dr_ref2));
+                            f += (ff_av_ref[j_+v])/(3*(rv+dr_ref2));
+                            f += (ff_av_ref[k_+w])/(3*(rw+dr_ref2));
                             f *= c_RRR;
                             f_av += f;
                             con = true;
