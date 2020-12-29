@@ -1622,7 +1622,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 		}
 		}
 
-        if (i==1 && j==1 && k==0){
+        if (i==0 && j==1 && k==1){
             printf("-33.434730629 \n");
             printf("v_in: %f \n", v_in);
         }
