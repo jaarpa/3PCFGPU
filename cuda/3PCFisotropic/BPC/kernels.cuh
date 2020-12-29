@@ -1128,7 +1128,7 @@ __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float 
 
     if (i==0 && j==0 && k ==0){
         printf("DD_ff_av_ref \n");
-        for(int a=0; a<100; a++){
+        for(int a=100*200*30; a>599900; a--){
             printf("%f \n", DD[a]);
         }
     }
