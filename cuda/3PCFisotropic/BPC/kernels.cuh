@@ -1101,6 +1101,13 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
 
+    if (i==0 && j==0 && k ==0){
+        printf("DD_ff_av \n");
+        for(int a=0; a<15; a++){
+            printf("%f \n", DD[a]);
+        }
+    }
+    
     if (i<bn && j<ptt){
         int i_ = i*ptt;
         double ri = i*dmax/(double)bn;
@@ -1118,6 +1125,13 @@ __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float 
     int k = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     int i = blockIdx.z * blockDim.z + threadIdx.z;
+
+    if (i==0 && j==0 && k ==0){
+        printf("DD_ff_av_ref \n");
+        for(int a=0; a<15; a++){
+            printf("%f \n", DD[a]);
+        }
+    }
 
     if (i<bn && j<bn_ref && k<ptt){
         double dr = dmax/(double)bn;
@@ -1143,6 +1157,7 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
         printf("ff_av_ref: %f, %f, %f \n", ff_av_ref[0], ff_av_ref[1], ff_av_ref[2] );
         printf("ff_av: %f, %f, %f \n", ff_av[0], ff_av[1], ff_av[2] );
     }
+    /*
     if (i<bn && j<bn && k<bn){
 
         double dr = dmax/(double)bn;
@@ -1224,5 +1239,5 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
                 XXY[i*bn*bn + j*bn + k] = f_av;
             }
         }
-    }
+    }*/
 }
