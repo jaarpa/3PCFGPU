@@ -1630,6 +1630,11 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 			f += (*(ff_av+k)/(3*(rk+dr2)));
 			f *= *(*(*(XXX+i)+j)+k);
 			*(*(*(XXY+i)+j)+k) += f;
+
+            if (i==3 && j==3 && k==3){
+                printf("(3,3,3) \n");
+                printf("f: %f, s: %f \n", f, s);
+            }
 		}
 		
 		else if (v_in < 8 && v_in > 0){

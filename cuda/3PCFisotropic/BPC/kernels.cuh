@@ -1173,6 +1173,11 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             f *= s;
             XXY[i*bn*bn + j*bn + k] = f;
 
+            if (i==3 && j==3 && k==3){
+                printf("(3,3,3) \n");
+                printf("f: %f, s: %f \n", f, s);
+            }
+
         } else if (v_in<8 && v_in>0){
             bool con = false;
             double dr_ref = dr/bn_ref;
