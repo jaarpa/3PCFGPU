@@ -1621,6 +1621,15 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 		}
 		}
 		}
+
+        if (i==1 && j==1 && k==0){
+            printf("-33.434730629 \n");
+            printf("v_in: %f \n", v_in);
+        }
+        if (i==0 && j==0 && k==0){
+            printf("30.8450536858 \n");
+            printf("v_in: %f \n", v_in);
+        }
 		
 		if (v_in==8){
 			*(*(*(XXX+i)+j)+k) += alph*(ri+dr2)*(rj+dr2)*(rk+dr2);

@@ -1167,7 +1167,7 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             printf("v_in: %f \n", v_in);
         }
         if (i==0 && j==0 && k==0){
-            printf("-33.434730629 \n");
+            printf("30.8450536858 \n");
             printf("v_in: %f \n", v_in);
         }
 
