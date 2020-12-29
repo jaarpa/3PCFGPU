@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #Script para variar parametros del programa 3PCFisotropica
+#PID 10484
 
 #Dmax --> [20..60..10] (de 20 a 60 en incrementos de 10)
 #N_bins --> 20
