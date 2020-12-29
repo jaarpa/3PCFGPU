@@ -1144,7 +1144,7 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
 
         double dr = dmax/(double)bn;
         double dr2 = dr*0.5;
-        double ri = i*dr, rj = j*dr, rk = k*dr;
+        double ri = (double)(i)*dr, rj = (double)(j)*dr, rk = (double)(k)*dr;
         int i_ = i*bn_ref, j_ = j*bn_ref, k_ = k*bn_ref;;
         double r1, r2, r3;
         int short v_in = 0;
@@ -1152,11 +1152,11 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
         // Check vertices of the 
         // cube to make refinement
         for (int a = 0; a < 2; ++a){
-            r1 = ri + (a*dr);
+            r1 = ri + ((double)(a)*dr);
             for (int b = 0; b < 2; ++b){
-                r2 = rj + (b*dr);
+                r2 = rj + ((double)(b)*dr);
                 for (int c = 0; c < 2; ++c){
-                    r3 = rk + (c*dr);
+                    r3 = rk + ((double)(c)*dr);
                     v_in += (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1);
                 }
             }
@@ -1181,19 +1181,19 @@ __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, dou
             double c_RRR, f, ru, rv, rw;
 
             for(int u=0; u<bn_ref; ++u) {
-                ru = ri + (u*dr_ref);
+                ru = ri + ((double)(u)*dr_ref);
                 for(int v=0; v<bn_ref; ++v) {
-                    rv = rj + (v*dr_ref);
+                    rv = rj + ((double)(v)*dr_ref);
                     for(int w=0; w<bn_ref; ++w) {
-                        rw = rk + (w*dr_ref);
+                        rw = rk + ((double)(w)*dr_ref);
                         
                         v_in = 0;
                         for (int a = 0; a < 2; ++a){
-                            r1 = ru + (a*dr_ref);
+                            r1 = ru + ((double)(a)*dr_ref);
                             for (int b = 0; b < 2; ++b){
-                                r2 = rv + (b*dr_ref);
+                                r2 = rv + ((double)(b)*dr_ref);
                                 for (int c = 0; c < 2; ++c){
-                                    r3 = rw + (c*dr_ref);
+                                    r3 = rw + ((double)(c)*dr_ref);
                                     v_in += (r1 + r2 >= r3 && r1 + r3 >= r2 && r2 + r3 >= r1);
                                 }
                             }
