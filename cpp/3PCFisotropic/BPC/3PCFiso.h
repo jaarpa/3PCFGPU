@@ -1659,10 +1659,8 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 				}
 				}
 				if (v_in==8){
-
-
-					if (u==7 && v==7 && w==7){
-						printf("u,v,w, 7,7,7 \n");
+					if (i==0 && j==1 && k==1){
+						printf("(0,1,1) \n");
 						printf("(*(ff_av_ref+i_+u)/(3*(ru+dr_ref2))), %f \n", (*(ff_av_ref+i_+u)/(3*(ru+dr_ref2))));
 						printf("(*(ff_av_ref+j_+v)/(3*(rv+dr_ref2))), %f \n", (*(ff_av_ref+j_+v)/(3*(rv+dr_ref2))));
 						printf("(*(ff_av_ref+k_+w)/(3*(rw+dr_ref2))), %f \n", (*(ff_av_ref+(k*bn_ref)+w)/(3*(rw+dr_ref2))));
