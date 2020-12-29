@@ -19,9 +19,9 @@ echo "n_points, size_box, d_max, partitions, time [s] \n" >> time_results.dat
 
 # ------------------- Para caja de 512MPc -------------------------------------------
 
-for ((dmax=20;dmax<=60;dmax+=10))
+for dmax in $(seq 20 10 60)
 do 
-	for ((partitions=20;partitions<=60;partitions+=5))
+	for partitions in $(seq 20 5 60)
 	do
 			3PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax -1 $partitions
 	done	
@@ -30,9 +30,9 @@ done
 
 # ------------------- Para caja de 1GPc --------------------------------------------
 
-for ((dmax=20;dmax<=60;dmax+=10))
+for dmax in $(seq 20 10 60)
 do 
-	for ((partitions=20;partitions<=60;partitions+=5))
+	for partitions in $(seq 20 5 60)
 	do
 			3PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax -1 $partitions
 	done	
@@ -41,9 +41,9 @@ done
 
 # ------------------- Para caja de 2GpC --------------------------------------------
 
-for ((dmax=20;dmax<=60;dmax+=10))
+for dmax in $(seq 20 10 60)
 do 
-	for ((partitions=20;partitions<=60;partitions+=5))
+	for partitions in $(seq 20 5 60)
 	do
 			3PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax -1 $partitions
 	done	
