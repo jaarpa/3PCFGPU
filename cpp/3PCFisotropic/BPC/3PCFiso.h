@@ -1631,7 +1631,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 			f *= *(*(*(XXX+i)+j)+k);
 			*(*(*(XXY+i)+j)+k) += f;
 		}
-		/*
+		
 		else if (v_in < 8 && v_in > 0){
 			
 			con = false;
@@ -1677,7 +1677,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 				*(*(*(XXX+i)+j)+k) += alph_ref*S_av;
 				*(*(*(XXY+i)+j)+k) += alph_ref*f_av;
 			}
-		}*/
+		}
 	}
 	}
 	}
