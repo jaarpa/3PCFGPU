@@ -157,7 +157,7 @@ int main(int argc, char **argv){
     cucheck(cudaMemsetAsync(d_RR_ff_av, 0, bn_XX_ff_av*sizeof(double), streamRR_ff_av));
     cucheck(cudaMemsetAsync(d_RR_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamRR_ff_av_ref));
     cucheck(cudaMemsetAsync(d_ff_av, 0, bn*sizeof(double), streamRR_ff_av));
-    cucheck(cudaMemsetAsync(d_ff_av_ref, 0, bn_ref*bn*sizeof(double), streamRR_ff_av_ref));
+    cucheck(cudaMemsetAsync(d_ff_av_ref, 1, bn_ref*bn*sizeof(double), streamRR_ff_av_ref));
 
     hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
@@ -282,7 +282,7 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
     
     make_ff_av<<<gridff_av,threads_perblockff_av,0,streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
-    make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt);
+    //make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt);
 
     //Waits to finish the ff_av and ff_av_ref histograms
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
