@@ -258,9 +258,9 @@ int main(int argc, char **argv){
     dim3 gridff_av((int)(ceil((float)((float)(bn)/(float)(threads_bn_ff_av)))),(int)(ceil((float)((float)(ptt)/(float)(threads_ptt_ff_av)))),1);
 
     dim3 threads_perblockff_av_ref(threadsff_av_ref_x,threadsff_av_ref_y,threadsff_av_ref_z);
-    gridff_av_ref_x = (int)(ceil((float)((float)(bn)/(float)(threadsff_av_ref_x))));
+    gridff_av_ref_x = (int)(ceil((float)((float)(ptt)/(float)(threadsff_av_ref_x))));
     gridff_av_ref_y = (int)(ceil((float)((float)(bn_ref)/(float)(threadsff_av_ref_y))));
-    gridff_av_ref_z = (int)(ceil((float)((float)(ptt)/(float)(threadsff_av_ref_z))));
+    gridff_av_ref_z = (int)(ceil((float)((float)(bn)/(float)(threadsff_av_ref_z))));
     dim3 gridff_av_ref(gridff_av_ref_x,gridff_av_ref_y,gridff_av_ref_z);
 
     blocks_analytic = (int)(ceil((float)((float)(bn)/(float)(threads_perblock_dim))));
