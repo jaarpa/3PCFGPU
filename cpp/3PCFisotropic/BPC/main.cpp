@@ -8,6 +8,7 @@
 #include "3PCFiso.h"
 #include <omp.h>
 #include <cmath>
+#include <iomanip>
 
 using namespace std;
 
@@ -195,7 +196,7 @@ void save_histogram(string name, int bns, double ***histo){
 	for (i=0; i<bns; i++){
 		for (j=0; j<bns; j++){
 			for (k=0; k<bns; k++){
-				file << histo[i][j][k] << " "; 
+				file << setprecision(12) << histo[i][j][k] << " "; 
 			}
 			file << "\n";
 		}
