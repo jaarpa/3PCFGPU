@@ -1675,9 +1675,9 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 			
             if (i==0 && j==0 && k==0){
                 printf("(0,0,0)");
-                printf("alpha_ref: %f, dr_ref: %f, bn_ref: %i \n", alpha_ref, dr_ref, bn_ref);
+                printf("alpha_ref: %f, dr_ref: %f, bn_ref: %i \n", alph_ref, dr_ref, bn_ref);
             }
-			
+
 			if (con){
 				*(*(*(XXX+i)+j)+k) += alph_ref*S_av;
 				*(*(*(XXY+i)+j)+k) += alph_ref*f_av;
