@@ -216,6 +216,12 @@ int main(int argc, char **argv){
     cucheck(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
 
     //cout << "Spent "<< time_spent << " miliseconds to compute and save all the histograms." << endl;
+
+    string name = "time_results.dat";
+    ofstream time_results_file;
+    time_results_file.open(name.c_str(), ios_base::app);
+    time_results_file << np << "\t" << size_box << "\t" << dmax << "\t" << partitions << "\t" << time_spent/1000 << endl;
+    time_results_file.close();
     
     /* =======================================================================*/
     /* ==========================  Free memory ===============================*/
