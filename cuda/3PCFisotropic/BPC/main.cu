@@ -269,6 +269,8 @@ int main(int argc, char **argv){
     //make_histoXXX<<<gridDDD,threads_perblockDDD,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
 
     make_histoDD<<<gridDD,threads_perblockDD,0,stream_analytic>>>(d_DD_ff_av_ref, d_DD_ff_av, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn_XX_ff_av_ref, bn_XX_ff_av, dmax, d_max_node, size_box, size_node);
+    cout << "alpha_ff_av" << alpha_ff_av << endl;
+    cout << "alpha_ff_av_ref" << alpha_ff_av_ref << endl;
     make_histoRR<<<gridRR_ff_av,threads_perblock_RR_ff_av,0,streamRR_ff_av>>>(d_RR_ff_av, alpha_ff_av, bn_XX_ff_av);
     make_histoRR<<<gridRR_ff_av_ref,threads_perblock_RR_ff_av_ref,0,streamRR_ff_av_ref>>>(d_RR_ff_av_ref, alpha_ff_av_ref, bn_XX_ff_av_ref);
     
