@@ -298,12 +298,17 @@ int main(int argc, char **argv){
     ff_av_ref = new double[bn_ref*bn];
     cucheck(cudaMemcpyAsync(ff_av_ref, d_ff_av_ref, bn_ref*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR_ff_av_ref));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
-    save_ff("ff_av_ref.daf", bn_ref*bn, ff_av_ref);
+    save_ff("ff_av_ref.dat", bn_ref*bn, ff_av_ref);
     double *ff_av;
     ff_av = new double[bn];
     cucheck(cudaMemcpyAsync(ff_av, d_ff_av, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     save_ff("ff_av.dat", bn, ff_av);
+    double *DD;
+    DD = new double[bn_XX_ff_av_ref];
+    cucheck(cudaMemcpyAsync(DD, d_DD_ff_av_ref, bn_XX_ff_av_ref*sizeof(double), cudaMemcpyDeviceToHost, stream_analytic));
+    cucheck(cudaStreamSynchronize(stream_analytic));
+    save_ff("DD.dat", bn_XX_ff_av_ref, DD);
 
     //Waits for all the kernels to complete
     cucheck(cudaStreamSynchronize(streamDDD));

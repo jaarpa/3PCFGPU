@@ -1573,7 +1573,8 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	
 	// Make the DD and RR histograms
 	make_histoXX(DD, RR, nodeX, bins_ref);
-	
+	save_ff("DD.dat", bins_ref, DD);
+
 	// Initiate a fix for the refinement function f_averrage
 	double *ff_av_ref;
 	ff_av_ref = new double[bn_ref*bn];
@@ -1601,7 +1602,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 		}
 	//std::cout << "=>" << *(ff_av_ref+i) << std::endl;
 	}
-	save_ff("ff_av_ref.daf", bn_ref*bn, ff_av_ref);
+	save_ff("ff_av_ref.dat", bn_ref*bn, ff_av_ref);
 	delete[] DD;
 	delete[] RR;
 	
