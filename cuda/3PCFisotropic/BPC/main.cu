@@ -158,14 +158,6 @@ int main(int argc, char **argv){
     cucheck(cudaMemsetAsync(d_RR_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamRR_ff_av_ref));
     cucheck(cudaMemsetAsync(d_ff_av, 0, bn*sizeof(double), streamRR_ff_av));
     cucheck(cudaMemsetAsync(d_ff_av_ref, 0, bn_ref*bn*sizeof(double), streamRR_ff_av_ref));
-    
-    double *ff_av_ref;
-    ff_av_ref = new double[bn_ref*bn];
-    for (int pr=0; pr<bn_ref*bn; pr++){
-        ff_av_ref[pr]=1.0;
-    }
-    cucheck(cudaMemcpyAsync(d_ff_av_ref, ff_av_ref, bn_ref*bn*sizeof(double), cudaMemcpyHostToDevice, streamRR_ff_av_ref));
-
 
     hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
@@ -289,18 +281,29 @@ int main(int argc, char **argv){
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
     
-    //make_ff_av<<<gridff_av,threads_perblockff_av,0,streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
-    //make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt);
+    make_ff_av<<<gridff_av,threads_perblockff_av,0,streamRR_ff_av>>>(d_ff_av, d_DD_ff_av, d_RR_ff_av, dmax, bn, bn_XX_ff_av, ptt);
+    make_ff_av_ref<<<gridff_av_ref,threads_perblockff_av_ref,0,streamRR_ff_av_ref>>>(d_ff_av_ref, d_DD_ff_av_ref, d_RR_ff_av_ref, dmax, bn, bn_ref, ptt);
 
     //Waits to finish the ff_av and ff_av_ref histograms
     cucheck(cudaStreamSynchronize(streamRR_ff_av));
     cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
 
-    make_histo_analitic<<<gridanalytic,threads_perblockDDD,0,stream_analytic>>>(d_DDR, d_RRR, d_ff_av, d_ff_av_ref, alpha, alpha_ref, dmax, bn, bn_ref);
+    //make_histo_analitic<<<gridanalytic,threads_perblockDDD,0,stream_analytic>>>(d_DDR, d_RRR, d_ff_av, d_ff_av_ref, alpha, alpha_ref, dmax, bn, bn_ref);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
     cucheck(cudaMemcpyAsync(DDR, d_DDR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, stream_analytic));
     cucheck(cudaMemcpyAsync(RRR, d_RRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, stream_analytic));
+
+    double *ff_av_ref;
+    ff_av_ref = new double[bn_ref*bn];
+    cucheck(cudaMemcpyAsync(ff_av_ref, d_ff_av_ref, bn_ref*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR_ff_av_ref));
+    cucheck(cudaStreamSynchronize(streamRR_ff_av_ref));
+    save_ff("ff_av_ref.daf", bn_ref*bn, ff_av_ref);
+    double *ff_av;
+    ff_av = new double[bn];
+    cucheck(cudaMemcpyAsync(ff_av, d_ff_av, bn*sizeof(double), cudaMemcpyDeviceToHost, streamRR_ff_av));
+    cucheck(cudaStreamSynchronize(streamRR_ff_av));
+    save_ff("ff_av.dat", bn, ff_av);
 
     //Waits for all the kernels to complete
     cucheck(cudaStreamSynchronize(streamDDD));

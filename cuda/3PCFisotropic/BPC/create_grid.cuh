@@ -170,3 +170,25 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
     }
 }
+
+void save_ff(string name, int bns, double *histo){
+    /* This function saves a one dimensional histogram in a file.
+    Receives the name of the file, number of bins in the histogram and the histogram array
+    */
+
+    string mypathto_files = "../../../results/";
+    //This creates the full path to where I save the histograms files
+    name.insert(0,mypathto_files);
+
+    ofstream file2;
+    file2.open(name.c_str(), ios::out | ios::binary);
+
+    if (file2.fail()){
+        cout << "Failed to save the the histogram in " << name << endl;
+        exit(1);
+    }
+    for (int i = 0; i < bns; i++){
+        file2 << setprecision(12) << histo[i] << endl;
+    }
+    file2.close();
+}

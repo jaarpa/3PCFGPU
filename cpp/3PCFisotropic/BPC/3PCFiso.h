@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cmath>
 #include <omp.h>
+#include <string.h>
 
 struct Point3D{
 	float x;
@@ -107,6 +108,28 @@ class NODE3P{
 		void make_histo_analitic(double ***, double ***, Node ***);
 		void make_histoXX(double *, double *, Node ***, int);
 		void histo_front_XX(double *, Node ***, float, float, float, float, bool, bool, bool, int, int, int, int, int, int, double);
+
+		void save_ff(string name, int bns, double *histo){
+			/* This function saves a one dimensional histogram in a file.
+			Receives the name of the file, number of bins in the histogram and the histogram array
+			*/
+
+			string mypathto_files = "../../../results/";
+			//This creates the full path to where I save the histograms files
+			name.insert(0,mypathto_files);
+
+			ofstream file2;
+			file2.open(name.c_str(), ios::out | ios::binary);
+
+			if (file2.fail()){
+				cout << "Failed to save the the histogram in " << name << endl;
+				exit(1);
+			}
+			for (int i = 0; i < bns; i++){
+				file2 << setprecision(12) << histo[i] << endl;
+			}
+			file2.close();
+		}
 		
 		~NODE3P();
 };
@@ -1533,7 +1556,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	//std::cout << "=>" << f_av/(double)(ptt) << std::endl;
 	*(ff_av+i) += f_av/(double)(ptt);
 	}
-	for (i=0; i<bn; ++i) *(ff_av+i) = 0.0;
+	save_ff("ff_av.dat", bn, ff_av);
 	delete[] DD;
 	delete[] RR;
 	
@@ -1580,9 +1603,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 		}
 	//std::cout << "=>" << *(ff_av_ref+i) << std::endl;
 	}
-	
-	for (i=0; i<bn_ref*bn; ++i) *(ff_av_ref+i) = 1.0;
-
+	save_ff("ff_av_ref.daf", bn_ref*bn, ff_av_ref);
 	delete[] DD;
 	delete[] RR;
 	
@@ -1600,7 +1621,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	double S_av;
 	bool con;
 	double c_RRR;
-
+	/*
 	for(i=0; i<bn; ++i) {
 	ri = i*dr;
 	i_ = i*bn_ref;
@@ -1687,7 +1708,7 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 	}
 	symmetrize_analitic(XXX);
 	symmetrize_analitic(XXY); 
-	
+	*/
 }
 //=================================================================== 
 void NODE3P::make_histoXX(double *XX, double *YY, Node ***nodeX, int bins){
@@ -2034,6 +2055,7 @@ void NODE3P::histo_front_XX(double *PP, Node ***dat, float disn, float dn_x, flo
 	}
 	}
 }
+
 //=================================================================== 
 void NODE3P::symmetrize_analitic(double ***XXX){
 	/*
