@@ -1128,7 +1128,7 @@ __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float 
 
         double f_av  = (ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1)/(double)(ptt);
 
-        atomicAdd(&ff_av_ref[1], 1);
+        atomicAdd(&ff_av_ref[i_+j], f_av);
     }
 
 }

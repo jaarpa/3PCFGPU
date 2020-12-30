@@ -1593,10 +1593,10 @@ void NODE3P::make_histo_analitic(double ***XXY, double ***XXX, Node ***nodeX){
 			#pragma omp for private(k,rk) reduction(+:f_av)
 			for( k=0; k<ptt; ++k){
 				rk = (k+0.5)*dr_ptt_ref;
-				f_av += 1; //(ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1);
+				f_av += (ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1);
 			}
 			
-		*(ff_av_ref+1) += f_av; // /(double)(ptt);
+		*(ff_av_ref+i_+j) += f_av/(double)(ptt);
 		//std::cout << "=>" << *(ff_av_ref+i_+j) << std::endl;
 		}
 	//std::cout << "=>" << *(ff_av_ref+i) << std::endl;
