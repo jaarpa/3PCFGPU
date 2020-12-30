@@ -1114,19 +1114,21 @@ __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, in
 }
 
 __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float dmax, int bn, int bn_ref, int ptt){
-    
-    int k = blockIdx.x * blockDim.x + threadIdx.x;
-    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
     int i = blockIdx.z * blockDim.z + threadIdx.z;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+    int k = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i<bn && j<bn_ref && k<ptt){
         double dr = dmax/(double)bn;
-        double ri = i*dr, rj = j*dr/bn_ref, rk = (k+0.5)*dmax/(double)(ptt*bn_ref*bn);
+        double dr_ref = dr/bn_ref;
+        double dr_ptt_ref = dmax/(double)(ptt*bn_ref*bn);
+        double ri = i*dr, rj = j*dr_ref, rk = (k+0.5)*dr_ptt_ref;
         int i_ = i*bn_ref, j_ = j*ptt;
 
-        double f_av = (ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1)/(double)(ptt);
+        double f_av  = (ri+rj+rk)*(((*(DD+(i_*ptt)+j_+k))/(*(RR+(i_*ptt)+j_+k))) - 1)/(double)(ptt);
 
-        atomicAdd(&ff_av_ref[i_+j], f_av);
+        atomicAdd(&ff_av_ref[i_+j], 1);
     }
 
 }
