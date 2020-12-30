@@ -4,6 +4,7 @@
 #include <omp.h>
 #include <string.h>
 #include <iomanip>
+using namespace std;
 
 struct Point3D{
 	float x;
