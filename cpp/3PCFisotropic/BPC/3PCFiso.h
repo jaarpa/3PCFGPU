@@ -3,6 +3,7 @@
 #include <cmath>
 #include <omp.h>
 #include <string.h>
+#include <iomanip>
 
 struct Point3D{
 	float x;
