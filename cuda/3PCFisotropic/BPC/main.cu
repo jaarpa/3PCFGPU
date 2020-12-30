@@ -162,7 +162,7 @@ int main(int argc, char **argv){
     double *ff_av_ref;
     ff_av_ref = new double[bn_ref*bn];
     for (int pr=0; pr<bn_ref*bn; pr++){
-        ff_av_ref=1.0;
+        ff_av_ref[pr]=1.0;
     }
     cucheck(cudaMemcpyAsync(d_ff_av_ref, ff_av_ref, bn_ref*bn*sizeof(double), cudaMemcpyHostToDevice, streamRR_ff_av_ref));
 
