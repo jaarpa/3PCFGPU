@@ -157,7 +157,15 @@ int main(int argc, char **argv){
     cucheck(cudaMemsetAsync(d_RR_ff_av, 0, bn_XX_ff_av*sizeof(double), streamRR_ff_av));
     cucheck(cudaMemsetAsync(d_RR_ff_av_ref, 0, bn_XX_ff_av_ref*sizeof(double), streamRR_ff_av_ref));
     cucheck(cudaMemsetAsync(d_ff_av, 0, bn*sizeof(double), streamRR_ff_av));
-    cucheck(cudaMemsetAsync(d_ff_av_ref, 1, bn_ref*bn*sizeof(double), streamRR_ff_av_ref));
+    cucheck(cudaMemsetAsync(d_ff_av_ref, 0, bn_ref*bn*sizeof(double), streamRR_ff_av_ref));
+    
+    double *ff_av_ref;
+    ff_av_ref = new double[bn_ref*bn];
+    for (int pr=0; pr<bn_ref*bn; pr++){
+        ff_av_ref=1.0;
+    }
+    cucheck(cudaMemcpyAsync(d_ff_av_ref, ff_av_ref, bn_ref*bn*sizeof(double), cudaMemcpyHostToDevice, streamRR_ff_av_ref));
+
 
     hnodeD = new Node**[partitions];
     for (int i=0; i<partitions; i++){
