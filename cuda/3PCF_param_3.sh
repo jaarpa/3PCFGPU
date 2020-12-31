@@ -8,7 +8,7 @@
 
 
 touch time_results.dat #Abrimos archivo
-nvcc -arch=sm_75 3PCFisotropic/normal/optimization.cu -o 3PCFisotropic/normal/opt.out
+nvcc -arch=sm_75 3PCFisotropic/normal/optimization2.cu -o 3PCFisotropic/normal/opt.out
 
 # ------------------- Encabezado del archivo ----------------------------------------
 
