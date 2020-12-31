@@ -67,6 +67,7 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
                                             d31 = sqrtf(d31);
                                             bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
                                             v *= elements[k].w;
+                                            if (bin=>bn*bn*bn) bin = bn*bn*bn -1;
                                             atomicAdd(&XXX[bin],v);
                                         }
                                     }
