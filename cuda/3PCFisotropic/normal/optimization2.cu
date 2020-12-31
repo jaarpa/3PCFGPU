@@ -48,7 +48,7 @@ int main(int argc, char **argv){
     float time_spent, d_max_node, size_node, dmax = stof(argv[5]), size_box = 0, r_size_box=0;
 
     double *DDD;//, *RRR, *DRR, *DDR;
-    double *d_DDD,//, *d_RRR, *d_DRR, *d_DDR;
+    double *d_DDD;//, *d_RRR, *d_DRR, *d_DDR;
 
     //n_kernel_calls should depend of the number of points, its density, and the number of bins
     int nonzero_Dnodes = 0, nonzero_Rnodes = 0, threads_perblock_dim = 8, idxR=0, idxD=0;
@@ -90,7 +90,7 @@ int main(int argc, char **argv){
 
     // Open and read the files to store the data in the arrays
     open_files(argv[1], np, dataD, size_box); //This function also gets the real size of the box
-    open_files(argv[2], np, dataR, r_size_box);
+    //open_files(argv[2], np, dataR, r_size_box);
     if (r_size_box>size_box){
         size_box=r_size_box;
     }
