@@ -119,7 +119,7 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                     int end1 = nodeX[idx1].end;
                     int end2 = nodeX[idx2].end;
                     int end3 = nodeY[idx3].end;
-                    int bin;
+                    int bnx, bny, bnz, bin;
                     float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
                     float d12,d23,d31;
@@ -148,7 +148,15 @@ __global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, in
                                         if (d31 < dd_max){
                                             d23 = sqrtf(d23);
                                             d31 = sqrtf(d31);
-                                            bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
+
+                                            bnx = (int)(d12*ds)*bn*bn;
+                                            if (bnx>(bn*bn*(bn-1))) bnx = bn*bn*(bn-1);
+                                            bny = (int)(d23*ds)*bn;
+                                            if (bny>(bn*(bn-1))) bny = bn*(bn-1);
+                                            bnz = (int)(d31*ds);
+                                            if (bnz>(bn-1)) bnz = bn-1;
+                                            bin = bnx + bny + bnz;
+
                                             v *= elementsY[k].w;
                                             atomicAdd(&XXY[bin],v);
                                         }
