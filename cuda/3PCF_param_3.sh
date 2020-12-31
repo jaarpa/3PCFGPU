@@ -8,7 +8,7 @@
 
 
 touch time_results.dat #Abrimos archivo
-nvcc -arch=sm_75 3PCFisotropic/normal/main.cu -o 3PCFisotropic/normal/opt.out
+nvcc -arch=sm_75 3PCFisotropic/normal/optimization.cu -o 3PCFisotropic/normal/opt.out
 
 # ------------------- Encabezado del archivo ----------------------------------------
 
@@ -22,5 +22,5 @@ echo "n_points, size_box, d_max, partitions, time [s] \n" >> time_results.dat
 partitions=25
 for ((dmax=80;dmax<=120;dmax+=20))
 do
-    3PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax $partitions
+    3PCFisotropic/normal/opt.out data_512MPc.dat data_512MPc.dat 50653 20 $dmax -1 $partitions
 done
