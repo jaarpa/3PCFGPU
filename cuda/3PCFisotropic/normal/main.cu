@@ -277,10 +277,10 @@ int main(int argc, char **argv){
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    //make_histoXXX<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD_DDD, dnodeD_DDD, nonzero_Dnodes, bn, dmax, d_max_node);
+    make_histoXXX<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD_DDD, dnodeD_DDD, nonzero_Dnodes, bn, dmax, d_max_node);
     //make_histoXXX<<<gridRRR,threads_perblock,0,streamRRR>>>(d_RRR, d_ordered_pointsR_RRR, dnodeR_RRR, nonzero_Rnodes, bn, dmax, d_max_node);
     //make_histoXXY<<<gridDRR,threads_perblock,0,streamDRR>>>(d_DRR, d_ordered_pointsR_DRR, dnodeR_DRR, nonzero_Rnodes, d_ordered_pointsD_DRR, dnodeD_DRR, nonzero_Dnodes, bn, dmax, d_max_node);
-    make_histoXXY<<<gridDDR,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, nonzero_Dnodes, d_ordered_pointsR_DDR, dnodeR_DDR, nonzero_Rnodes, bn, dmax, d_max_node);
+    //make_histoXXY<<<gridDDR,threads_perblock,0,streamDDR>>>(d_DDR, d_ordered_pointsD_DDR, dnodeD_DDR, nonzero_Dnodes, d_ordered_pointsR_DDR, dnodeR_DDR, nonzero_Rnodes, bn, dmax, d_max_node);
 
     cucheck(cudaMemcpyAsync(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamDDD));
     cucheck(cudaMemcpyAsync(RRR, d_RRR, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost, streamRRR));
