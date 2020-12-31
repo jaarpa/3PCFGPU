@@ -314,6 +314,26 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Free the memory
+
+    for (int i=0; i<partitions; i++){
+        for (int j=0; j<partitions; j++){
+            delete[] hnodeD[i][j];
+           // delete[] hnodeR[i][j];
+        }
+        delete[] hnodeD[i];
+        //delete[] hnodeR[i];
+    }    
+    delete[] hnodeD;
+    //delete[] hnodeR;
+
+    delete[] dataD;
+    //delete[] dataR;
+    
+    delete[] hnodeD_s;
+    delete[] h_ordered_pointsD_s;
+    //delete[] hnodeR_s;
+    //delete[] h_ordered_pointsR_s;
+    
     cucheck(cudaStreamDestroy(streamDDD));
     //cucheck(cudaStreamDestroy(streamDDR));
     //cucheck(cudaStreamDestroy(streamDRR));
