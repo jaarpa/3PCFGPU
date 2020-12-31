@@ -277,7 +277,7 @@ int main(int argc, char **argv){
     cucheck(cudaEventSynchronize(stop_timmer));
     cucheck(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
 
-    //cout << "Spent "<< time_spent << " miliseconds to compute and save all the histograms." << endl;
+    cout << "Spent "<< time_spent << " miliseconds to compute and save all the histograms." << endl;
     
     /* =======================================================================*/
     /* ==========================  Free memory ===============================*/
