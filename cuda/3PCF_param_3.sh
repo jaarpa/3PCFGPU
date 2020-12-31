@@ -1,14 +1,14 @@
 #!/bin/bash
 
 #Script para variar parametros del programa 3PCFisotropica
-#PID 10484
+#PID 16309
 
 #Dmax --> [20..60..10] (de 20 a 60 en incrementos de 10)
 #N_bins --> 20
 
 
 touch time_results.dat #Abrimos archivo
-nvcc -arch=sm_75 3PCFisotropic/normal/optimization.cu -o 3PCFisotropic/normal/opt.out
+nvcc -arch=sm_75 3PCFisotropic/normal/main.cu -o 3PCFisotropic/normal/opt.out
 
 # ------------------- Encabezado del archivo ----------------------------------------
 
