@@ -7,14 +7,14 @@
 #N_bins --> 20
 
 
-touch time_results.dat #Abrimos archivo
+#touch time_results.dat #Abrimos archivo
 nvcc -arch=sm_75 3PCFisotropic/normal/optimization.cu -o 3PCFisotropic/normal/opt.out
 
 # ------------------- Encabezado del archivo ----------------------------------------
 
-echo "3PCF isotropica. Sin BPC. Histograma DDD \n" >> time_results.dat
-echo "caja 512MPc \n" >> time_results.dat
-echo "n_points, size_box, d_max, partitions, time [s] \n" >> time_results.dat
+#echo "3PCF isotropica. Sin BPC. Histograma DDD \n" >> time_results.dat
+#echo "caja 512MPc \n" >> time_results.dat
+#echo "n_points, size_box, d_max, partitions, time [s] \n" >> time_results.dat
 
 # ------------------- Cuerpo del archivo --------------------------------------------
 
