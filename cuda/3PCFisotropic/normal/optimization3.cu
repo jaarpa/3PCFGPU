@@ -53,7 +53,7 @@ int main(int argc, char **argv){
     cucheck(cudaEventCreate(&start_timmer));
     cucheck(cudaEventCreate(&stop_timmer));
 
-    clock_t stop_timmer_host, start_timmer_host;
+    //clock_t stop_timmer_host, start_timmer_host;
 
     PointW3D *dataD;
     //PointW3D *dataR;
@@ -79,7 +79,7 @@ int main(int argc, char **argv){
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
-    start_timmer_host = clock();
+    //start_timmer_host = clock();
     dataD = new PointW3D[np];
     //dataR = new PointW3D[np];
 
