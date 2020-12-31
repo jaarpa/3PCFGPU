@@ -169,19 +169,6 @@ int main(int argc, char **argv){
     cucheck(cudaMemcpyAsync(dnodeD_DDD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDDD));
     cucheck(cudaMemcpyAsync(d_ordered_pointsD_DDD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDDD));
 
-    for (int i=0; i<partitions; i++){
-        for (int j=0; j<partitions; j++){
-            delete[] hnodeD[i][j];
-        }
-        delete[] hnodeD[i];
-    }    
-    delete[] hnodeD;
-
-    delete[] dataD;
-    
-    delete[] hnodeD_s;
-    delete[] h_ordered_pointsD_s;
-
     stop_timmer_host = clock();
     time_spent = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
     //cout << "Succesfully readed the data. All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
@@ -228,6 +215,20 @@ int main(int argc, char **argv){
     /* =======================================================================*/
 
     //Free the memory
+
+    for (int i=0; i<partitions; i++){
+        for (int j=0; j<partitions; j++){
+            delete[] hnodeD[i][j];
+        }
+        delete[] hnodeD[i];
+    }    
+    delete[] hnodeD;
+
+    delete[] dataD;
+    
+    delete[] hnodeD_s;
+    delete[] h_ordered_pointsD_s;
+    
     cucheck(cudaStreamDestroy(streamDDD));
 
     cucheck(cudaEventDestroy(start_timmer));
