@@ -29,8 +29,8 @@ int main(int argc, char **argv){
     if(argc == 2 && (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0)){
         show_help();
         return 0;
-    } else if (argc > 2 && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)) {
-        int col=1;
+    } else if (argc >= 12 && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)) {
+        int col=argc;
         cout << col << endl;
     } else {
         cout << "Invalid <cal_type> option. See --help for more information." << endl;
