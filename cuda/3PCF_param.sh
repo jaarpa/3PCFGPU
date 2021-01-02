@@ -33,7 +33,7 @@ nvcc -arch=sm_75 3PCFisotropic/normal/optimization.cu -o 3PCFisotropic/normal/op
 
 for dmax in $(seq 30 10 60)
 do 
-	for partitions in $(seq 20 5 60)
+	for partitions in $(seq 15 5 45)
 	do
 			3PCFisotropic/normal/opt.out data_1GPc.dat data_1GPc.dat 405224 20 $dmax -1 $partitions
 	done	
@@ -44,7 +44,7 @@ done
 
 for dmax in $(seq 20 10 60)
 do 
-	for partitions in $(seq 20 5 60)
+	for partitions in in $(seq 15 5 45)
 	do
 			3PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax -1 $partitions
 	done	
