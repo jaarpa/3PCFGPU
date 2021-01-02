@@ -33,7 +33,7 @@ int main(int argc, char **argv){
         int col=argc;
         cout << col << endl;
     } else {
-        cout << "Invalid <cal_type> option. See --help for more information." << endl;
+        cout << "Invalid <cal_type> option or not enough parameters. \nSee --help for more information." << endl;
         exit(1);
     }
     return 0;
