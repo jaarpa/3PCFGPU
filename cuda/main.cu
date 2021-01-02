@@ -30,8 +30,9 @@ int main(int argc, char **argv){
         show_help();
         return 0;
     } else if (argc >= 12 && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)) {
-        int col=argc;
-        cout << col << endl;
+        for (int idpar=1; idpar<argc; idpar++){
+            cout << argv[idpar] << endl;
+        }
     } else {
         cout << "Invalid <cal_type> option or not enough parameters. \nSee --help for more information." << endl;
         exit(1);
