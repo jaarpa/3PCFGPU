@@ -34,7 +34,7 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
             float x1,y1,z1,w1,x2,y2,z2;
             float dd_z, dd_ort;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
+            int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
             double v;
 
             for (int i=nodeD[idx1].start; i<end1; ++i){
@@ -51,8 +51,14 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                     dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
                     if (dd_z < dd_max && dd_z > 0 && dd_ort < dd_max && dd_ort > 0){
-                        bin = (int)(sqrt(dd_z)*ds)*bn + (int)(sqrtf(dd_ort)*ds);
+
+                        bnz = (int)(sqrt(dd_z)*ds)*bn;
+                        if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
+                        bnort = (int)(sqrtf(dd_ort)*ds);
+                        if (bnort>(bn-1)) bnort = bn-1;
+                        bin = bnz + bnort;
                         v = w1*elements[j].w;
+
                         atomicAdd(&XX[bin],v);
                     }
                 }
@@ -107,7 +113,13 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                     dd_ort = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1);
 
                     if (dd_z < dd_max && dd_z > 0 && dd_ort < dd_max && dd_ort > 0){
-                        bin = (int)(sqrt(dd_z)*ds)*bn + (int)(sqrtf(dd_ort)*ds);
+
+                        bnz = (int)(sqrt(dd_z)*ds)*bn;
+                        if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
+                        bnort = (int)(sqrtf(dd_ort)*ds);
+                        if (bnort>(bn-1)) bnort = bn-1;
+                        bin = bnz + bnort;
+
                         v = w1*elementsD[j].w;
                         atomicAdd(&XY[bin],v);
                     }

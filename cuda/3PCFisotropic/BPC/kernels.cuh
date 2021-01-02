@@ -7,7 +7,7 @@
 
 //DDD pure histogram
 __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, int start2, int end2, int start3, int end3, int bn, float ds, float dd_max, float size_box, bool fx_2, bool fy_2, bool fz_2, bool fx_3, bool fy_3, bool fz_3){
-    int bin;
+    int bnx, bny, bnz, bin;
     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
     float dx12, dy12, dz12, dx23, dy23, dz23, dx31, dy31, dz31;
     float d12,d23,d31;
@@ -47,8 +47,16 @@ __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, 
                         if (d31 < dd_max && d31>0){
                             d23 = sqrtf(d23);
                             d31 = sqrtf(d31);
+
+                            bnx = (int)(d12*ds)*bn*bn;
+                            if (bnx>(bn*bn*(bn-1))) bnx = bn*bn*(bn-1);
+                            bny = (int)(d23*ds)*bn;
+                            if (bny>(bn*(bn-1))) bny = bn*(bn-1);
+                            bnz = (int)(d31*ds);
+                            if (bnz>(bn-1)) bnz = bn-1;
+                            bin = bnx + bny + bnz;
                             v *= elements[k].w;
-                            bin = (int)(d12*ds)*bn*bn + (int)(d23*ds)*bn + (int)(d31*ds);
+                            
                             atomicAdd(&XXX[bin],v);
                         }
                     }

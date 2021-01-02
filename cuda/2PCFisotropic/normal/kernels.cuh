@@ -96,6 +96,9 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max){
                         bin = (int)(sqrtf(d)*ds);
+
+                        if (bin>(bn-1)) bnx = bn-1;
+
                         v = elementsD[i].w*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
                     }
