@@ -30,7 +30,7 @@ int main(int argc, char **argv){
         show_help();
         return 0;
     } else if (argc > 2 && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)) {
-        int col=1
+        int col=1;
         cout << col << endl;
     } else {
         cout << "Invalid <cal_type> option. See --help for more information." << endl;
