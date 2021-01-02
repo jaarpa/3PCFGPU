@@ -5,18 +5,19 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
+__global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
     /*
-    Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
+    Kernel function to calculate the pure histograms for the 2 point isotropic correlation function. 
+    This version does NOT considers boudary periodic conditions. It stores the counts in the XX histogram.
 
     args:
     XX: (double*) The histogram where the distances are counted.
     elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+    nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
     */
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
@@ -55,21 +56,24 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
     }
 }
 
-__global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node){
+__global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node){
     /*
-    Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
+    Kernel function to calculate the mixed histograms for the 2 point isotropic correlation function. 
+    This version does NOT include boundary periodic conditions. It stores the counts in the XY histogram.
 
     args:
     XY: (double*) The histogram where the distances are counted.
-    elementsD: (PointW3D*) Array of the points ordered coherently with the nodes.
-    nodeD: (DNode) Array of DNodes each of which define a node and the elements of elementD that correspond to that node.
-    elementsR: (PointW3D*) Array of the points ordered coherently with the nodes.
-    nodeR: (DNode) Array of RNodes each of which define a node and the elements of elementR that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    elementsD: (PointW3D*) Array of the points ordered coherently with the nodes. For the data points.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the data points
+    nonzero_Dnodes: (int) Number of nonzero nodes where the points have been classificated. For the data points
+    elementsR: (PointW3D*) Array of the points ordered coherently with the nodes. For the random points.
+    nodeR: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the random points
+    nonzero_Rnodes: (int) Number of nonzero nodes where the points have been classificated. For the random points
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
     */
+
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){

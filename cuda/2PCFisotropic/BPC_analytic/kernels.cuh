@@ -7,16 +7,19 @@
 
 __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
     /*
-    Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
+    Kernel function to calculate the DD histograms for the 2 point isotropic correlation function WITH 
+    boundary periodic conditions. This could be used to calculate the RR histiIt stores the counts in the XX histogram.
 
     args:
     XX: (double*) The histogram where the distances are counted.
     elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+    nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
+    size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
+    size_node: (float) Size of the nodes.
     */
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.

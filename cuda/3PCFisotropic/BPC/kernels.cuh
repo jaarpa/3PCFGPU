@@ -7,6 +7,35 @@
 
 //DDD pure histogram
 __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, int start2, int end2, int start3, int end3, int bn, float ds, float dd_max, float size_box, bool fx_2, bool fy_2, bool fz_2, bool fx_3, bool fy_3, bool fz_3){
+    /*
+    Device function only callable from GPU.
+
+    Given that three nodes are closer to each other than the maximum distance this function counts all the possible triangles 
+    with one point in each node. If the triangles within one nodes are required simply pass the same node three times. This 
+    function can compute the trieangles from nodes where one or two of the nodes are proyected to a boundary. It considers 
+    only one kind of nodes, either data nodes or random nodes but not both.
+
+    args:
+    XXY: (double*) The histogram where the distances are counted.
+    elements: (PointW3D*) Array of the points ordered coherently with the nodes.
+    start1: (int) Index where the points of the node 1 start. Locatedin the elements array.
+    end1: (int) Index where the points of the node 1 end. Locatedin the elements array.
+    start2: (int) Index where the points of the node 2 start. Locatedin the elements array.
+    end2: (int) Index where the points of the node 2 end. Locatedin the elements array.
+    start3: (int) Index where the points of the node 3 start. Locatedin the elements array.
+    end3: (int) Index where the points of the node 3 end. Locatedin the elements array.
+    bn: (int) NUmber of bins in the XY histogram.
+    ds: (float) Constant to calculate the bin index where the triangle count will be stored.
+    ddmax: (float) The square of the maximum distance of interest between points.
+    size_box: (float) The size of the box where the points were contained. It is used to calculate the proyected nodes.
+    fx_2: (bool) True if the node number 2 is proyected in the x direction.
+    fy_2: (bool) True if the node number 2 is proyected in the y direction.
+    fz_2: (bool) True if the node number 2 is proyected in the z direction.
+    fx_3: (bool) True if the node number 3 is proyected in the x direction.
+    fy_3: (bool) True if the node number 3 is proyected in the y direction.
+    fz_3: (bool) True if the node number 3 is proyected in the z direction.
+    */
+
     int bnx, bny, bnz, bin;
     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
     float dx12, dy12, dz12, dx23, dy23, dz23, dx31, dy31, dz31;
@@ -66,19 +95,26 @@ __device__ void count123(double *XXX, PointW3D *elements, int start1, int end1, 
     }
 }
 
-__global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
+__global__ void XXX3iso_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
     /*
-    Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
+    Kernel function to calculate the pure histograms for the 3 point isotropic correlation function. 
+    This version does NOT considers boudary periodic conditions. It stores the counts in the XXX histogram.
 
     args:
     XXX: (double*) The histogram where the distances are counted.
-    elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    elementsX: (PointW3D*) Array of the points ordered coherently with the nodes. For the X points.
+    nodeX: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the X points
+    nonzero_Xnodes: (int) Number of nonzero nodes where the points have been classificated. For the X points
+    elementsY: (PointW3D*) Array of the points ordered coherently with the nodes. For the Y points.
+    nodeY: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the Y points
+    nonzero_Ynodes: (int) Number of nonzero nodes where the points have been classificated. For the Y points
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
+    size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
+    size_node: (float) Size of the nodes.
     */
+
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
@@ -811,19 +847,25 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
 }
 
 //Analytic formulas for RRR and mixed histograms
-
-__global__ void make_histoDD(double *XX_ff_av_ref, double *XX_ff_av, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn_ff_av_ref, int bn_ff_av, float dmax, float d_max_node, float size_box, float size_node){
+__global__ void DD2iso_forBPC(double *XX_ff_av_ref, double *XX_ff_av, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn_ff_av_ref, int bn_ff_av, float dmax, float d_max_node, float size_box, float size_node){
     /*
-    Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
+    Kernel function to calculate the pure histograms WITH boundary periodic conditions. It stores the counts in the XX_ff_av_ref and XX_ff_av histogram.
+    This function does the same calculations to save the same distances countings in different histograms.
 
     args:
-    XX: (double*) The histogram where the distances are counted.
+    float size_box, float size_node
+    XX_ff_av_ref: (double*) The histogram where the distances are counted.
+    XX_ff_av: (double*) The histogram where the distances are counted.
     elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+    nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated. For the data points
     partitions: (int) Number of partitions that are fitted by box side.
-    bn: (int) NUmber of bins in the XY histogram.
+    bn_ff_av_ref: (int) NUmber of bins in the XX_ff_av_ref histogram.
+    bn_ff_av: (int) NUmber of bins in the XX_ff_av histogram.
     dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    d_max_node: (float) The maximum internodal distance.
+    size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
+    size_node: (float) Size of the nodes.
     */
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
@@ -1093,16 +1135,7 @@ __global__ void make_histoDD(double *XX_ff_av_ref, double *XX_ff_av, PointW3D *e
 
 }
 
-__global__ void make_histoRR(double *RR, double alpha, int bn){
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    if (idx<bn){
-        int dr = 3*idx*idx + 3*idx +1;
-        RR[idx] = alpha*((double)(dr));
-    }
-
-}
-
+// Get make_histoRR from 2pcfisotropic bpc analytic
 
 __global__ void make_ff_av(double *ff_av, double *XX, double *YY, float dmax, int bn, int bn_ff_av, int ptt){
     
@@ -1143,15 +1176,15 @@ __global__ void make_ff_av_ref(double *ff_av_ref, double *DD, double *RR, float 
 
 __global__ void make_histo_analitic(double *XXY, double *RRR, double *ff_av, double *ff_av_ref, double alpha, double alpha_ref, float dmax, int bn, int bn_ref){
     /*
+    This function computes the RRR and DDR analytically from ff_av and ff_av_ref which were calculated from (DD_ff_av and RR_ff_av)
+    and (DD_ff_av_ref and RR_ff_av_ref) respectively.
     */
 
     //Histogram 3D bin indices
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
     int k = blockIdx.z * blockDim.z + threadIdx.z;
-    if (i==0 && j==0 && k==0){
-        printf("This is ff_av_ref %f", ff_av_ref[2]);
-    }
+    
     if (i<bn && j<bn && k<bn){
 
         double dr = dmax/(double)bn;

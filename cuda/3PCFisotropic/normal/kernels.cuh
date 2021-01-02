@@ -5,19 +5,21 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
+__global__ void XXX3iso(double *XXX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node){
     /*
-    Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
+    Kernel function to calculate the pure histograms for the 3 point isotropic correlation function. 
+    This version does NOT considers boudary periodic conditions. It stores the counts in the XXX histogram.
 
     args:
     XXX: (double*) The histogram where the distances are counted.
     elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+    nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
     */
+    
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
@@ -88,18 +90,22 @@ __global__ void make_histoXXX(double *XXX, PointW3D *elements, DNode *nodeD, int
     }
 }
 
-__global__ void make_histoXXY(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonzero_Xnodes, PointW3D *elementsY, DNode *nodeY, int nonzero_Ynodes, int bn, float dmax, float d_max_node){
+__global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonzero_Xnodes, PointW3D *elementsY, DNode *nodeY, int nonzero_Ynodes, int bn, float dmax, float d_max_node){
     /*
-    Kernel function to calculate the pure histograms. It stores the counts in the XXX histogram.
+    Kernel function to calculate the mixed histograms for the 3 point isotropic correlation function. 
+    This version does NOT considers boudary periodic conditions. It stores the counts in the XXY histogram.
 
     args:
-    XXX: (double*) The histogram where the distances are counted.
-    elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    XXY: (double*) The histogram where the distances are counted.
+    elementsX: (PointW3D*) Array of the points ordered coherently with the nodes. For the X points.
+    nodeX: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the X points
+    nonzero_Xnodes: (int) Number of nonzero nodes where the points have been classificated. For the X points
+    elementsY: (PointW3D*) Array of the points ordered coherently with the nodes. For the Y points.
+    nodeY: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the Y points
+    nonzero_Ynodes: (int) Number of nonzero nodes where the points have been classificated. For the Y points
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
     */
 
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
