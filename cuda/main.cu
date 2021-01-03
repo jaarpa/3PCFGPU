@@ -81,7 +81,7 @@ int main(int argc, char **argv){
             cout << "Missing maximum distance argument." << endl;
             exit(1);
         }
-        if (!(bpc && analytic) && rand_name==""){
+        if (!(bpc && analytic && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"2iso")==0)) && rand_name==""){
             cout << "Missing random file(s) location." << endl;
             exit(1);
         }
