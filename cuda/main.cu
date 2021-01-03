@@ -141,11 +141,11 @@ int main(int argc, char **argv){
         if (rand_required){
             hnodeR = new Node***[n_randfiles];
             for (int i=0; i<n_randfiles; i++){
-                *(hnodeR+i) = new Node**[partitions]
+                *(hnodeR+i) = new Node**[partitions];
                 for (int j=0; j<partitions; j++){
-                    *(*(hnodeD+i)+j) = new Node*[partitions];
+                    *(*(hnodeR+i)+j) = new Node*[partitions];
                     for (int k=0; k<partitions; k++){
-                        *(*(*(hnodeD+i)+j)+k) = new Node[partitions];
+                        *(*(*(hnodeR+i)+j)+k) = new Node[partitions];
                     }
                 }
             }
