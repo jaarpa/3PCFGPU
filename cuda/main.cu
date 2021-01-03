@@ -99,6 +99,12 @@ int main(int argc, char **argv){
         int nonzero_Dnodes, k_element=0, idxD=0, last_pointD = 0;
         float size_node, r_size_box=0;
 
+        //Declare variables for random.
+        DNode **hnodeR_s;
+        PointW3D **dataR, **h_ordered_pointsR_s;
+        Node ****hnodeR;
+        int *nonzero_Rnodes, *idxR, *last_pointR, n_randfiles=1;
+
         //Define variables
         //Read data
         dataD = new PointW3D[np];
@@ -106,11 +112,6 @@ int main(int argc, char **argv){
         
         //Read rand
         if (rand_required){
-            //Declare variables for random.
-            DNode **hnodeR_s;
-            PointW3D **dataR, **h_ordered_pointsR_s;
-            Node ****hnodeR;
-            int *nonzero_Rnodes, *idxR, *last_pointR, n_randfiles=1;
             
             //Check if a directory of random files was provided to change n_randfiles
             //Instead of rand name should be an array with the name of each rand array or something like that.
