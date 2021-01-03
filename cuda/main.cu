@@ -115,6 +115,10 @@ int main(int argc, char **argv){
             
             //Check if a directory of random files was provided to change n_randfiles
             //Instead of rand name should be an array with the name of each rand array or something like that.
+            if (rand_dir){
+                cout << "You are dealing with multiple random files" << endl;
+                cout << rand_name << endl;
+            }
             
             dataR = new PointW3D*[n_randfiles];
             nonzero_Rnodes = new int[n_randfiles];
@@ -163,7 +167,7 @@ int main(int argc, char **argv){
         make_nodos(hnodeD, dataD, partitions, size_node, np);
         if (rand_required){
             for (int i=0; i<n_randfiles; i++){
-                make_nodos(hnodeR[i], dataR[i], partitions, size_node, np)
+                make_nodos(hnodeR[i], dataR[i], partitions, size_node, np);
             }
         };
 
