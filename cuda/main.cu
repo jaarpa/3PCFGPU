@@ -252,7 +252,7 @@ int main(int argc, char **argv){
         cucheck(cudaMemcpy(d_ordered_pointsD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
         //Memory allocation and copy of random files in the loop of the functions
         stop_timmer_host = clock();
-        time_spent = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
+        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
         cout << "Succesfully readed the data. All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
         cout << "(Does not include host to device copies of nodes of random data)" << endl;
 
