@@ -243,8 +243,6 @@ int main(int argc, char **argv){
 
         //Launch the correct function
         
-
-        cucheck(cudaDeviceSynchronize());
         
         //Free the host memory
         cucheck(cudaFree(dnodeD));
