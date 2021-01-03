@@ -1,7 +1,7 @@
 #include <iostream>
 
 void show_help(){
-    std::cout << "Use: ./PCF <calc_type> -p number_of_points -f datafile -b bins -d maximum_distance" << std::endl;
+    std::cout << "Use: ./PCF <calc_type> -n number_of_points -f datafile -b bins -d maximum_distance" << std::endl;
     std::cout << "-r randomfile || -rd randoms_directory" << std::endl;
     std::cout << "[-bpc [-a]][-p box_partitions] [-s size_box]" << std::endl;
 
@@ -26,7 +26,7 @@ void show_help(){
     "2ani: Anisotropic 2 points correlation function. \n";
 
     std::cout << "Parameters: \n \n" <<
-    "-p number_of_points:   (required) number_of_points must be an integer of how many points will be taken from the files of data. \n\n"<<
+    "-n number_of_points:   (required) number_of_points must be an integer of how many points will be taken from the files of data. \n\n"<<
     "-f datafile:           (required) datafile must be the name of a plain text file located in the data/ directory. The file shall contain \n"<<
     "                       3 columns for the x,y,z and a fourth column for the wight of each point. The file must contain at least \n"<<
     "                       the number of row specified by the -p parameter. \n \n"<<

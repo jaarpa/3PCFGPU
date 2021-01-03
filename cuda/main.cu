@@ -30,9 +30,64 @@ int main(int argc, char **argv){
         show_help();
         return 0;
     } else if (argc >= 12 && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)) {
-        for (int idpar=1; idpar<argc; idpar++){
-            cout << argv[idpar] << endl;
+
+        //Read the parameters from command line
+        int np=0, bn=0, partitions=35;
+        bool bpc = false, analytic=false, rand_dir = false;
+        float size_box = 0, dmax=0;
+        string data_name, rand_name="";
+        for (int idpar=2; idpar<argc; idpar++){     
+            
+            if (strcmp(argv[idpar],"-n")==0){
+                np = stoi(argv[idpar+1]);
+                idpar++;
+            } else if (strcmp(argv[idpar],"-f")==0){
+                data_name = argv[idpar+1];
+                idpar++;
+            } else if (strcmp(argv[idpar],"-r")==0 || strcmp(argv[idpar],"-rd")==0){
+                rand_dir = (strcmp(argv[idpar],"-rd")==0);
+                rand_name = argv[idpar+1];
+                idpar++;
+            } else if (strcmp(argv[idpar],"-b")==0){
+                bn = stoi(argv[idpar+1]);
+                idpar++;
+            } else if (strcmp(argv[idpar],"-d")==0){
+                dmax = stof(argv[[idpar+1]]);
+                idpar++;
+            } else if (strcmp(argv[idpar],"-bpc")==0){
+                bpc = true;
+            } else if (strcmp(argv[idpar],"-a")==0){
+                analytic = true;
+            } else if (strcmp(argv[idpar],"-p")==0){
+                partitions = stof(argv[[idpar+1]]);
+                idpar++;
+            } else if (strcmp(argv[idpar],"-s")==0){
+                size_box = stof(argv[[idpar+1]]);
+                idpar++;
+            }
+
         }
+
+        //Figure out if something very necessary is missing
+        if (np==0){
+            cout << "Missing number of points argument." << endl;
+            exit(1);
+        }
+        if (bn==0){
+            cout << "Missing number of bins argument." << endl;
+            exit(1);
+        }
+        if (dmax==0){
+            cout << "Missing maximum distance argument." << endl;
+            exit(1);
+        }
+        if (!(bpc && analytic) && rand_name==""){
+            cout << "Missing random file(s) location." << endl;
+            exit(1);
+        }
+
+        cout << "Random file(s) location."<< rand_name << endl;
+
     } else {
         cout << "Invalid <cal_type> option or not enough parameters. \nSee --help for more information." << endl;
         exit(1);
