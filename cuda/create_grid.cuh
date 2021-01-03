@@ -72,7 +72,7 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
         }
     }
 
-    size_box=ceil(candidate_size_box+1);
+    if (size_box<=0) size_box=ceil(candidate_size_box+1);
 
     file.close();
 }
