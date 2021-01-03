@@ -253,7 +253,7 @@ int main(int argc, char **argv){
         //Memory allocation and copy of random files in the loop of the functions
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
-        cout << "Succesfully readed the data. All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
+        cout << "Succesfully readed the data. All set to compute the histograms in " << htime*1000 << " miliseconds" << endl;
         cout << "(Does not include host to device copies of nodes of random data)" << endl;
 
         //Launch the correct function
