@@ -124,7 +124,7 @@ int main(int argc, char **argv){
                 idxR[i] = 0;
                 last_pointR[i] = 0;
                 *(dataR+i) = new PointW3D[np];
-                open_files(rand_name, np, dataR, r_size_box);
+                open_files(rand_name, np, dataR[i], r_size_box);
                 
                 //Set box size
                 if (!size_box_provided){
