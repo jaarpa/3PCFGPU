@@ -14,15 +14,14 @@
 using namespace std;
 
 /** CUDA check macro */
-#define cucheck(call) \
-	{\
-	cudaError_t res = (call);\
-	if(res != cudaSuccess) {\
-	const char* err_str = cudaGetErrorString(res);\
-	fprintf(stderr, "%s (%d): %s in %s \n", __FILE__, __LINE__, err_str, #call);	\
-	exit(-1);\
-	}\
-	}
+#define cucheck(call){\
+    cudaError_t res = (call);\
+    if(res != cudaSuccess) {\
+        const char* err_str = cudaGetErrorString(res);\
+        fprintf(stderr, "%s (%d): %s in %s \n", __FILE__, __LINE__, err_str, #call);\
+        exit(-1);\
+    }\
+}\
 
 
 int main(int argc, char **argv){

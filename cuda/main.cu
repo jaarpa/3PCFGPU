@@ -1,6 +1,9 @@
+
 /*
 Esta funcion lee los datos y crea el grid de nodos y luego llama a la función correspondiente 
 para crear y guardar los histogramas correspondientes.
+
+nvcc main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
 */
 
 /** CUDA check macro */
@@ -93,11 +96,14 @@ int main(int argc, char **argv){
         //Everything should be set to read the data and call the funtions to make and save the histograms.
         
         //Declare data variables.
+        clock_t stop_timmer_host, start_timmer_host;
+        start_timmer_host = clock();
+
         DNode *hnodeD_s, *dnodeD;
         PointW3D *dataD, *h_ordered_pointsD_s, *d_ordered_pointsD;
         Node ***hnodeD;
         int nonzero_Dnodes, k_element=0, idxD=0, last_pointD = 0;
-        float size_node, r_size_box=0;
+        float size_node, htime, r_size_box=0;
 
         //Declare variables for random.
         DNode **hnodeR_s;
@@ -245,6 +251,10 @@ int main(int argc, char **argv){
         cucheck(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
         cucheck(cudaMemcpy(d_ordered_pointsD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
         //Memory allocation and copy of random files in the loop of the functions
+        stop_timmer_host = clock();
+        time_spent = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
+        cout << "Succesfully readed the data. All set to compute the histograms in " << time_spent*1000 << " miliseconds" << endl;
+        cout << "(Does not include host to device copies of nodes of random data)" << endl;
 
         //Launch the correct function
         
