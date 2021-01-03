@@ -59,10 +59,10 @@ int main(int argc, char **argv){
             } else if (strcmp(argv[idpar],"-a")==0){
                 analytic = true;
             } else if (strcmp(argv[idpar],"-p")==0){
-                partitions = stof(argv[[idpar+1]]);
+                partitions = stof(argv[idpar+1]);
                 idpar++;
             } else if (strcmp(argv[idpar],"-s")==0){
-                size_box = stof(argv[[idpar+1]]);
+                size_box = stof(argv[idpar+1]);
                 idpar++;
             }
 
