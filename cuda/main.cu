@@ -52,7 +52,7 @@ int main(int argc, char **argv){
                 bn = stoi(argv[idpar+1]);
                 idpar++;
             } else if (strcmp(argv[idpar],"-d")==0){
-                dmax = stof(argv[[idpar+1]]);
+                dmax = stof(argv[idpar+1]);
                 idpar++;
             } else if (strcmp(argv[idpar],"-bpc")==0){
                 bpc = true;
