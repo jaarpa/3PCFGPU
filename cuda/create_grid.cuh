@@ -156,7 +156,7 @@ void save_histogram1D(string name, int bns, double *histo, int nhistos=1){
     }
     for (int i = 0; i < nhistos; i++){
         for (int j = 0; j < bns; j++){
-        file2 << setprecision(12) << histo[i*bn + j] << endl;
+        file2 << setprecision(12) << histo[i*bns + j] << endl;
         }
     }
     file2.close();

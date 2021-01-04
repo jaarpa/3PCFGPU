@@ -31,9 +31,9 @@ void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DN
     /* ======================  Var declaration ===============================*/
     /* =======================================================================*/
 
-    float d_max_node;
+    float d_max_node, time_spent;
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
-    int  blocks_D, blocks_R, threads_perblock_dim = 32, idxD=0, idxR=0;
+    int  blocks_D, blocks_R, threads_perblock_dim = 32;
 
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
@@ -56,7 +56,7 @@ void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DN
 
     // Name of the files where the results are saved
     std::string nameDD = "DDiso_", nameRR = "RRiso_", nameDR = "DRiso_";
-    std::string data_name = argv[1], rand_name = argv[2];
+    std::string data_name = "argv[1]", rand_name = "argv[2]";
     nameDD.append(data_name);
     nameRR.append(rand_name);
     nameDR.append(rand_name);
@@ -103,26 +103,26 @@ void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DN
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cucheck(cudaEventRecord(start_timmer));
-    make_histoXX<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_ordered_pointsD_DD, dnodeD_DD, nonzero_Dnodes, bn, dmax, d_max_node);
+    XX2iso<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node);
     for (int i=0; i<n_randfiles; i++){
         //Calculates grid dim for each file
         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
         gridR.x = blocks_R;
         gridR.y = blocks_R;
-        make_histoXX<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_ordered_pointsR_RR, dnodeR_RR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        XX2iso<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
         gridDR.y = blocks_R;
-        make_histoXY<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_ordered_pointsD_DR, dnodeD_DR, nonzero_Dnodes, d_ordered_pointsR_DR, dnodeR_DR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        XY2iso<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
     }
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
 
     cucheck(cudaMemcpy(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost));
-    save_histogram(nameDD, bn, DD);
+    save_histogram1D(nameDD, bn, DD);
     cucheck(cudaMemcpy(RR, d_RR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
-    save_histogram(nameRR, bn, RR, n_randfiles);
+    save_histogram1D(nameRR, bn, RR, n_randfiles);
     cucheck(cudaMemcpy(DR, d_DR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
-    save_histogram(nameDR, bn, DR, n_randfiles);
+    save_histogram1D(nameDR, bn, DR, n_randfiles);
 
 
     cucheck(cudaEventRecord(stop_timmer));

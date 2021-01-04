@@ -3,7 +3,7 @@
 Esta funcion lee los datos y crea el grid de nodos y luego llama a la función correspondiente 
 para crear y guardar los histogramas correspondientes.
 
-nvcc main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
 */
 
 /** CUDA check macro */
@@ -113,8 +113,8 @@ int main(int argc, char **argv){
         float size_node, htime;
 
         //Declare variables for random.
-        DNode **hnodeR_s;
-        PointW3D **dataR, **h_ordered_pointsR_s;
+        DNode **hnodeR_s, dnodeR;
+        PointW3D **dataR, **h_ordered_pointsR_s, d_ordered_pointsR;
         Node ****hnodeR;
         float r_size_box=0;
         int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1, tot_randnodes=0;
@@ -267,11 +267,15 @@ if (rand_dir){
         cucheck(cudaMalloc(&d_ordered_pointsD, np*sizeof(PointW3D)));
         cucheck(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
         cucheck(cudaMemcpy(d_ordered_pointsD, h_ordered_pointsD, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
-        //Memory allocation and copy of random files in the loop of the functions
+        if (rand_required){
+            cucheck(cudaMalloc(&dnodeR, tot_randnodes*sizeof(DNode)));
+            cucheck(cudaMalloc(&d_ordered_pointsR, n_randfiles*np*sizeof(PointW3D)));
+            cucheck(cudaMemcpy(dnodeR, hnodeR_s, tot_randnodes*sizeof(DNode), cudaMemcpyHostToDevice));
+            cucheck(cudaMemcpy(d_ordered_pointsR, h_ordered_pointsR_s, n_randfiles*np*sizeof(PointW3D), cudaMemcpyHostToDevice));
+        }
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
         cout << "Succesfully readed the data. All set to compute the histograms in " << htime*1000 << " miliseconds" << endl;
-        cout << "(Does not include host to device copies of nodes of random data)" << endl;
 
         /* =======================================================================*/
         /* ===================== Free unused host memory =========================*/
@@ -335,7 +339,7 @@ if (rand_dir){
                     cout << "Call 2iso with bpc" << endl;
                 }
             } else {
-                pcf_2iso(dnodeD, d_ordered_pointsD, nonzero_Dnodes, hnodeR_s, h_ordered_pointsR_s, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+                pcf_2iso(dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
             }
         } else if (strcmp(argv[1],"2ani")==0){
             if (bpc){
