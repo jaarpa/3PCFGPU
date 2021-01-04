@@ -178,12 +178,10 @@ if (rand_dir){
                 *(*(hnodeD+i)+j) = new Node[partitions];
             }
         }
-        
-        cout << "Properly assigned and read the data. Justbefore making the nodes" << endl;
-        cout << size_box << endl;
-        cout << dataR[0][5].z << endl;
 
         make_nodos(hnodeD, dataD, partitions, size_node, np);
+
+        cout << "Tthe data nodes are made properly" << endl;
         if (rand_required){
             for (int i=0; i<n_randfiles; i++){
                 make_nodos(hnodeR[i], dataR[i], partitions, size_node, np);
