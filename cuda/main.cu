@@ -186,8 +186,6 @@ if (rand_dir){
             }
         };
 
-        cout << "After make nodes" << endl;
-
         //Count nonzero data nodes
         for(int row=0; row<partitions; row++){
             for(int col=0; col<partitions; col++){
@@ -201,12 +199,6 @@ if (rand_dir){
                     }
 
                 }
-            }
-        }
-
-        if (rand_required){
-            for (int i=0; i<n_randfiles; i++){
-                cout << "File: " << i << "Nonzero nodes: " << nonzero_Rnodes[i] << endl;
             }
         }
 
@@ -273,7 +265,40 @@ if (rand_dir){
 
         //Launch the correct function
         
-        
+        if (strcmp(argv[1],"3iso")==0){
+            if (bpc){
+                if (analytic){
+                    cout << "Call 3iso with bpc analytic" << endl;
+                } else {
+                    cout << "Call 3iso with bpc" << endl;
+                }
+            } else {
+                cout << "Call 3iso NO BPC" << endl;
+            }
+        } else if (strcmp(argv[1],"3ani")==0){
+            if (bpc){
+                cout << "Call 3ani with bpc" << endl;
+            } else {
+                cout << "Call 3ani NO BPC" << endl;
+            }
+        } else if (strcmp(argv[1],"2iso")==0){
+            if (bpc){
+                if (analytic){
+                    cout << "Call 2iso with bpc analytic" << endl;
+                } else {
+                    cout << "Call 2iso with bpc" << endl;
+                }
+            } else {
+                cout << "Call 2iso NO BPC" << endl;
+            }
+        } else if (strcmp(argv[1],"2ani")==0){
+            if (bpc){
+                cout << "Call 2ani with bpc" << endl;
+            } else {
+                cout << "Call 2ani NO BPC" << endl;
+            }
+        }
+
         //Free the host memory
         cucheck(cudaFree(dnodeD));
         cucheck(cudaFree(d_ordered_pointsD));
