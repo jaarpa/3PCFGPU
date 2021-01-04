@@ -186,6 +186,8 @@ if (rand_dir){
             }
         };
 
+        cout << "After make nodes" << endl;
+
         //Count nonzero data nodes
         for(int row=0; row<partitions; row++){
             for(int col=0; col<partitions; col++){
@@ -215,7 +217,6 @@ if (rand_dir){
                 h_ordered_pointsR_s[i] = new PointW3D[np];
             }
         }
-        cout << "Before deep copy" << endl;
 
         for(int row=0; row<partitions; row++){
             for(int col=0; col<partitions; col++){
