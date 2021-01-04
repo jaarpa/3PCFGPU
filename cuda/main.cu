@@ -359,9 +359,6 @@ if (rand_dir){
         cucheck(cudaFree(d_ordered_pointsR));
 
         if (rand_required){
-            for (int i=0; i<n_randfiles; i++){
-                delete[] nonzero_Rnodes[i];
-            }
             delete[] nonzero_Rnodes;
             delete[] acum_nonzero_Rnodes;
         }
