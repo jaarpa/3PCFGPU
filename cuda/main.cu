@@ -113,7 +113,8 @@ int main(int argc, char **argv){
         DNode **hnodeR_s;
         PointW3D **dataR, **h_ordered_pointsR_s;
         Node ****hnodeR;
-        int *nonzero_Rnodes, *idxR, *last_pointR, r_size_box=0, n_randfiles=1;
+        float r_size_box=0;
+        int *nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1;
 
 
         /* =======================================================================*/
