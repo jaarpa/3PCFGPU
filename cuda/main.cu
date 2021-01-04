@@ -106,7 +106,7 @@ int main(int argc, char **argv){
         PointW3D *dataD, *h_ordered_pointsD, *d_ordered_pointsD;
         Node ***hnodeD;
 
-        int nonzero_Dnodes, k_element=0, idxD=0, last_pointD = 0;
+        int nonzero_Dnodes=0, k_element=0, idxD=0, last_pointD = 0;
         float size_node, htime;
 
         //Declare variables for random.
@@ -192,9 +192,7 @@ if (rand_dir){
         for(int row=0; row<partitions; row++){
             for(int col=0; col<partitions; col++){
                 for(int mom=0; mom<partitions; mom++){
-                    if(hnodeD[row][col][mom].len>0){
-                        nonzero_Dnodes+=1;
-                    }
+                    if(hnodeD[row][col][mom].len>0)  nonzero_Dnodes+=1;
 
                     if (rand_required){
                         for (int i=0; i<n_randfiles; i++){
@@ -203,6 +201,12 @@ if (rand_dir){
                     }
 
                 }
+            }
+        }
+
+        if (rand_required){
+            for (int i=0; i<n_randfiles; i++){
+                cout << "File: " << i << "Nonzero nodes: " << nonzero_Rnodes[i] << endl;
             }
         }
 
