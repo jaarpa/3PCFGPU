@@ -180,6 +180,8 @@ if (rand_dir){
         }
         
         cout << "Properly assigned and read the data. Justbefore making the nodes" << endl;
+        cout << size_box << endl;
+        cout << dataR[5].z << endl;
 
         make_nodos(hnodeD, dataD, partitions, size_node, np);
         if (rand_required){
