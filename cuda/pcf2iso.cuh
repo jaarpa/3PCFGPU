@@ -8,7 +8,7 @@
 #include "kernels/2iso_k.cuh"
 
 
-void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR_s, PointW3D *d_ordered_pointsR_s, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax){
+void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax){
     /*
     Main function to calculate the isotropic 2 point correlation function. Saves three different histograms in the same location of this script
     with the names DD.dat DR.dat RR.dat. This program do not consider periodic boundary conditions. The file must contain 4 columns, the first 3 
@@ -38,12 +38,6 @@ void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DN
     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
     cucheck(cudaEventCreate(&start_timmer));
     cucheck(cudaEventCreate(&stop_timmer));
-
-    int num_streams;
-    // ... set num_streams
-    cudaStream_t *streams = new cudaStream_t[num_streams];
-    for (int i = 0; i < num_streams; i++)
-      cudaStreamCreate(&(streams[i]));
 
     cudaStream_t streamDD, *streamRR, *streamDR;
     streamRR = new cudaStream_t[n_randfiles];

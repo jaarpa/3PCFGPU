@@ -113,8 +113,8 @@ int main(int argc, char **argv){
         float size_node, htime;
 
         //Declare variables for random.
-        DNode **hnodeR_s, dnodeR;
-        PointW3D **dataR, **h_ordered_pointsR_s, d_ordered_pointsR;
+        DNode *hnodeR_s, dnodeR;
+        PointW3D **dataR, *h_ordered_pointsR_s, d_ordered_pointsR;
         Node ****hnodeR;
         float r_size_box=0;
         int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1, tot_randnodes=0;
