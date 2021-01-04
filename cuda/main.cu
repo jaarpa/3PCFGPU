@@ -18,6 +18,7 @@ nvcc main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 2
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "PCF_help.cuh"
 #include "create_grid.cuh"
 #include "pcf2iso.cuh"
@@ -358,6 +359,8 @@ if (rand_dir){
             delete[] nonzero_Rnodes;
             delete[] acum_nonzero_Rnodes;
         }
+        
+        cout << "Program terminated..." << endl;
 
     } else {
         cout << "Invalid <cal_type> option or not enough parameters. \nSee --help for more information." << endl;

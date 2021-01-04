@@ -3,16 +3,12 @@
 // nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data.dat rand0.dat 32768 20 150
 // nvcc -arch=sm_75 main.cu -o par_s.out && ./par_s.out data_5K.dat rand0_5K.dat 5000 30 180
 
-#include <stdio.h>
-#include <iostream>
 #include <string.h>
-#include <time.h>
 #include <math.h>
-#include "create_grid.cuh"
-#include "kernels.cuh"
+#include "kernels/2iso_k.cuh"
 
 
-int pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR_s, PointW3D *d_ordered_pointsR_s, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax){
+void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR_s, PointW3D *d_ordered_pointsR_s, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax){
     /*
     Main function to calculate the isotropic 2 point correlation function. Saves three different histograms in the same location of this script
     with the names DD.dat DR.dat RR.dat. This program do not consider periodic boundary conditions. The file must contain 4 columns, the first 3 
@@ -59,8 +55,8 @@ int pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNo
     }
 
     // Name of the files where the results are saved
-    string nameDD = "DDiso_", nameRR = "RRiso_", nameDR = "DRiso_";
-    string data_name = argv[1], rand_name = argv[2];
+    std::string nameDD = "DDiso_", nameRR = "RRiso_", nameDR = "DRiso_";
+    std::string data_name = argv[1], rand_name = argv[2];
     nameDD.append(data_name);
     nameRR.append(rand_name);
     nameDR.append(rand_name);
@@ -159,7 +155,5 @@ int pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNo
     cucheck(cudaFree(d_RR));
     cucheck(cudaFree(d_DR));
 
-    cout << "Program terminated..." << endl;
-    return 0;
 }
 
