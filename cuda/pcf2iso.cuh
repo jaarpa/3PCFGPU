@@ -8,7 +8,7 @@
 #include "kernels/2iso_k.cuh"
 
 
-void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax){
+void pcf_2iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax){
     /*
     Main function to calculate the isotropic 2 point correlation function. Saves three different histograms in the same location of this script
     with the names DD.dat DR.dat RR.dat. This program do not consider periodic boundary conditions. The file must contain 4 columns, the first 3 
@@ -48,12 +48,7 @@ void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DN
         cucheck(cudaStreamCreate(&streamRR[i]));
     }
 
-    // Name of the files where the results are saved
-    std::string nameDD = "DDiso_", nameRR = "RRiso_", nameDR = "DRiso_";
-    std::string data_name = "argv[1]", rand_name = "argv[2]";
-    nameDD.append(data_name);
-    nameRR.append(rand_name);
-    nameDR.append(rand_name);
+    std::string nameDD, nameRR, nameDR;
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
@@ -110,13 +105,25 @@ void pcf_2iso(DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DN
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
+    
+
 
     cucheck(cudaMemcpy(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost));
+    nameDD = "DDiso_":
+    nameDD.append(histo_names[0]);
     save_histogram1D(nameDD, bn, DD);
     cucheck(cudaMemcpy(RR, d_RR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
-    save_histogram1D(nameRR, bn, RR, n_randfiles);
+    for (int i=0; i<n_randfiles; i++){
+        nameRR = "RRiso_";
+        nameRR.append(histo_names[i+1]);
+        save_histogram1D(nameRR, bn, RR, i);
+    }
     cucheck(cudaMemcpy(DR, d_DR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
-    save_histogram1D(nameDR, bn, DR, n_randfiles);
+    for (int i=0; i<n_randfiles; i++){
+        nameDR = "DRiso_";
+        nameDR.append(histo_names[i+1]);
+        save_histogram1D(nameDR, bn, DR, i);
+    }
 
 
     cucheck(cudaEventRecord(stop_timmer));

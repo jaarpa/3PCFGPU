@@ -138,7 +138,7 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
 }
 
 //=================================================================== 
-void save_histogram1D(string name, int bns, double *histo, int nhistos=1){
+void save_histogram1D(string name, int bns, double *histo, int nhistos=0){
     /* This function saves a 1 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
     */
@@ -154,11 +154,11 @@ void save_histogram1D(string name, int bns, double *histo, int nhistos=1){
         cout << "Failed to save the the histogram in " << name << endl;
         exit(1);
     }
-    for (int i = 0; i < nhistos; i++){
-        for (int j = 0; j < bns; j++){
+    
+    for (int j = 0; j < bns; j++){
         file2 << setprecision(12) << histo[i*bns + j] << endl;
-        }
     }
+    
     file2.close();
 }
 
