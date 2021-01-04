@@ -95,36 +95,44 @@ int main(int argc, char **argv){
 
         //Everything should be set to read the data and call the funtions to make and save the histograms.
         
-        //Declare data variables.
+        /* =======================================================================*/
+        /* ========================= Declare variables ===========================*/
+        /* =======================================================================*/
+
         clock_t stop_timmer_host, start_timmer_host;
         start_timmer_host = clock();
 
         DNode *hnodeD_s, *dnodeD;
-        PointW3D *dataD, *h_ordered_pointsD_s, *d_ordered_pointsD;
+        PointW3D *dataD, *h_ordered_pointsD, *d_ordered_pointsD;
         Node ***hnodeD;
+
         int nonzero_Dnodes, k_element=0, idxD=0, last_pointD = 0;
-        float size_node, htime, r_size_box=0;
+        float size_node, htime;
 
         //Declare variables for random.
         DNode **hnodeR_s;
         PointW3D **dataR, **h_ordered_pointsR_s;
         Node ****hnodeR;
-        int *nonzero_Rnodes, *idxR, *last_pointR, n_randfiles=1;
+        int *nonzero_Rnodes, *idxR, *last_pointR, r_size_box=0, n_randfiles=1;
 
-        //Define variables
+
+        /* =======================================================================*/
+        /* ================== Define and prepare variables =======================*/
+        /* =======================================================================*/
+
         //Read data
         dataD = new PointW3D[np];
         open_files(data_name, np, dataD, size_box);
         
-        //Read rand
+        //Read rand only if rand was required.
         if (rand_required){
             
-            //Check if a directory of random files was provided to change n_randfiles
-            //Instead of rand name should be an array with the name of each rand array or something like that.
-            if (rand_dir){
-                cout << "You are dealing with multiple random files" << endl;
-                cout << rand_name << endl;
-            }
+//Check if a directory of random files was provided to change n_randfiles
+//Instead of rand name should be an array with the name of each rand array or something like that.
+if (rand_dir){
+    cout << "You are dealing with multiple random files" << endl;
+    cout << rand_name << endl;
+}
             
             dataR = new PointW3D*[n_randfiles];
             nonzero_Rnodes = new int[n_randfiles];
@@ -134,7 +142,7 @@ int main(int argc, char **argv){
                 nonzero_Rnodes[i] = 0;
                 idxR[i] = 0;
                 last_pointR[i] = 0;
-                *(dataR+i) = new PointW3D[np];
+                dataR[i] = new PointW3D[np];
                 open_files(rand_name, np, dataR[i], r_size_box);
                 
                 //Set box size
@@ -152,11 +160,11 @@ int main(int argc, char **argv){
         if (rand_required){
             hnodeR = new Node***[n_randfiles];
             for (int i=0; i<n_randfiles; i++){
-                *(hnodeR+i) = new Node**[partitions];
+                hnodeR[i] = new Node**[partitions];
                 for (int j=0; j<partitions; j++){
-                    *(*(hnodeR+i)+j) = new Node*[partitions];
+                    hnodeR[i][j] = new Node*[partitions];
                     for (int k=0; k<partitions; k++){
-                        *(*(*(hnodeR+i)+j)+k) = new Node[partitions];
+                        hnodeR[i][j][k] = new Node[partitions];
                     }
                 }
             }
@@ -169,6 +177,8 @@ int main(int argc, char **argv){
                 *(*(hnodeD+i)+j) = new Node[partitions];
             }
         }
+        
+        cout << "Properly assigned and read the data. Justbefore making the nodes" << endl;
 
         make_nodos(hnodeD, dataD, partitions, size_node, np);
         if (rand_required){
@@ -197,7 +207,7 @@ int main(int argc, char **argv){
 
         //Deep copy into linear nodes and an ordered elements array
         hnodeD_s = new DNode[nonzero_Dnodes];
-        h_ordered_pointsD_s = new PointW3D[np];
+        h_ordered_pointsD = new PointW3D[np];
         if (rand_required){
             hnodeR_s = new DNode*[n_randfiles];
             h_ordered_pointsR_s = new PointW3D*[n_randfiles];
@@ -219,7 +229,7 @@ int main(int argc, char **argv){
                         hnodeD_s[idxD].end = last_pointD;
                         for (int j=hnodeD_s[idxD].start; j<last_pointD; j++){
                             k_element = j-hnodeD_s[idxD].start;
-                            h_ordered_pointsD_s[j] = hnodeD[row][col][mom].elements[k_element];
+                            h_ordered_pointsD[j] = hnodeD[row][col][mom].elements[k_element];
                         }
                         idxD++;
                     }
@@ -249,7 +259,7 @@ int main(int argc, char **argv){
         cucheck(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
         cucheck(cudaMalloc(&d_ordered_pointsD, np*sizeof(PointW3D)));
         cucheck(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
-        cucheck(cudaMemcpy(d_ordered_pointsD, h_ordered_pointsD_s, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
+        cucheck(cudaMemcpy(d_ordered_pointsD, h_ordered_pointsD, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
         //Memory allocation and copy of random files in the loop of the functions
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
@@ -272,7 +282,7 @@ int main(int argc, char **argv){
         delete[] hnodeD;
         delete[] dataD;
         delete[] hnodeD_s;
-        delete[] h_ordered_pointsD_s;
+        delete[] h_ordered_pointsD;
         
         if (rand_required){
             for (int i=0; i<n_randfiles; i++){
