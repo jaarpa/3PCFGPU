@@ -20,6 +20,7 @@ nvcc main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 2
 #include <string.h>
 #include "PCF_help.cuh"
 #include "create_grid.cuh"
+#include "pcf2iso.cuh"
 
 using namespace std;
 
@@ -115,7 +116,7 @@ int main(int argc, char **argv){
         PointW3D **dataR, **h_ordered_pointsR_s;
         Node ****hnodeR;
         float r_size_box=0;
-        int *nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1;
+        int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1, tot_randnodes=0;
 
         /* =======================================================================*/
         /* ================== Define and prepare variables =======================*/
@@ -139,10 +140,12 @@ if (rand_dir){
             nonzero_Rnodes = new int[n_randfiles];
             idxR = new int[n_randfiles];
             last_pointR = new int[n_randfiles];
+            acum_nonzero_Rnodes = new int[n_randfiles];
             for (int i=0; i<n_randfiles; i++){
                 nonzero_Rnodes[i] = 0;
                 idxR[i] = 0;
                 last_pointR[i] = 0;
+                acum_nonzero_Rnodes[i] = 0;
                 dataR[i] = new PointW3D[np];
                 open_files(rand_name, np, dataR[i], r_size_box);
                 
@@ -194,7 +197,11 @@ if (rand_dir){
 
                     if (rand_required){
                         for (int i=0; i<n_randfiles; i++){
-                            if(hnodeR[i][row][col][mom].len>0) nonzero_Rnodes[i]+=1;
+                            if(hnodeR[i][row][col][mom].len>0) {
+                                nonzero_Rnodes[i]+=1;
+                                tot_randnodes+=1;
+                            }
+                            
                         }
                     }
 
@@ -202,16 +209,18 @@ if (rand_dir){
             }
         }
 
+        if (rand_required){
+            for (int i=1; i<n_randfiles; i++){
+                acum_nonzero_Rnodes[i] = acum_nonzero_Rnodes[i-1] + nonzero_Rnodes[i-1];
+            }
+        }
+
         //Deep copy into linear nodes and an ordered elements array
         hnodeD_s = new DNode[nonzero_Dnodes];
         h_ordered_pointsD = new PointW3D[np];
         if (rand_required){
-            hnodeR_s = new DNode*[n_randfiles];
-            h_ordered_pointsR_s = new PointW3D*[n_randfiles];
-            for (int i=0; i<n_randfiles; i++){
-                hnodeR_s[i] = new DNode[nonzero_Rnodes[i]];
-                h_ordered_pointsR_s[i] = new PointW3D[np];
-            }
+            hnodeR_s = new DNode[tot_randnodes];
+            h_ordered_pointsR_s = new PointW3D[n_randfiles*np];
         }
 
         for(int row=0; row<partitions; row++){
@@ -234,14 +243,14 @@ if (rand_dir){
                     if (rand_required){
                         for (int i=0; i<n_randfiles; i++){
                             if (hnodeR[i][row][col][mom].len>0){
-                                hnodeR_s[i][idxR[i]].nodepos = hnodeR[i][row][col][mom].nodepos;
-                                hnodeR_s[i][idxR[i]].start = last_pointR[i];
-                                hnodeR_s[i][idxR[i]].len = hnodeR[i][row][col][mom].len;
+                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].nodepos = hnodeR[i][row][col][mom].nodepos;
+                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start = last_pointR[i];
+                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].len = hnodeR[i][row][col][mom].len;
                                 last_pointR[i] = last_pointR[i] + hnodeR[i][row][col][mom].len;
-                                hnodeR_s[i][idxR[i]].end = last_pointR[i];
-                                for (int j=hnodeR_s[i][idxR[i]].start; j<last_pointR[i]; j++){
-                                    k_element = j-hnodeR_s[i][idxR[i]].start;
-                                    h_ordered_pointsR_s[i][j] = hnodeR[i][row][col][mom].elements[k_element];
+                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end = last_pointR[i];
+                                for (int j=hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start; j<last_pointR[i]; j++){
+                                    k_element = j-hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start;
+                                    h_ordered_pointsR_s[i*np + j] = hnodeR[i][row][col][mom].elements[k_element];
                                 }
                                 idxR[i]++;
                             }
@@ -293,6 +302,8 @@ if (rand_dir){
             delete[] hnodeR;
             delete[] idxR;
             delete[] last_pointR;
+            delete[] hnodeR_s;
+            delete[] h_ordered_pointsR_s;
         }
 
         /* =======================================================================*/
@@ -323,7 +334,7 @@ if (rand_dir){
                     cout << "Call 2iso with bpc" << endl;
                 }
             } else {
-                cout << "Call 2iso NO BPC" << endl;
+                pcf_2iso(dnodeD, d_ordered_pointsD, nonzero_Dnodes, hnodeR_s, h_ordered_pointsR_s, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
             }
         } else if (strcmp(argv[1],"2ani")==0){
             if (bpc){
@@ -343,12 +354,9 @@ if (rand_dir){
         if (rand_required){
             for (int i=0; i<n_randfiles; i++){
                 delete[] nonzero_Rnodes[i];
-                delete[] hnodeR_s[i];
-                delete[] h_ordered_pointsR_s[i];
             }
             delete[] nonzero_Rnodes;
-            delete[] hnodeR_s;
-            delete[] h_ordered_pointsR_s;
+            delete[] acum_nonzero_Rnodes;
         }
 
     } else {
