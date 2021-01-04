@@ -180,14 +180,12 @@ if (rand_dir){
         }
 
         make_nodos(hnodeD, dataD, partitions, size_node, np);
-
-        cout << "Tthe data nodes are made properly" << endl;
         if (rand_required){
             for (int i=0; i<n_randfiles; i++){
                 make_nodos(hnodeR[i], dataR[i], partitions, size_node, np);
             }
         };
-
+        cout << "Aftter nodes make" << endl;
         //Count nonzero data nodes
         for(int row=0; row<partitions; row++){
             for(int col=0; col<partitions; col++){
