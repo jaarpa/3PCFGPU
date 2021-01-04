@@ -18,8 +18,9 @@ nvcc main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 2
 
 #include <stdio.h>
 #include <string.h>
-#include "create_grid.cuh"
 #include "PCF_help.cuh"
+#include "create_grid.cuh"
+
 using namespace std;
 
 int main(int argc, char **argv){
@@ -115,7 +116,6 @@ int main(int argc, char **argv){
         Node ****hnodeR;
         float r_size_box=0;
         int *nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1;
-
 
         /* =======================================================================*/
         /* ================== Define and prepare variables =======================*/
@@ -263,8 +263,42 @@ if (rand_dir){
         cout << "Succesfully readed the data. All set to compute the histograms in " << htime*1000 << " miliseconds" << endl;
         cout << "(Does not include host to device copies of nodes of random data)" << endl;
 
-        //Launch the correct function
+        /* =======================================================================*/
+        /* ===================== Free unused host memory =========================*/
+        /* =======================================================================*/
+
+        for (int i=0; i<partitions; i++){
+            for (int j=0; j<partitions; j++){
+                delete[] hnodeD[i][j];
+            }
+            delete[] hnodeD[i];
+        }    
+        delete[] hnodeD;
+        delete[] dataD;
+        delete[] hnodeD_s;
+        delete[] h_ordered_pointsD;
         
+        if (rand_required){
+            for (int i=0; i<n_randfiles; i++){
+                delete[] dataR[i];
+                for (int j=0; j<partitions; j++){
+                    for (int k=0; k<partitions; k++){
+                        delete[] hnodeR[i][j][k];
+                    }
+                    delete[] hnodeR[i][j];
+                }
+                delete[] hnodeR[i];
+            }
+            delete[] dataR;
+            delete[] hnodeR;
+            delete[] idxR;
+            delete[] last_pointR;
+        }
+
+        /* =======================================================================*/
+        /* ============ Launch the right histogram maker function ================*/
+        /* =======================================================================*/
+
         if (strcmp(argv[1],"3iso")==0){
             if (bpc){
                 if (analytic){
@@ -299,41 +333,22 @@ if (rand_dir){
             }
         }
 
-        //Free the host memory
+        /* =======================================================================*/
+        /* ========================== Free memory ================================*/
+        /* =======================================================================*/
+
         cucheck(cudaFree(dnodeD));
         cucheck(cudaFree(d_ordered_pointsD));
-        
-        for (int i=0; i<partitions; i++){
-            for (int j=0; j<partitions; j++){
-                delete[] hnodeD[i][j];
-            }
-            delete[] hnodeD[i];
-        }    
-        delete[] hnodeD;
-        delete[] dataD;
-        delete[] hnodeD_s;
-        delete[] h_ordered_pointsD;
-        
+
         if (rand_required){
             for (int i=0; i<n_randfiles; i++){
+                delete[] nonzero_Rnodes[i];
                 delete[] hnodeR_s[i];
-                delete[] dataR[i];
                 delete[] h_ordered_pointsR_s[i];
-                for (int j=0; j<partitions; j++){
-                    for (int k=0; k<partitions; k++){
-                        delete[] hnodeR[i][j][k];
-                    }
-                    delete[] hnodeR[i][j];
-                }
-                delete[] hnodeR[i];
             }
-            delete[] hnodeR;
-            delete[] hnodeR_s;
-            delete[] dataR;
-            delete[] h_ordered_pointsR_s;
             delete[] nonzero_Rnodes;
-            delete[] idxR;
-            delete[] last_pointR;
+            delete[] hnodeR_s;
+            delete[] h_ordered_pointsR_s;
         }
 
     } else {
