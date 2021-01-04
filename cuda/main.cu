@@ -132,9 +132,14 @@ int main(int argc, char **argv){
             
 //Check if a directory of random files was provided to change n_randfiles
 //Instead of rand name should be an array with the name of each rand array or something like that.
+string *histo_names;
+histo_names = new string[2];
+histo_names[0] = data_name;
+histo_names[1] = rand_name;
 if (rand_dir){
     cout << "You are dealing with multiple random files" << endl;
     cout << rand_name << endl;
+    // string *histo_names something
 }
             
             dataR = new PointW3D*[n_randfiles];
@@ -339,7 +344,7 @@ if (rand_dir){
                     cout << "Call 2iso with bpc" << endl;
                 }
             } else {
-                pcf_2iso(dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+                pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
             }
         } else if (strcmp(argv[1],"2ani")==0){
             if (bpc){
