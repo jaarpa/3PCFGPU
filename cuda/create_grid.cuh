@@ -155,10 +155,10 @@ void save_histogram1D(string name, int bns, double *histo, int nhistos=0){
         exit(1);
     }
     
-    for (int j = 0; j < bns; j++){
-        file2 << setprecision(12) << histo[i*bns + j] << endl;
+    for (int i = 0; i < bns; i++){
+        file2 << setprecision(12) << histo[nhistos*bns + i] << endl;
     }
-    
+
     file2.close();
 }
 

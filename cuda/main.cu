@@ -118,6 +118,7 @@ int main(int argc, char **argv){
         Node ****hnodeR;
         float r_size_box=0;
         int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1, tot_randnodes=0;
+        string *histo_names;
 
         /* =======================================================================*/
         /* ================== Define and prepare variables =======================*/
@@ -132,7 +133,6 @@ int main(int argc, char **argv){
             
 //Check if a directory of random files was provided to change n_randfiles
 //Instead of rand name should be an array with the name of each rand array or something like that.
-string *histo_names;
 histo_names = new string[2];
 histo_names[0] = data_name;
 histo_names[1] = rand_name;

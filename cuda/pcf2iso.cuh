@@ -109,7 +109,7 @@ void pcf_2iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
 
 
     cucheck(cudaMemcpy(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost));
-    nameDD = "DDiso_":
+    nameDD = "DDiso_";
     nameDD.append(histo_names[0]);
     save_histogram1D(nameDD, bn, DD);
     cucheck(cudaMemcpy(RR, d_RR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
