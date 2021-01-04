@@ -355,6 +355,8 @@ if (rand_dir){
 
         cucheck(cudaFree(dnodeD));
         cucheck(cudaFree(d_ordered_pointsD));
+        cucheck(cudaFree(dnodeR));
+        cucheck(cudaFree(d_ordered_pointsR));
 
         if (rand_required){
             for (int i=0; i<n_randfiles; i++){
