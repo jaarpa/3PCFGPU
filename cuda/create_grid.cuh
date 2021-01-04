@@ -86,6 +86,7 @@ void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     It manages the memory allocation and free of the previous and new elements.
     */
     lon++;
+    cout << lon << endl;
     PointW3D *array_aux = new PointW3D[lon];
     for (int i=0; i<lon-1; i++){
         array_aux[i].x = array[i].x;
