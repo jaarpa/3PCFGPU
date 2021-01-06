@@ -6,6 +6,12 @@ para crear y guardar los histogramas correspondientes.
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
 */
 
+#include <stdio.h>
+#include <time.h>
+#include <filesystem>
+#include <string>
+#include <sstream>
+
 /** CUDA check macro */
 #define cucheck(call){\
     cudaError_t res = (call);\
@@ -16,9 +22,6 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -
     }\
 }\
 
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
 #include "PCF_help.cuh"
 #include "create_grid.cuh"
 #include "pcf2iso.cuh"
@@ -118,7 +121,7 @@ int main(int argc, char **argv){
         Node ****hnodeR;
         float r_size_box=0;
         int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1, tot_randnodes=0;
-        string *histo_names;
+        string *histo_names, *rand_files;
 
         /* =======================================================================*/
         /* ================== Define and prepare variables =======================*/
@@ -130,17 +133,41 @@ int main(int argc, char **argv){
         
         //Read rand only if rand was required.
         if (rand_required){
-            
-//Check if a directory of random files was provided to change n_randfiles
-//Instead of rand name should be an array with the name of each rand array or something like that.
-histo_names = new string[2];
-histo_names[0] = data_name;
-histo_names[1] = rand_name;
-if (rand_dir){
-    cout << "You are dealing with multiple random files" << endl;
-    cout << rand_name << endl;
-    // string *histo_names something
-}
+
+            //Check if a directory of random files was provided to change n_randfiles
+            //Instead of rand name should be an array with the name of each rand array or something like that.
+            if (rand_dir){
+                n_randfiles=0; //Restart counter of rand files
+                for (auto & dir_archivo : filesystem::directory_iterator(rand_name)){
+                    //Count how many files there are
+                    n_randfiles++;
+                }
+
+                histo_names = new string[n_randfiles+1];
+                histo_names[0] = data_name;
+                rand_files = new string[n_randfiles];
+
+                for (auto & dir_archivo : filesystem::directory_iterator(rand_name)){
+                    ostringstream str;
+                    str << dir_archivo;
+                    string nombre = str.str(), nombre_archivo = "";
+                    //Clean the name of the first and last spaces
+                    for (int i = 1; i < nombre.length()-1; i++)
+                    {
+                        nombre_archivo += nombre[i];
+                    }
+                    histo_names[j+1] = nombre_archivo;
+                    nombre_archivo.insert(0,rand_name);
+                    rand_files[j] = nombre_archivo;
+                }
+
+            } else {
+                rand_files = new string[1];
+                rand_files[0] = rand_name;
+                histo_names = new string[2];
+                histo_names[0] = data_name;
+                histo_names[1] = rand_name;
+            }
             
             dataR = new PointW3D*[n_randfiles];
             nonzero_Rnodes = new int[n_randfiles];
@@ -153,7 +180,7 @@ if (rand_dir){
                 last_pointR[i] = 0;
                 acum_nonzero_Rnodes[i] = 0;
                 dataR[i] = new PointW3D[np];
-                open_files(rand_name, np, dataR[i], r_size_box);
+                open_files(rand_files[i], np, dataR[i], r_size_box);
                 
                 //Set box size
                 if (!size_box_provided){
@@ -366,7 +393,9 @@ if (rand_dir){
         if (rand_required){
             delete[] nonzero_Rnodes;
             delete[] acum_nonzero_Rnodes;
+            delete[] rand_files;
         }
+        delete[] histo_names;
         
         cout << "Program terminated..." << endl;
 
