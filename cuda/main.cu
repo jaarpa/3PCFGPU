@@ -8,9 +8,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -
 
 #include <stdio.h>
 #include <time.h>
-#include <dirent.h>
 #include <string>
-#include <sstream>
 
 /** CUDA check macro */
 #define cucheck(call){\
@@ -34,6 +32,10 @@ int main(int argc, char **argv){
     script which calls the correct function. The file must contain 4 columns, the first 3 
     are the x,y,z coordinates and the 4 the weigh of the measurment.
     */
+
+    /* =======================================================================*/
+    /* ===================  Read command line args ===========================*/
+    /* =======================================================================*/
 
     if(argc == 2 && (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0)){
         show_help();
@@ -107,11 +109,11 @@ int main(int argc, char **argv){
 
         clock_t stop_timmer_host, start_timmer_host;
         start_timmer_host = clock();
-
+        
+        //Declare variables for data.
         DNode *hnodeD_s, *dnodeD;
         PointW3D *dataD, *h_ordered_pointsD, *d_ordered_pointsD;
         Node ***hnodeD;
-
         int nonzero_Dnodes=0, k_element=0, idxD=0, last_pointD = 0;
         float size_node, htime;
 
@@ -137,34 +139,8 @@ int main(int argc, char **argv){
             //Check if a directory of random files was provided to change n_randfiles
             //Instead of rand name should be an array with the name of each rand array or something like that.
             if (rand_dir){
-                DIR *dir; struct dirent *diread;
-                string nombre_archivo;
-                n_randfiles=0; //Restart counter of rand files
-                if ((dir = opendir(rand_name)) != nullptr) {
-                    while ((diread = readdir(dir)) != nullptr) {
-                        nombre_archivo = diread->d_name;
-                        if (nombre_archivo == "." || nombre_archivo == ".." ) continue;
-                        n_randfiles++;
-                    }
-                    closedir (dir);
-
-                    histo_names = new string[n_randfiles+1];
-                    histo_names[0] = data_name;
-                    rand_files = new string[n_randfiles];
-                    int j=0;
-                    while ((diread = readdir(dir)) != nullptr) {
-                        nombre_archivo = diread->d_name;
-                        if (nombre_archivo == "." || nombre_archivo == ".." ) continue;
-                        histo_names[j+1] = nombre_archivo;
-                        nombre_archivo.insert(0,rand_name);
-                        rand_files[j] = diread->d_name;
-                    }
-                    closedir (dir);
-
-                } else {
-                    perror ("opendir");
-                    return 1;
-                }
+                cout << "You are dealing with a dir" << endl;
+                exit(1);
 
             } else {
                 rand_files = new string[1];
