@@ -163,7 +163,7 @@ int main(int argc, char **argv){
 
                 } else {
                     perror ("opendir");
-                    return exit(1);
+                    return 1;
                 }
 
             } else {
