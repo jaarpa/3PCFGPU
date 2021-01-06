@@ -33,7 +33,7 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
 
             float x1,y1,z1,x2,y2,z2;
             float d, dd_max=dmax*dmax;
-            double ds = floor(((double)(bn)/d_max)*1000000)/1000000;
+            double ds = floor(((double)(bn)/dmax)*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
             double v;
 
@@ -89,7 +89,7 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
 
             float x1,y1,z1,x2,y2,z2;
             float d, dd_max=dmax*dmax;
-            double ds = floor(((double)(bn)/d_max)*1000000)/1000000;
+            double ds = floor(((double)(bn)/dmax)*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
             double v;
 
