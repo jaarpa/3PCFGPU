@@ -23,6 +23,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -
 #include "PCF_help.cuh"
 #include "create_grid.cuh"
 #include "pcf2iso.cuh"
+#include "pcf2isoBPC.cuh"
 
 using namespace std;
 
@@ -347,9 +348,9 @@ int main(int argc, char **argv){
         } else if (strcmp(argv[1],"2iso")==0){
             if (bpc){
                 if (analytic){
-                    cout << "Call 2iso with bpc analytic" << endl;
+                    pcf_2iso_analytic(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, dmax)
                 } else {
-                    cout << "Call 2iso with bpc" << endl;
+                    pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
                 }
             } else {
                 pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
