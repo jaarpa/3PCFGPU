@@ -6,6 +6,10 @@ para crear y guardar los histogramas correspondientes.
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
 */
 
+#include <stdio.h>
+#include <time.h>
+#include <string>
+
 /** CUDA check macro */
 #define cucheck(call){\
     cudaError_t res = (call);\
@@ -16,9 +20,6 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -
     }\
 }\
 
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
 #include "PCF_help.cuh"
 #include "create_grid.cuh"
 #include "pcf2iso.cuh"
@@ -31,6 +32,10 @@ int main(int argc, char **argv){
     script which calls the correct function. The file must contain 4 columns, the first 3 
     are the x,y,z coordinates and the 4 the weigh of the measurment.
     */
+
+    /* =======================================================================*/
+    /* ===================  Read command line args ===========================*/
+    /* =======================================================================*/
 
     if(argc == 2 && (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0)){
         show_help();
@@ -104,11 +109,11 @@ int main(int argc, char **argv){
 
         clock_t stop_timmer_host, start_timmer_host;
         start_timmer_host = clock();
-
+        
+        //Declare variables for data.
         DNode *hnodeD_s, *dnodeD;
         PointW3D *dataD, *h_ordered_pointsD, *d_ordered_pointsD;
         Node ***hnodeD;
-
         int nonzero_Dnodes=0, k_element=0, idxD=0, last_pointD = 0;
         float size_node, htime;
 
@@ -118,7 +123,7 @@ int main(int argc, char **argv){
         Node ****hnodeR;
         float r_size_box=0;
         int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1, tot_randnodes=0;
-        string *histo_names;
+        string *histo_names, *rand_files;
 
         /* =======================================================================*/
         /* ================== Define and prepare variables =======================*/
@@ -130,17 +135,20 @@ int main(int argc, char **argv){
         
         //Read rand only if rand was required.
         if (rand_required){
-            
-//Check if a directory of random files was provided to change n_randfiles
-//Instead of rand name should be an array with the name of each rand array or something like that.
-histo_names = new string[2];
-histo_names[0] = data_name;
-histo_names[1] = rand_name;
-if (rand_dir){
-    cout << "You are dealing with multiple random files" << endl;
-    cout << rand_name << endl;
-    // string *histo_names something
-}
+
+            //Check if a directory of random files was provided to change n_randfiles
+            //Instead of rand name should be an array with the name of each rand array or something like that.
+            if (rand_dir){
+                cout << "You are dealing with a dir" << endl;
+                exit(1);
+
+            } else {
+                rand_files = new string[1];
+                rand_files[0] = rand_name;
+                histo_names = new string[2];
+                histo_names[0] = data_name;
+                histo_names[1] = rand_name;
+            }
             
             dataR = new PointW3D*[n_randfiles];
             nonzero_Rnodes = new int[n_randfiles];
@@ -153,7 +161,7 @@ if (rand_dir){
                 last_pointR[i] = 0;
                 acum_nonzero_Rnodes[i] = 0;
                 dataR[i] = new PointW3D[np];
-                open_files(rand_name, np, dataR[i], r_size_box);
+                open_files(rand_files[i], np, dataR[i], r_size_box);
                 
                 //Set box size
                 if (!size_box_provided){
@@ -366,7 +374,9 @@ if (rand_dir){
         if (rand_required){
             delete[] nonzero_Rnodes;
             delete[] acum_nonzero_Rnodes;
+            delete[] rand_files;
         }
+        delete[] histo_names;
         
         cout << "Program terminated..." << endl;
 

@@ -32,7 +32,8 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
         if (dd_nod12 <= d_max_node){
 
             float x1,y1,z1,x2,y2,z2;
-            float d, ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+            float dd_max=dmax*dmax;
+            double d, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
             double v;
 
@@ -47,7 +48,7 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max && d>0){
                         bin = (int)(sqrtf(d)*ds);
-                        if (bin>(bn-1)) bin = bn-1;
+                        if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;
                         v = elements[i].w*elements[j].w;
                         atomicAdd(&XX[bin],v);
@@ -87,7 +88,8 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
         if (dd_nod12 <= d_max_node){
 
             float x1,y1,z1,x2,y2,z2;
-            float d, ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+            float dd_max=dmax*dmax;
+            double d, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
             double v;
 
@@ -103,7 +105,7 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
                     if (d<dd_max){
                         bin = (int)(sqrtf(d)*ds);
 
-                        if (bin>(bn-1)) bin = bn-1;
+                        if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;
 
                         v = elementsD[i].w*elementsR[j].w;
