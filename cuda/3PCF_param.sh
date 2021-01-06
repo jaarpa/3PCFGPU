@@ -46,7 +46,7 @@ for dmax in $(seq 20 10 60)
 do 
 	for partitions in in $(seq 10 2 20)
 	do
-			3PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax -1 $partitions
-	done	
+		3PCFisotropic/normal/opt.out data_2GPc.dat data_2GPc.dat 3241792 20 $dmax -1 $partitions
+	done
 done
 
