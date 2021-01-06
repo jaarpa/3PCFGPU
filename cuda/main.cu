@@ -8,7 +8,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -
 
 #include <stdio.h>
 #include <time.h>
-#include <filesystem>
+#include <dirent.h>
 #include <string>
 #include <sstream>
 
@@ -137,28 +137,32 @@ int main(int argc, char **argv){
             //Check if a directory of random files was provided to change n_randfiles
             //Instead of rand name should be an array with the name of each rand array or something like that.
             if (rand_dir){
+                DIR *dir; struct dirent *diread;
                 n_randfiles=0; //Restart counter of rand files
-                for (auto & dir_archivo : filesystem::directory_iterator(rand_name)){
-                    //Count how many files there are
-                    n_randfiles++;
-                }
-
-                histo_names = new string[n_randfiles+1];
-                histo_names[0] = data_name;
-                rand_files = new string[n_randfiles];
-
-                for (auto & dir_archivo : filesystem::directory_iterator(rand_name)){
-                    ostringstream str;
-                    str << dir_archivo;
-                    string nombre = str.str(), nombre_archivo = "";
-                    //Clean the name of the first and last spaces
-                    for (int i = 1; i < nombre.length()-1; i++)
-                    {
-                        nombre_archivo += nombre[i];
+                if ((dir = opendir(rand_name)) != nullptr) {
+                    while ((diread = readdir(dir)) != nullptr) {
+                        if (file_name == "." || file_name == ".." ) continue;
+                        n_randfiles++;
                     }
-                    histo_names[j+1] = nombre_archivo;
-                    nombre_archivo.insert(0,rand_name);
-                    rand_files[j] = nombre_archivo;
+                    closedir (dir);
+
+                    histo_names = new string[n_randfiles+1];
+                    histo_names[0] = data_name;
+                    rand_files = new string[n_randfiles];
+                    int j=0;
+                    string nombre_archivo;
+                    while ((diread = readdir(dir)) != nullptr) {
+                        if (file_name == "." || file_name == ".." ) continue;
+                        nombre_archivo = diread->d_name;
+                        histo_names[j+1] = nombre_archivo;
+                        nombre_archivo.insert(0,rand_name);
+                        rand_files[j] = diread->d_name;
+                    }
+                    closedir (dir);
+
+                } else {
+                    perror ("opendir");
+                    return exit(1);
                 }
 
             } else {
