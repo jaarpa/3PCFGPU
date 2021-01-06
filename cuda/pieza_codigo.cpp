@@ -1,59 +1,73 @@
 #include <iostream>
-#include <filesystem>
+#include <dirent.h>
 #include <string>
 #include <fstream>
-#include <sstream>
 
 using namespace std;
 
 int main(int argc, char *argv[]){
     /*
-        Esta pieza de código usa el estándar c++17:
-        compilar con g++ -std=c++17 pieza_codigo.cpp -o ejecutable
-        requiere las librerias: sstream, fstream, string y filesystem
+        Esta pieza de código utiliza la libreria dirent.h que es compatible con el estandar c++11.
 
-        Recibe en carpeta: el nombre de la carpeta donde se localizan los archivos
-        Muestra: todos los archivos con sus respectivos datos localizados en la carpeta especificada
+        Intrucciones: Solo cambiar la variable ruta_carpeta por la dirección de la carpeta deseada.
+
+        Nota: funciona con archivos .dat de dos columnas de datos x e y (por eso las variables float x, y )
+
+        Regresa: la cantidad de puntos de cada archivo, imprime los puntos de cada archivo e imprime la cantidad de archivos abiertos.
     */
 
-    //Varible que recibe el nombre de la carpeta donde se localizan los ficheros
-    string carpeta = "/home/alejandrogoper/Documentos/RepoDePrueba/JuanCODE/DESI/cuda/datatest";
-    //Variables para guardar los datos y mostrarlos en pantalla 
-    float x,y;
-    //Variable que cuenta el numero de puntos en cada archivo y numero de archivos en la carpeta
-    int num_puntos=0, num_archivos=0;
-    for (auto & dir_archivo : filesystem::directory_iterator(carpeta))
+   string ruta_carpeta = "/home/alejandrogoper/Documentos/RepoDePrueba/JuanCODE/DESI/cuda/datatest";
+   
+   /*
+    ======================================================================================================================
+                                                Variables útiles
+    ======================================================================================================================
+   */
+   string nombre_archivo, ruta_archivo;
+   float x,y;
+   int num_puntos=0, num_archivos=0;    
+   /*
+    ======================================================================================================================
+                                                Lógica del progama
+    ======================================================================================================================
+   */
+    if(DIR *carpeta = opendir(ruta_carpeta.c_str()))
     {
-        num_archivos++;
-        //Convertimos a string el iterador dir_archivo para poder leer el fichero
-        ostringstream str;
-        str << dir_archivo;
-        string nombre = str.str(), nombre_archivo = "";
-        //eliminamos el primer y ultimo caracter de la cadena nombre (pues contienen " " al inicio y al final y esto genera problemas al leer el fichero)
-        for (int i = 1; i < nombre.length()-1; i++)
+        num_archivos = 0;
+        while(dirent *archivos = readdir(carpeta))
         {
-            nombre_archivo += nombre[i];
+            nombre_archivo = archivos->d_name; //regresa el nombre de un archivo perteneciente al directorio "carpeta"
+            //Este if es para evitar leer archivos ocultos de linux que en principio comienzan con .src o .bin etc.
+            if( nombre_archivo != "." && nombre_archivo != ".." )
+            {
+                num_archivos++;
+                //De esta manera nos aseguramos que abrimos el archivo correcto dentro de la carpeta.
+                ruta_archivo = ruta_carpeta + "/" + nombre_archivo;
+                ifstream archivo;
+                archivo.open(ruta_archivo.c_str(), ios::in | ios::binary);
+                if (archivo.fail())
+                {
+                    cout << "Error al abrir el archivo: " << nombre_archivo << endl;
+                    exit(1);
+                }
+                num_puntos=0;
+                while (!archivo.eof())
+                {
+                    archivo >> x >> y;
+                    cout << x << "\t" << y << endl;
+                    num_puntos++;
+                }
+                cout << "Archivo: "<< nombre_archivo << "\n" << "Longitud: " << num_puntos << " datos." << endl;
+                cout << "======================================================"<< endl;
+                archivo.close();
+            }
         }
-        cout << "======================================================"<< endl;
-        //Abrimos cada archivo        
-        ifstream archivo;
-        archivo.open(nombre_archivo.c_str(), ios::in | ios::binary); //le indico al programa que se trata de un archivo binario con ios::binary
-        if (archivo.fail()){
-            cout << "Error al cargar el archivo: "<< nombre_archivo<< endl;
-            exit(1);
-        }
-        int c = 0;
-        //accedemos a los datos de cada archivo
-        while (!archivo.eof())
-        {
-            archivo >> x >> y;
-            cout << x << "\t" << y << endl; 
-            c++;
-        }
-        cout << "Archivo: "<<nombre_archivo << "\n" << "Longitud: " << c << " datos"<<endl;
-        cout << "======================================================"<< endl;
-        archivo.close();
+        cout << "\n\n\tCantidad de archivos: " << num_archivos << endl;
+        closedir(carpeta);
     }
-    cout << "Numero de archivos = " << num_archivos << endl;   
-    return 0;
+    else
+    {
+        cout << "No se pudo abrir el directorio" << endl;
+    }
+    
 }
