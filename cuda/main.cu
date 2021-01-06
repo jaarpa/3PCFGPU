@@ -138,10 +138,12 @@ int main(int argc, char **argv){
             //Instead of rand name should be an array with the name of each rand array or something like that.
             if (rand_dir){
                 DIR *dir; struct dirent *diread;
+                string nombre_archivo;
                 n_randfiles=0; //Restart counter of rand files
                 if ((dir = opendir(rand_name)) != nullptr) {
                     while ((diread = readdir(dir)) != nullptr) {
-                        if (file_name == "." || file_name == ".." ) continue;
+                        nombre_archivo = diread->d_name;
+                        if (nombre_archivo == "." || nombre_archivo == ".." ) continue;
                         n_randfiles++;
                     }
                     closedir (dir);
@@ -150,10 +152,9 @@ int main(int argc, char **argv){
                     histo_names[0] = data_name;
                     rand_files = new string[n_randfiles];
                     int j=0;
-                    string nombre_archivo;
                     while ((diread = readdir(dir)) != nullptr) {
-                        if (file_name == "." || file_name == ".." ) continue;
                         nombre_archivo = diread->d_name;
+                        if (nombre_archivo == "." || nombre_archivo == ".." ) continue;
                         histo_names[j+1] = nombre_archivo;
                         nombre_archivo.insert(0,rand_name);
                         rand_files[j] = diread->d_name;
