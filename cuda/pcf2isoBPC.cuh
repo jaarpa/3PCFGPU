@@ -103,9 +103,10 @@ void pcf_2iso_BPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_points
         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
         gridR.x = blocks_R;
         gridR.y = blocks_R;
-        XX2iso_BPC<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], size_box, size_node, i);
+        XX2iso_BPC<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, i, acum_nonzero_Rnodes[i]);
+        (double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int bn_offset=0)
         gridDR.y = blocks_R;
-        XY2iso_BPC<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], size_box, size_node, i);
+        XY2iso_BPC<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, i, acum_nonzero_Rnodes[i]);
     }
 
     //Waits for all the kernels to complete

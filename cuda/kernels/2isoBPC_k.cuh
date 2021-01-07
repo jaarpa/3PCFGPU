@@ -5,7 +5,7 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int bn_offset=0){
+__global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int bn_offset=0, int node_offset=0){
     /*
     Kernel function to calculate the pure histograms for the 2 point isotropic correlation function WITH 
     boundary periodic conditions. It stores the counts in the XX histogram.
@@ -23,8 +23,8 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
     */
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
-    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
     double v;
 
     if (idx1<nonzero_nodes && idx2<nonzero_nodes){
@@ -282,7 +282,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
 
 }
 
-__global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int bn_offset){
+__global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int bn_offset, int node_offset){
     /*
     Kernel function to calculate the mixed histograms for the 2 point isotropic correlation function WITH 
     boundary periodic conditions. It stores the counts in the XY histogram.
@@ -302,8 +302,8 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
     size_node: (float) Size of the nodes.
     */
 
-    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
