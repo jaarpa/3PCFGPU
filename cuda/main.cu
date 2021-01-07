@@ -140,9 +140,29 @@ int main(int argc, char **argv){
             //Check if a directory of random files was provided to change n_randfiles
             //Instead of rand name should be an array with the name of each rand array or something like that.
             if (rand_dir){
-                cout << "You are dealing with a dir" << endl;
-                exit(1);
+                if(DIR *folder = opendir(ruta_carpeta.c_str())){
 
+                    n_randfiles = 0;
+                    string nombre_archivo;
+                    while(dirent *archivos = readdir(folder)){
+                        nombre_archivo = archivos->d_name;
+                        if( nombre_archivo != "." && nombre_archivo != ".." ) n_randfiles++;
+                    }
+                    rand_files = new string[n_randfiles];
+                    histo_names = new string[n_randfiles+1];
+                    histo_names[0] = data_name;
+                    int j = 0;
+                    while(dirent *archivos = readdir(folder)){
+                        nombre_archivo = archivos->d_name;
+                        if( nombre_archivo != "." && nombre_archivo != ".." ) {
+                            histo_names[j+1] = nombre_archivo;
+                            nombre_archivo.insert(0,rand_name);
+                            rand_files[j] = nombre_archivo;
+                            j++;
+                        }
+                    }
+                    closedir(carpeta);
+                }
             } else {
                 rand_files = new string[1];
                 rand_files[0] = rand_name;
