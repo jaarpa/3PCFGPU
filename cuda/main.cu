@@ -141,6 +141,8 @@ int main(int argc, char **argv){
             //Check if a directory of random files was provided to change n_randfiles
             //Instead of rand name should be an array with the name of each rand array or something like that.
             if (rand_dir){
+                string ruta_carpeta=rand_name;
+                ruta_carpeta.insert(0,"../data/");
                 if(DIR *folder = opendir(ruta_carpeta.c_str())){
 
                     n_randfiles = 0;
@@ -369,7 +371,7 @@ int main(int argc, char **argv){
         } else if (strcmp(argv[1],"2iso")==0){
             if (bpc){
                 if (analytic){
-                    pcf_2iso_BPCanalytic(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, dmax)
+                    pcf_2iso_BPCanalytic(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, dmax);
                 } else {
                     pcf_2iso_BPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
                 }
