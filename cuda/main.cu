@@ -9,6 +9,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -
 #include <stdio.h>
 #include <time.h>
 #include <string>
+#include <dirent.h>
 
 /** CUDA check macro */
 #define cucheck(call){\
@@ -368,9 +369,9 @@ int main(int argc, char **argv){
         } else if (strcmp(argv[1],"2iso")==0){
             if (bpc){
                 if (analytic){
-                    pcf_2iso_analytic(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, dmax)
+                    pcf_2iso_BPCanalytic(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, dmax)
                 } else {
-                    pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+                    pcf_2iso_BPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
                 }
             } else {
                 pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
