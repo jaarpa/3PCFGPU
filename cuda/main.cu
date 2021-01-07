@@ -164,7 +164,7 @@ int main(int argc, char **argv){
                             j++;
                         }
                     }
-                    closedir(carpeta);
+                    closedir(folder);
                 }
             } else {
                 rand_files = new string[1];
@@ -371,9 +371,9 @@ int main(int argc, char **argv){
         } else if (strcmp(argv[1],"2iso")==0){
             if (bpc){
                 if (analytic){
-                    pcf_2iso_BPCanalytic(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, dmax);
+                    pcf_2iso_BPCanalytic(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, size_box, dmax);
                 } else {
-                    pcf_2iso_BPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+                    pcf_2iso_BPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
                 }
             } else {
                 pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);

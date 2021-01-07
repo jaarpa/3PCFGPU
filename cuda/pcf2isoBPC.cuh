@@ -8,7 +8,7 @@
 #include "kernels/2isoBPC_k.cuh"
 
 
-void pcf_2iso_BPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax){
+void pcf_2iso_BPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float size_box, float dmax){
 
     /*
     Main function to calculate the isotropic 2 point correlation function. Saves three different histograms in the same location of this script
@@ -163,7 +163,7 @@ void pcf_2iso_BPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_points
 
 }
 
-void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, int bn, float size_node, float dmax){
+void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, int bn, float size_node, float size_box, float dmax){
 
     /*
     Main function to calculate the isotropic 2 point correlation function. Saves three different histograms in the same location of this script
