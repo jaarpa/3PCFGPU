@@ -79,11 +79,6 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
 
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1==0 && idx2==0){
-        printf("Im in the thread 0,0, in the XY make \n");
-        printf("Offset is %i \n", bn_offset);
-    }
-    idx2 += node_offset;
 
     if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
         
@@ -113,6 +108,7 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
 
                         if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;
+                        if (bn_offset!=0) printf("Bin: %i \n",bin);
 
                         v = elementsD[i].w*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
