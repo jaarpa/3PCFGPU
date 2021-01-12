@@ -113,6 +113,9 @@ void pcf_2iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
     nameDD.append(histo_names[0]);
     save_histogram1D(nameDD, bn, DD);
     cucheck(cudaMemcpy(RR, d_RR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
+    for (int i=0; i<n_randfiles*bn; i++){
+        cout << RR[i] << endl;
+    }
     for (int i=0; i<n_randfiles; i++){
         nameRR = "RRiso_";
         nameRR.append(histo_names[i+1]);

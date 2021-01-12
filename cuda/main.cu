@@ -408,7 +408,7 @@ int main(int argc, char **argv){
         cout << "Program terminated..." << endl;
 
     } else {
-        cout << "Invalid <cal_type> option or not enough parameters. \nSee --help for more information." << endl;
+        cout << "Invalid <calc_type> option or not enough parameters. \nSee --help for more information." << endl;
         exit(1);
     }
     return 0;
