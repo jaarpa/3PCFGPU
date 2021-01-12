@@ -151,6 +151,8 @@ int main(int argc, char **argv){
                         nombre_archivo = archivos->d_name;
                         if( nombre_archivo != "." && nombre_archivo != ".." ) n_randfiles++;
                     }
+                    cout << "Number of random files" << n_randfiles << endl;
+
                     rand_files = new string[n_randfiles];
                     histo_names = new string[n_randfiles+1];
                     histo_names[0] = data_name;
@@ -165,6 +167,11 @@ int main(int argc, char **argv){
                         }
                     }
                     closedir(folder);
+                    for (int l=0; l<n_randfiles;l++){
+                        cout << "index: " << l << endl;
+                        cout << "histo_names: " << histo_names[l] << endl;
+                        cout << "rand_files: " << rand_files[l] << endl;
+                    }
                 }
             } else {
                 rand_files = new string[1];
