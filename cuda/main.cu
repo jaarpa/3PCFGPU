@@ -152,8 +152,7 @@ int main(int argc, char **argv){
                         if( nombre_archivo != "." && nombre_archivo != ".." ) n_randfiles++;
                     }
                     closedir(folder);
-                    DIR *folder = opendir(ruta_carpeta.c_str())
-                    cout << "Number of random files" << n_randfiles << endl;
+                    folder = opendir(ruta_carpeta.c_str());
 
                     rand_files = new string[n_randfiles];
                     histo_names = new string[n_randfiles+1];
@@ -169,11 +168,6 @@ int main(int argc, char **argv){
                         }
                     }
                     closedir(folder);
-                    for (int l=0; l<n_randfiles;l++){
-                        cout << "index: " << l << endl;
-                        cout << "histo_names: " << histo_names[l] << endl;
-                        cout << "rand_files: " << rand_files[l] << endl;
-                    }
                 }
             } else {
                 rand_files = new string[1];
