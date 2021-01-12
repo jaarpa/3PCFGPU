@@ -81,7 +81,7 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1==0 && idx2==0){
         printf("Im in the thread 0,0, in the XY make \n");
-        printf("Offset is %i \n", bn_offset)
+        printf("Offset is %i \n", bn_offset);
     }
     idx2 += node_offset;
 
