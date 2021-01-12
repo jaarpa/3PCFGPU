@@ -151,6 +151,8 @@ int main(int argc, char **argv){
                         nombre_archivo = archivos->d_name;
                         if( nombre_archivo != "." && nombre_archivo != ".." ) n_randfiles++;
                     }
+                    closedir(folder);
+                    DIR *folder = opendir(ruta_carpeta.c_str())
                     cout << "Number of random files" << n_randfiles << endl;
 
                     rand_files = new string[n_randfiles];
