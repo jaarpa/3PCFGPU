@@ -96,7 +96,6 @@ void pcf_2iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
     for (int i=0; i<n_randfiles; i++){
         //Calculates grid dim for each file
         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-        cout << blocks_R << endl;
         gridR.x = blocks_R;
         gridR.y = blocks_R;
         XX2iso<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
