@@ -108,7 +108,6 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
 
                         if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;
-                        if (bn_offset!=0) printf("Bin: %i \n",bin);
 
                         v = elementsD[i].w*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
