@@ -28,16 +28,15 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
     if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
-        float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+        float dd_max=dmax*dmax;
         float dxn12=fabsf(nx2-nx1), dyn12=fabsf(ny2-ny1), dzn12=fabsf(nz2-nz1);
         float dd_nod12_ort = dxn12*dxn12 + dyn12*dyn12;
         float dd_nod12_z = dzn12*dzn12;
         
         float x1,y1,z1,w1,x2,y2,z2;
-        float dd_z, dd_ort;
         float dx,dy,dz;
         int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
-        double v;
+        double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
         
         //Front vars
         float f_dmax = dmax+size_node;
@@ -65,7 +64,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         
                         bnz = (int)(sqrt(dd_z)*ds)*bn;
                         if (bnz>(bn*(bn-1))) continue;
-                        bnort = (int)(sqrtf(dd_ort)*ds);
+                        bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
                         bin += bn*bn*bn_offset;
@@ -100,7 +99,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -136,7 +135,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -172,7 +171,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -210,7 +209,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -249,7 +248,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -287,7 +286,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -327,7 +326,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -371,13 +370,12 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
         float dxn12=fabsf(nx2-nx1), dyn12=fabsf(ny2-ny1), dzn12=fabsf(nz2-nz1);
         float dd_nod12_ort = dxn12*dxn12+dyn12*dyn12;
         float dd_nod12_z = dzn12*dzn12;
-        float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+        float dd_max=dmax*dmax;
         
         float x1,y1,z1,w1,x2,y2,z2;
         float dx,dy,dz;
-        float dd_z, dd_ort;
         int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
-        double v;
+        double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
         
         //Front vars
         float f_dmax = dmax+size_node;
@@ -404,7 +402,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         
                         bnz = (int)(sqrt(dd_z)*ds)*bn;
                         if (bnz>(bn*(bn-1))) continue;
-                        bnort = (int)(sqrtf(dd_ort)*ds);
+                        bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
                         bin += bn*bn*bn_offset;
@@ -440,7 +438,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -476,7 +474,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -512,7 +510,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -550,7 +548,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -589,7 +587,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -627,7 +625,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;
@@ -667,7 +665,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
                             if (bnz>(bn*(bn-1))) continue;
-                            bnort = (int)(sqrtf(dd_ort)*ds);
+                            bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
                             bin += bn*bn*bn_offset;

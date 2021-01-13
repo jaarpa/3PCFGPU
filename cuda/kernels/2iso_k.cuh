@@ -48,7 +48,7 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
                     z2 = elements[j].z;
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
+                        bin = (int)(sqrt(d)*ds);
                         if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;
                         v = elements[i].w*elements[j].w;
@@ -105,7 +105,7 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
                     z2 = elementsR[j].z;
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max){
-                        bin = (int)(sqrtf(d)*ds);
+                        bin = (int)(sqrt(d)*ds);
 
                         if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;

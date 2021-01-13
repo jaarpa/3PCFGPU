@@ -60,7 +60,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                     z2 = elements[j].z;
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max && d>0){
-                        bin = (int)(sqrtf(d)*ds);
+                        bin = (int)(sqrt(d)*ds);
                         if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;
                         v = elements[i].w*elements[j].w;
@@ -87,7 +87,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         dz = size_box-fabsf(z2-z1);
                         d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz*dz;
                         if (d<dd_max && d>0){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elements[i].w*elements[j].w;
@@ -115,7 +115,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         dy = size_box-fabsf(y2-y1);
                         d = (x2-x1)*(x2-x1)+dy*dy+(z2-z1)*(z2-z1);
                         if (d<dd_max && d>0){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elements[i].w*elements[j].w;
@@ -143,7 +143,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         dx = size_box-fabsf(x2-x1);
                         d = dx*dx+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                         if (d<dd_max && d>0){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elements[i].w*elements[j].w;
@@ -173,7 +173,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         dy = size_box-fabsf(y2-y1);
                         d = dx*dx+dy*dy+(z2-z1)*(z2-z1);
                         if (d<dd_max && d>0){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elements[i].w*elements[j].w;
@@ -204,7 +204,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         dz = size_box-fabsf(z2-z1);
                         d = dx*dx+(y2-y1)*(y2-y1)+dz*dz;
                         if (d<dd_max && d>0){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elements[i].w*elements[j].w;
@@ -234,7 +234,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         dz = size_box-fabsf(z2-z1);
                         d = (x2-x1)*(x2-x1)+dy*dy+dz*dz;
                         if (d<dd_max && d>0){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elements[i].w*elements[j].w;
@@ -266,7 +266,7 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         dz = size_box-fabsf(z2-z1);
                         d = dx*dx+dy*dy+dz*dz;
                         if (d<dd_max && d>0){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elements[i].w*elements[j].w;
@@ -336,7 +336,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                     z2 = elementsR[j].z;
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max){
-                        bin = (int)(sqrtf(d)*ds);
+                        bin = (int)(sqrt(d)*ds);
                         if (bin>(bn-1)) continue;
                         bin += bn_offset*bn;
                         v = elementsD[i].w*elementsR[j].w;
@@ -363,7 +363,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         dz = size_box-fabsf(z2-z1);
                         d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+dz*dz;
                         if (d<dd_max){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elementsD[i].w*elementsR[j].w;
@@ -391,7 +391,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         dy = size_box-fabsf(y2-y1);
                         d = (x2-x1)*(x2-x1)+dy*dy+(z2-z1)*(z2-z1);
                         if (d<dd_max){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elementsD[i].w*elementsR[j].w;
@@ -419,7 +419,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         dx = size_box-fabsf(x2-x1);
                         d = dx*dx+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                         if (d<dd_max){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elementsD[i].w*elementsR[j].w;
@@ -449,7 +449,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         dy = size_box-fabsf(y2-y1);
                         d = dx*dx+dy*dy+(z2-z1)*(z2-z1);
                         if (d<dd_max){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elementsD[i].w*elementsR[j].w;
@@ -479,7 +479,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         dz = size_box-fabsf(z2-z1);
                         d = dx*dx+(y2-y1)*(y2-y1)+dz*dz;
                         if (d<dd_max){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elementsD[i].w*elementsR[j].w;
@@ -509,7 +509,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         dz = size_box-fabsf(z2-z1);
                         d = (x2-x1)*(x2-x1)+dy*dy+dz*dz;
                         if (d<dd_max){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elementsD[i].w*elementsR[j].w;
@@ -541,7 +541,7 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         dz = size_box-fabsf(z2-z1);
                         d = dx*dx+dy*dy+dz*dz;
                         if (d<dd_max){
-                            bin = (int)(sqrtf(d)*ds);
+                            bin = (int)(sqrt(d)*ds);
                             if (bin>(bn-1)) continue;
                             bin += bn_offset*bn;
                             v = elementsD[i].w*elementsR[j].w;

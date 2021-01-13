@@ -194,7 +194,7 @@ void save_histogram2D(string name, int bns, double *histo, int nhistos=0){
 }
 
 //====================================================================
-void save_histogram3D(string name, int bns, double *histo){
+void save_histogram3D(string name, int bns, double *histo, int nhistos=0){
     /* This function saves a 3 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
     */
@@ -216,7 +216,7 @@ void save_histogram3D(string name, int bns, double *histo){
     for (int i = 0; i < bns; i++){
         for (int j = 0; j < bns; j++){
             for (int k = 0; k < bns; k++){
-                idx = i*bns*bns + j*bns + k;
+                idx = nhistos*bns*bns*bns + i*bns*bns + j*bns + k;
                 file << setprecision(12) << histo[idx] << ' ';
             }
             file << "\n";
@@ -227,7 +227,7 @@ void save_histogram3D(string name, int bns, double *histo){
 }
 
 //====================================================================
-void save_histogram5D(string name, int bns, double *histo){
+void save_histogram5D(string name, int bns, double *histo, int nhistos=0){
     /* This function saves a 5 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
     */
@@ -251,7 +251,7 @@ void save_histogram5D(string name, int bns, double *histo){
             for (int k = 0; k < bns; k++){
                 for (int l = 0; l < bns; l++){
                     for (int m = 0; m < bns; m++){
-                        idx = i*bns*bns*bns*bns + j*bns*bns*bns + k*bns*bns + l*bns + m;
+                        idx = nhistos*bns*bns*bns*bns*bns + i*bns*bns*bns*bns + j*bns*bns*bns + k*bns*bns + l*bns + m;
                         file << setprecision(12) << histo[idx] << ' ';
                     }
                     file << "\n";

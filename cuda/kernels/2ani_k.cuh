@@ -32,10 +32,9 @@ __global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
         if (dd_nod12_z <= d_max_node && dd_nod12_ort <= d_max_node){
 
             float x1,y1,z1,w1,x2,y2,z2;
-            float dd_z, dd_ort;
-            float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+            float dd_max=dmax*dmax;
             int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
-            double v;
+            double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
             for (int i=nodeD[idx1].start; i<end1; ++i){
                 x1 = elements[i].x;
@@ -54,7 +53,7 @@ __global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
 
                         bnz = (int)(sqrt(dd_z)*ds)*bn;
                         if (bnz>(bn*(bn-1))) continue;
-                        bnort = (int)(sqrtf(dd_ort)*ds);
+                        bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
                         bin += bn_offset*bn*bn;
@@ -100,10 +99,9 @@ __global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
         if (dd_nod12_z <= d_max_node && dd_nod12_ort <= d_max_node){
 
             float x1,y1,z1,w1,x2,y2,z2;
-            float dd_z, dd_ort;
-            float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+            float dd_max=dmax*dmax;
             int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
-            double v;
+            double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
             for (int i=nodeD[idx1].start; i<end1; ++i){
                 x1 = elementsD[i].x;
@@ -122,7 +120,7 @@ __global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
                         
                         bnz = (int)(sqrt(dd_z)*ds)*bn;
                         if (bnz>(bn*(bn-1))) continue;
-                        bnort = (int)(sqrtf(dd_ort)*ds);
+                        bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
                         bin += bn_offset*bn*bn;
