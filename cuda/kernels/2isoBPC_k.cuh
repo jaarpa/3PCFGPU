@@ -25,10 +25,9 @@ __global__ void XX2iso_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    double v;
-
-    if (idx1<nonzero_nodes && idx2<nonzero_nodes){
-
+    if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
+        
+        double v;
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
         float dd_max=dmax*dmax;
@@ -301,10 +300,9 @@ __global__ void XY2iso_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
     size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
     size_node: (float) Size of the nodes.
     */
-
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
+    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset)){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
         float dxn12=fabsf(nx2-nx1), dyn12=fabsf(ny2-ny1), dzn12=fabsf(nz2-nz1);
