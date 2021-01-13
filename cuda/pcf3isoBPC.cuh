@@ -99,19 +99,19 @@ void pcf_3isoBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    XXX3isoBPC<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
+    XXX3iso_BPC<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
     for (int i=0; i<n_randfiles; i++){
         //Calculates grid dim for each file
         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
         gridRRR.x = blocks_R;
         gridRRR.y = blocks_R;
         gridRRR.z = blocks_R;
-        XXX3isoBPC<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i);
+        XXX3iso_BPC<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i);
         gridDDR.z = blocks_R;
-        XXY3isoBPC<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, true);
+        XXY3iso_BPC<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, true);
         gridDRR.x = blocks_R;
         gridDRR.y = blocks_R;
-        XXY3isoBPC<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, false);
+        XXY3iso_BPC<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, false);
     }
 
     //Waits for all the kernels to complete
