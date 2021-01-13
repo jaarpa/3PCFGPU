@@ -334,11 +334,11 @@ void pcf_3isoBPC_analytic(string data_name, DNode *dnodeD, PointW3D *d_ordered_p
 
     //Save the results
     cucheck(cudaStreamSynchronize(streamDDD));
-    save_histogram(nameDDD, bn, DDD);
+    save_histogram3D(nameDDD, bn, DDD);
     cucheck(cudaStreamSynchronize(stream_analytic));
-    save_histogram(nameDDR, bn, DDR);
-    save_histogram(nameDRR, bn, DDR);
-    save_histogram(nameRRR, bn, RRR);
+    save_histogram3D(nameDDR, bn, DDR);
+    save_histogram3D(nameDRR, bn, DDR);
+    save_histogram3D(nameRRR, bn, RRR);
 
     cucheck(cudaEventRecord(stop_timmer));
     cucheck(cudaEventSynchronize(stop_timmer));
