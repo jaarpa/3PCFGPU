@@ -5,7 +5,7 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__device__ void count123_ani(double *XXX, PointW3D *elements, int start1, int end1, int start2, int end2, int start3, int end3, int bn, double ds, float dd_max, float size_box, bool fx_2, bool fy_2, bool fz_2, bool fx_3, bool fy_3, bool fz_3, int bn_offset=0){
+__device__ void count123_ani(double *XXX, PointW3D *elements, int start1, int end1, int start2, int end2, int start3, int end3, int bn, double ds, float ds_th, float dd_max, float size_box, bool fx_2, bool fy_2, bool fz_2, bool fx_3, bool fy_3, bool fz_3, int bn_offset=0){
     /*
     Device function only callable from GPU.
 
@@ -74,20 +74,31 @@ __device__ void count123_ani(double *XXX, PointW3D *elements, int start1, int en
                         dz31 = fabsf(z3-z1) - size_box*fz_3;
                         d31 = dx31*dx31 + dy31*dy31 + dz31*dz31;
                         if (d31 < dd_max && d31>0){
+
                             d23 = sqrt(d23);
                             d31 = sqrt(d31);
+                            cth12 = 1 + dz12/d12;
+                            cth31 = 1 + dz31/d31;
+                                                                        
+                            // Indices 
+                            a = (int) (d12*ds);
+                            if (a>(bn-1)) continue;
+                            b = (int) (d31*ds);
+                            if (b>(bn-1)) continue;
+                            c = (int) (d23*ds);
+                            if (c>(bn-1)) continue;
+                            t = (int) (cth12*ds_th);
+                            if (t>(bn-1)) continue;
+                            p = (int) (cth31*ds_th);
+                            if (p>(bn-1)) continue;
 
-                            bnx = (int)(d12*ds)*bn*bn;
-                            if (bnx>(bn*bn*(bn-1))) continue;
-                            bny = (int)(d23*ds)*bn;
-                            if (bny>(bn*(bn-1))) continue;
-                            bnz = (int)(d31*ds);
-                            if (bnz>(bn-1)) continue;
-                            bin = bnx + bny + bnz;
-                            bin += bn_offset*bn*bn*bn;
+                            //Atomic add
+                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
+                            bin += bn_offset*bn*bn*bn*bn*bn;
+
                             v *= elements[k].w;
-                            
                             atomicAdd(&XXX[bin],v);
+
                         }
                     }
                 }
@@ -95,7 +106,7 @@ __device__ void count123_ani(double *XXX, PointW3D *elements, int start1, int en
         }
     }
 }
-__device__ void count123_animixed(double *XXY, PointW3D *elementsX, PointW3D *elementsY, int start1, int end1, int start2, int end2, int start3, int end3, int bn, double ds, float dd_max, float size_box, bool fx_2, bool fy_2, bool fz_2, bool fx_3, bool fy_3, bool fz_3, int bn_offset=0){
+__device__ void count123_animixed(double *XXY, PointW3D *elementsX, PointW3D *elementsY, int start1, int end1, int start2, int end2, int start3, int end3, int bn, double ds, float ds_th, float dd_max, float size_box, bool fx_2, bool fy_2, bool fz_2, bool fx_3, bool fy_3, bool fz_3, int bn_offset=0){
     /*
     Device function only callable from GPU.
 
@@ -167,18 +178,27 @@ __device__ void count123_animixed(double *XXY, PointW3D *elementsX, PointW3D *el
                         if (d31 < dd_max && d31>0){
                             d23 = sqrt(d23);
                             d31 = sqrt(d31);
+                            cth12 = 1 + dz12/d12;
+                            cth31 = 1 + dz31/d31;
+                                                                        
+                            // Indices 
+                            a = (int) (d12*ds);
+                            if (a>(bn-1)) continue;
+                            b = (int) (d31*ds);
+                            if (b>(bn-1)) continue;
+                            c = (int) (d23*ds);
+                            if (c>(bn-1)) continue;
+                            t = (int) (cth12*ds_th);
+                            if (t>(bn-1)) continue;
+                            p = (int) (cth31*ds_th);
+                            if (p>(bn-1)) continue;
 
-                            bnx = (int)(d12*ds)*bn*bn;
-                            if (bnx>(bn*bn*(bn-1))) continue;
-                            bny = (int)(d23*ds)*bn;
-                            if (bny>(bn*(bn-1))) continue;
-                            bnz = (int)(d31*ds);
-                            if (bnz>(bn-1)) continue;
-                            bin = bnx + bny + bnz;
-                            bin += bn_offset*bn*bn*bn;
-                            v *= elementsY[k].w;
-                            
-                            atomicAdd(&XXY[bin],v);
+                            //Atomic add
+                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
+                            bin += bn_offset*bn*bn*bn*bn*bn;
+
+                            v *= elements[k].w;
+                            atomicAdd(&XXX[bin],v);
                         }
                     }
                 }
@@ -213,7 +233,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
     if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset) && idx3<(nonzero_nodes+node_offset)){
         int end1 = nodeD[idx1].end, end2 = nodeD[idx2].end, end3 = nodeD[idx3].end;
         int start1 = nodeD[idx1].start, start2 = nodeD[idx2].start, start3 = nodeD[idx3].start;
-        float dd_max=dmax*dmax;
+        float dd_max=dmax*dmax, ds_th = (float)(bn)/2;
         double ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
@@ -240,7 +260,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
         //No proyection
         if (dd_nod12 <= d_max_node && dd_nod23 <= d_max_node && dd_nod31 <= d_max_node){
             //Regular counting. No BPC
-            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, false, bn_offset);
+            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, false, false, bn_offset);
         }
 
         //============ Only node 3 proyections ================
@@ -251,7 +271,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, false, false, bn_offset);
                     }
                 }
             }
@@ -261,7 +281,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, true, false, bn_offset);
                     }
                 }
             }
@@ -271,7 +291,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, true, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, false, true, bn_offset);
                     }
                 }
             }
@@ -281,7 +301,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, true, false, bn_offset);
                     }
                 }
             }
@@ -291,7 +311,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, true, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, false, true, bn_offset);
                     }
                 }
             }
@@ -301,7 +321,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, true, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, true, true, bn_offset);
                     }
                 }
             }
@@ -311,7 +331,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, true, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, true, true, bn_offset);
                     }
                 }
             }
@@ -326,7 +346,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dxn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -336,7 +356,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dyn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -346,7 +366,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dzn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -356,7 +376,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dyn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -366,7 +386,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -376,7 +396,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dyn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -386,7 +406,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, false, bn_offset);
+                        count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -403,7 +423,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dxn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, false, bn_offset);
+                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, false, false, bn_offset);
                         }
                     }
                 }
@@ -413,7 +433,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dyn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, false, bn_offset);
+                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, true, false, bn_offset);
                         }
                     }
                 }
@@ -423,7 +443,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dzn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, true, bn_offset);
+                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, false, true, bn_offset);
                         }
                     }
                 }
@@ -433,7 +453,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dyn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, false, bn_offset);
+                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, true, false, bn_offset);
                         }
                     }
                 }
@@ -443,7 +463,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, true, bn_offset);
+                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, false, true, bn_offset);
                         }
                     }
                 }
@@ -453,7 +473,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dyn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, true, bn_offset);
+                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, true, true, bn_offset);
                         }
                     }
                 }
@@ -463,7 +483,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, true, bn_offset);
+                            count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, true, true, bn_offset);
                         }
                     }
                 }
@@ -480,7 +500,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -490,7 +510,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -500,7 +520,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -510,7 +530,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -520,7 +540,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -530,7 +550,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -546,7 +566,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -556,7 +576,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -566,7 +586,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -576,7 +596,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -586,7 +606,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -596,7 +616,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -612,7 +632,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -622,7 +642,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -632,7 +652,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -642,7 +662,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -652,7 +672,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -662,7 +682,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -678,7 +698,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -688,7 +708,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -698,7 +718,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dzn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -708,7 +728,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -718,7 +738,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -728,7 +748,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -744,7 +764,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -754,7 +774,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -764,7 +784,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -774,7 +794,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -784,7 +804,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -794,7 +814,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -810,7 +830,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -820,7 +840,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -830,7 +850,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -840,7 +860,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -850,7 +870,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -860,7 +880,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -876,7 +896,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -886,7 +906,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -896,7 +916,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -906,7 +926,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, false, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -916,7 +936,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -926,7 +946,7 @@ __global__ void XXX3ani_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, true, bn_offset);
+                                count123_ani(XXX, elements, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -966,7 +986,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
     if (idx1<(nonzero_Xnodes + (!isDDR)*node_offset) && idx2<(nonzero_Xnodes + (!isDDR)*node_offset) && idx3<(nonzero_Ynodes + isDDR*node_offset)){
         int end1 = nodeX[idx1].end, end2 = nodeX[idx2].end, end3 = nodeY[idx3].end;
         int start1 = nodeX[idx1].start, start2 = nodeX[idx2].start, start3 = nodeY[idx3].start;
-        float dd_max=dmax*dmax;
+        float dd_max=dmax*dmax, ds_th = (float)(bn)/2;
         double ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
         float nx1=nodeX[idx1].nodepos.x, ny1=nodeX[idx1].nodepos.y, nz1=nodeX[idx1].nodepos.z;
@@ -993,7 +1013,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
         //No proyection
         if (dd_nod12 <= d_max_node && dd_nod23 <= d_max_node && dd_nod31 <= d_max_node){
             //Regular counting. No BPC
-            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, false, bn_offset);
+            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, false, false, bn_offset);
         }
 
         //============ Only node 3 proyections ================
@@ -1004,7 +1024,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, false, false, bn_offset);
                     }
                 }
             }
@@ -1014,7 +1034,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, true, false, bn_offset);
                     }
                 }
             }
@@ -1024,7 +1044,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, true, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, false, true, bn_offset);
                     }
                 }
             }
@@ -1034,7 +1054,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, true, false, bn_offset);
                     }
                 }
             }
@@ -1044,7 +1064,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, true, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, false, true, bn_offset);
                     }
                 }
             }
@@ -1054,7 +1074,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, true, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, false, true, true, bn_offset);
                     }
                 }
             }
@@ -1064,7 +1084,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, true, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, false, true, true, true, bn_offset);
                     }
                 }
             }
@@ -1079,7 +1099,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dxn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1089,7 +1109,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dyn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1099,7 +1119,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dzn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1109,7 +1129,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dyn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1119,7 +1139,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1129,7 +1149,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dyn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1139,7 +1159,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, false, bn_offset);
+                        count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1156,7 +1176,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dxn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, false, bn_offset);
+                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, false, false, bn_offset);
                         }
                     }
                 }
@@ -1166,7 +1186,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dyn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, false, bn_offset);
+                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, true, false, bn_offset);
                         }
                     }
                 }
@@ -1176,7 +1196,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dzn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, true, bn_offset);
+                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, false, true, bn_offset);
                         }
                     }
                 }
@@ -1186,7 +1206,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dyn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, false, bn_offset);
+                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, true, false, bn_offset);
                         }
                     }
                 }
@@ -1196,7 +1216,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, true, bn_offset);
+                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, false, true, bn_offset);
                         }
                     }
                 }
@@ -1206,7 +1226,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dyn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, true, bn_offset);
+                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, true, true, bn_offset);
                         }
                     }
                 }
@@ -1216,7 +1236,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, true, bn_offset);
+                            count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, true, true, bn_offset);
                         }
                     }
                 }
@@ -1233,7 +1253,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1243,7 +1263,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1253,7 +1273,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1263,7 +1283,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1273,7 +1293,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1283,7 +1303,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1299,7 +1319,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1309,7 +1329,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1319,7 +1339,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1329,7 +1349,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1339,7 +1359,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1349,7 +1369,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1365,7 +1385,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1375,7 +1395,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1385,7 +1405,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1395,7 +1415,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1405,7 +1425,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1415,7 +1435,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, false, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1431,7 +1451,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1441,7 +1461,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1451,7 +1471,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dzn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1461,7 +1481,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1471,7 +1491,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1481,7 +1501,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1497,7 +1517,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1507,7 +1527,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1517,7 +1537,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1527,7 +1547,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1537,7 +1557,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1547,7 +1567,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, false, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1563,7 +1583,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1573,7 +1593,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1583,7 +1603,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1593,7 +1613,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1603,7 +1623,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1613,7 +1633,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, false, true, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1629,7 +1649,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1639,7 +1659,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1649,7 +1669,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1659,7 +1679,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, false, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1669,7 +1689,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1679,7 +1699,7 @@ __global__ void XXY3ani_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, true, bn_offset);
+                                count123_animixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, ds_th, dd_max, size_box, true, true, true, false, true, true, bn_offset);
                             }
                         }
                     }

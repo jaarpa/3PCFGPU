@@ -69,20 +69,31 @@ __global__ void XXX3ani(double *XXX, PointW3D *elements, DNode *nodeD, int nonze
                                         dz31 = z3-z1
                                         d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + dz31*dz31;
                                         if (d31 < dd_max && d31>0){
+
                                             d23 = sqrt(d23);
                                             d31 = sqrt(d31);
+                                            cth12 = 1 + dz12/d12;
+                                            cth31 = 1 + dz31/d31;
+                                                                                        
+                                            // Indices 
+                                            a = (int) (d12*ds);
+                                            if (a>(bn-1)) continue;
+                                            b = (int) (d31*ds);
+                                            if (b>(bn-1)) continue;
+                                            c = (int) (d23*ds);
+                                            if (c>(bn-1)) continue;
+                                            t = (int) (cth12*ds_th);
+                                            if (t>(bn-1)) continue;
+                                            p = (int) (cth31*ds_th);
+                                            if (p>(bn-1)) continue;
 
-                                            bnx = (int)(d12*ds)*bn*bn;
-                                            if (bnx>(bn*bn*(bn-1))) continue;
-                                            bny = (int)(d23*ds)*bn;
-                                            if (bny>(bn*(bn-1))) continue;
-                                            bnz = (int)(d31*ds);
-                                            if (bnz>(bn-1)) continue;
-                                            bin = bnx + bny + bnz;
-                                            bin += bn*bn*bn*bn_offset;
+                                            //Atomic add
+                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
+                                            bin += bn_offset*bn*bn*bn*bn*bn;
+
                                             v *= elements[k].w;
-
                                             atomicAdd(&XXX[bin],v);
+
                                         }
                                     }
                                 }
@@ -133,6 +144,7 @@ __global__ void XXY3ani(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                     int bnx, bny, bnz, bin;
                     float dd_max=dmax*dmax;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
+                    float dz12, dz23, dz31;
                     double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
                     for (int i=nodeX[idx1].start; i<end1; i++){
@@ -146,31 +158,45 @@ __global__ void XXY3ani(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                             z2 = elementsX[j].z;
                             w2 = elementsX[j].w;
                             v = w1*w2;
-                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+                            dz12 = z2-z1;
+                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + dz12*dz12;
                             if (d12 < dd_max && d12>0){
                                 d12 = sqrt(d12);
                                 for (int k=nodeY[idx3].start; k<end3; k++){
                                     x3 = elementsY[k].x;
                                     y3 = elementsY[k].y;
                                     z3 = elementsY[k].z;
-                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2);
+                                    dz23 = z3-z2;
+                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + dz23*dz23;
                                     if (d23 < dd_max){
-                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
+                                        dz31 = z3-z1;
+                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + dz31*dz31;
                                         if (d31 < dd_max){
-                                            d23 = sqrt(d23);
-                                            d31 = sqrt(d31);                                            
-                                            
-                                            bnx = (int)(d12*ds)*bn*bn;
-                                            if (bnx>(bn*bn*(bn-1))) continue;
-                                            bny = (int)(d23*ds)*bn;
-                                            if (bny>(bn*(bn-1))) continue;
-                                            bnz = (int)(d31*ds);
-                                            if (bnz>(bn-1)) continue;
-                                            bin = bnx + bny + bnz;
-                                            bin += bn*bn*bn*bn_offset;
 
-                                            v *= elementsY[k].w;
-                                            atomicAdd(&XXY[bin],v);
+                                            d23 = sqrt(d23);
+                                            d31 = sqrt(d31);
+                                            cth12 = 1 + dz12/d12;
+                                            cth31 = 1 + dz31/d31;
+                                                                                        
+                                            // Indices 
+                                            a = (int) (d12*ds);
+                                            if (a>(bn-1)) continue;
+                                            b = (int) (d31*ds);
+                                            if (b>(bn-1)) continue;
+                                            c = (int) (d23*ds);
+                                            if (c>(bn-1)) continue;
+                                            t = (int) (cth12*ds_th);
+                                            if (t>(bn-1)) continue;
+                                            p = (int) (cth31*ds_th);
+                                            if (p>(bn-1)) continue;
+
+                                            //Atomic add
+                                            bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
+                                            bin += bn_offset*bn*bn*bn*bn*bn;
+
+                                            v *= elements[k].w;
+                                            atomicAdd(&XXX[bin],v);
+
                                         }
                                     }
                                 }
