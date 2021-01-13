@@ -398,15 +398,15 @@ int main(int argc, char **argv){
 
         cucheck(cudaFree(dnodeD));
         cucheck(cudaFree(d_ordered_pointsD));
-        cucheck(cudaFree(dnodeR));
-        cucheck(cudaFree(d_ordered_pointsR));
 
         if (rand_required){
+            cucheck(cudaFree(dnodeR));
+            cucheck(cudaFree(d_ordered_pointsR));
             delete[] nonzero_Rnodes;
             delete[] acum_nonzero_Rnodes;
             delete[] rand_files;
+            delete[] histo_names;
         }
-        delete[] histo_names;
         
         cout << "Program terminated..." << endl;
 
