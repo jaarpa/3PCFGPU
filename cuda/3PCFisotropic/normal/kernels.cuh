@@ -56,7 +56,7 @@ __global__ void XXX3iso(double *XXX, PointW3D *elements, DNode *nodeD, int nonze
                             v = w1*w2;
                             d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
                             if (d12 < dd_max && d12>0){
-                                d12 = sqrtf(d12);
+                                d12 = sqrt(d12);
                                 for (int k=nodeD[idx3].start; k<end3; k++){
                                     x3 = elements[k].x;
                                     y3 = elements[k].y;
@@ -65,8 +65,8 @@ __global__ void XXX3iso(double *XXX, PointW3D *elements, DNode *nodeD, int nonze
                                     if (d23 < dd_max && d23>0){
                                         d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
                                         if (d31 < dd_max && d31>0){
-                                            d23 = sqrtf(d23);
-                                            d31 = sqrtf(d31);
+                                            d23 = sqrt(d23);
+                                            d31 = sqrt(d31);
 
                                             bnx = (int)(d12*ds)*bn*bn;
                                             if (bnx>(bn*bn*(bn-1))) bnx = bn*bn*(bn-1);
@@ -128,8 +128,7 @@ __global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                     int bnx, bny, bnz, bin;
                     float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
-                    float d12,d23,d31;
-                    double v;
+                    double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
                     for (int i=nodeX[idx1].start; i<end1; i++){
                         x1 = elementsX[i].x;
                         y1 = elementsX[i].y;
@@ -143,7 +142,7 @@ __global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                             v = w1*w2;
                             d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
                             if (d12 < dd_max && d12>0){
-                                d12 = sqrtf(d12);
+                                d12 = sqrt(d12);
                                 for (int k=nodeY[idx3].start; k<end3; k++){
                                     x3 = elementsY[k].x;
                                     y3 = elementsY[k].y;
@@ -152,8 +151,8 @@ __global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                                     if (d23 < dd_max){
                                         d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
                                         if (d31 < dd_max){
-                                            d23 = sqrtf(d23);
-                                            d31 = sqrtf(d31);                                            
+                                            d23 = sqrt(d23);
+                                            d31 = sqrt(d31);                                            
                                             
                                             bnx = (int)(d12*ds)*bn*bn;
                                             if (bnx>(bn*bn*(bn-1))) bnx = bn*bn*(bn-1);
