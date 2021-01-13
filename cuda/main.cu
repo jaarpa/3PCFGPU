@@ -313,7 +313,6 @@ int main(int argc, char **argv){
             cucheck(cudaMalloc(&d_ordered_pointsR, n_randfiles*np*sizeof(PointW3D)));
             cucheck(cudaMemcpy(dnodeR, hnodeR_s, tot_randnodes*sizeof(DNode), cudaMemcpyHostToDevice));
             cucheck(cudaMemcpy(d_ordered_pointsR, h_ordered_pointsR_s, n_randfiles*np*sizeof(PointW3D), cudaMemcpyHostToDevice));
-            }
         }
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
