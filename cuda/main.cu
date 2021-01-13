@@ -312,6 +312,10 @@ int main(int argc, char **argv){
             cucheck(cudaMalloc(&d_ordered_pointsR, n_randfiles*np*sizeof(PointW3D)));
             cucheck(cudaMemcpy(dnodeR, hnodeR_s, tot_randnodes*sizeof(DNode), cudaMemcpyHostToDevice));
             cucheck(cudaMemcpy(d_ordered_pointsR, h_ordered_pointsR_s, n_randfiles*np*sizeof(PointW3D), cudaMemcpyHostToDevice));
+            cout << "Total number of nodes: " << tot_randnodes << endl
+            for (int l=0; l<n_randfiles; l++){
+                cout << "Aumulated nodes in file " << l << " are " << tot_randnodes[l] << endl;
+            }
         }
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;

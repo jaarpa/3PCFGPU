@@ -80,7 +80,7 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset){
+    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset)){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
