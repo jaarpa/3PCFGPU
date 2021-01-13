@@ -35,6 +35,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -f data.dat -r rand0.dat -
 #include "pcf2iso.cuh"
 #include "pcf2isoBPC.cuh"
 #include "pcf3iso.cuh"
+#include "pcf3isoBPC.cuh"
 
 using namespace std;
 
