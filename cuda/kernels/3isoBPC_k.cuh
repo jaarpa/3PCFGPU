@@ -176,7 +176,7 @@ __device__ void count123_mixed(double *XXY, PointW3D *elementsX, PointW3D *eleme
                             if (bnz>(bn-1)) continue;
                             bin = bnx + bny + bnz;
                             bin += bn_offset*bn*bn*bn;
-                            v *= elements[k].w;
+                            v *= elementsY[k].w;
                             
                             atomicAdd(&XXY[bin],v);
                         }
@@ -940,7 +940,7 @@ __global__ void XXX3iso_BPC(double *XXX, PointW3D *elements, DNode *nodeD, int n
 __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonzero_Xnodes, PointW3D *elementsY, DNode *nodeY, int nonzero_Ynodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int node_offset, int bn_offset, bool isDDR){
     /*
     Kernel function to calculate the mixed histograms for the 3 point isotropic correlation function. 
-    This version does considers boudary periodic conditions. It stores the counts in the XXX histogram.
+    This version does considers boudary periodic conditions. It stores the counts in the XXY histogram.
 
     args:
     XXY: (double*) The histogram where the distances are counted.
@@ -993,7 +993,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
         //No proyection
         if (dd_nod12 <= d_max_node && dd_nod23 <= d_max_node && dd_nod31 <= d_max_node){
             //Regular counting. No BPC
-            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, false, bn_offset);
+            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, false, bn_offset);
         }
 
         //============ Only node 3 proyections ================
@@ -1004,7 +1004,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dxn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, false, bn_offset);
                     }
                 }
             }
@@ -1014,7 +1014,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dyn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, false, bn_offset);
                     }
                 }
             }
@@ -1024,7 +1024,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + size_box2 - 2*dzn31*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, true, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, false, true, bn_offset);
                     }
                 }
             }
@@ -1034,7 +1034,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dyn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, false, bn_offset);
                     }
                 }
             }
@@ -1044,7 +1044,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dxn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, true, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, false, true, bn_offset);
                     }
                 }
             }
@@ -1054,7 +1054,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 2*size_box2 - 2*(dyn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, true, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, false, true, true, bn_offset);
                     }
                 }
             }
@@ -1064,7 +1064,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod31 = dd_nod31 + 3*size_box2 - 2*(dxn31 + dyn31 + dzn31)*size_box;
                     if (f_dd_nod31 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, true, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, false, true, true, true, bn_offset);
                     }
                 }
             }
@@ -1079,7 +1079,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dxn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1089,7 +1089,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dyn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1099,7 +1099,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + size_box2 - 2*dzn12*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1109,7 +1109,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dyn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1119,7 +1119,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1129,7 +1129,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dyn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1139,7 +1139,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                 if (f_dd_nod23 <= d_max_node){
                     f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dzn12)*size_box;
                     if (f_dd_nod12 <= d_max_node){
-                        count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, false, bn_offset);
+                        count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, false, bn_offset);
                     }
                 }
             }
@@ -1156,7 +1156,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dxn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, false, bn_offset);
+                            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, false, bn_offset);
                         }
                     }
                 }
@@ -1166,7 +1166,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dyn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, false, bn_offset);
+                            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, false, bn_offset);
                         }
                     }
                 }
@@ -1176,7 +1176,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod31 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + size_box2 - 2*dzn12*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, true, bn_offset);
+                            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, false, true, bn_offset);
                         }
                     }
                 }
@@ -1186,7 +1186,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dyn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, false, bn_offset);
+                            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, false, bn_offset);
                         }
                     }
                 }
@@ -1196,7 +1196,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dxn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, true, bn_offset);
+                            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, true, bn_offset);
                         }
                     }
                 }
@@ -1206,7 +1206,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 2*size_box2 - 2*(dyn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, true, bn_offset);
+                            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, true, bn_offset);
                         }
                     }
                 }
@@ -1216,7 +1216,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                     if (f_dd_nod23 <= d_max_node){
                         f_dd_nod12 = dd_nod12 + 3*size_box2 - 2*(dxn12 + dyn12 + dzn12)*size_box;
                         if (f_dd_nod12 <= d_max_node){
-                            count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, true, bn_offset);
+                            count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, true, bn_offset);
                         }
                     }
                 }
@@ -1233,7 +1233,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1243,7 +1243,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1253,7 +1253,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1263,7 +1263,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1273,7 +1273,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1283,7 +1283,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1299,7 +1299,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1309,7 +1309,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1319,7 +1319,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1329,7 +1329,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1339,7 +1339,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1349,7 +1349,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1365,7 +1365,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1375,7 +1375,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1385,7 +1385,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1395,7 +1395,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1405,7 +1405,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1415,7 +1415,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, false, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1431,7 +1431,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1441,7 +1441,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1451,7 +1451,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dzn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1461,7 +1461,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1471,7 +1471,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1481,7 +1481,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, false, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1497,7 +1497,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1507,7 +1507,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1517,7 +1517,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1527,7 +1527,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1537,7 +1537,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, false, true, true, bn_offset);
                             }
                         }
                     }
@@ -1547,7 +1547,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, false, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1563,7 +1563,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dxn23 + dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1573,7 +1573,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1583,7 +1583,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1593,7 +1593,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1603,7 +1603,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1613,7 +1613,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, false, true, true, true, true, true, bn_offset);
                             }
                         }
                     }
@@ -1629,7 +1629,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dyn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, false, bn_offset);
                             }
                         }
                     }
@@ -1639,7 +1639,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, false, bn_offset);
                             }
                         }
                     }
@@ -1649,7 +1649,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 2*size_box2 - 2*(dxn23 + dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, false, true, bn_offset);
                             }
                         }
                     }
@@ -1659,7 +1659,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dzn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, false, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, true, false, bn_offset);
                             }
                         }
                     }
@@ -1669,7 +1669,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + 3*size_box2 - 2*(dyn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, true, false, true, bn_offset);
                             }
                         }
                     }
@@ -1679,7 +1679,7 @@ __global__ void XXY3iso_BPC(double *XXY, PointW3D *elementsX, DNode *nodeX, int 
                         if (f_dd_nod31 <= d_max_node){
                             f_dd_nod23 = dd_nod23 + size_box2 - 2*(dxn23)*size_box;
                             if (f_dd_nod23 <= d_max_node){
-                                count123_mixed(XXX, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, true, bn_offset);
+                                count123_mixed(XXY, elementsX, elementsY, start1, end1, start2, end2, start3, end3, bn, ds, dd_max, size_box, true, true, true, false, true, true, bn_offset);
                             }
                         }
                     }
