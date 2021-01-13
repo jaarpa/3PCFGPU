@@ -126,7 +126,7 @@ __global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                     int end2 = nodeX[idx2].end;
                     int end3 = nodeY[idx3].end;
                     int bnx, bny, bnz, bin;
-                    float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+                    float dd_max=dmax*dmax;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
                     double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
                     for (int i=nodeX[idx1].start; i<end1; i++){
