@@ -3,14 +3,15 @@
 Esta funcion lee los datos y crea el grid de nodos y luego llama a la función correspondiente 
 para crear y guardar los histogramas correspondientes.
 
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -f data.dat -r rand0.dat -n 10000 -b 30 -d 50
-
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -rd test/ -n 5000 -b 20 -d 150
-
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -rd test/ -n 5000 -b 20 -d 150 
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -bpc -f data.dat -r rand0.dat -n 32768 -b 20 -d 150 -s 250
-
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -bpc -a -f data.dat -n 32768 -b 20 -d 150 -s 250
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -bpc -f data.dat -r rand0.dat -n 32768 -b 20 -d 150 -s 250
+
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -f data.dat -r rand0.dat -n 10000 -b 30 -d 50
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -bpc -f data.dat -r rand0.dat -n 5000 -b 30 -d 60 -s 250
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -bpc -a -f data.dat -n 5000 -b 30 -d 60 -s 250
 */
 
 #include <stdio.h>
@@ -369,7 +370,7 @@ int main(int argc, char **argv){
         if (strcmp(argv[1],"3iso")==0){
             if (bpc){
                 if (analytic){
-                    cout << "Call 3iso with bpc analytic" << endl;
+                    pcf_3isoBPC_analytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, size_box, dmax);
                 } else {
                     pcf_3isoBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
                 }
