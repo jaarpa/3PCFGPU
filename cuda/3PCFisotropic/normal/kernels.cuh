@@ -155,11 +155,11 @@ __global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                                             d31 = sqrt(d31);                                            
                                             
                                             bnx = (int)(d12*ds)*bn*bn;
-                                            if (bnx>(bn*bn*(bn-1))) bnx = bn*bn*(bn-1);
+                                            if (bnx>(bn*bn*(bn-1))) continue;
                                             bny = (int)(d23*ds)*bn;
-                                            if (bny>(bn*(bn-1))) bny = bn*(bn-1);
+                                            if (bny>(bn*(bn-1))) continue;
                                             bnz = (int)(d31*ds);
-                                            if (bnz>(bn-1)) bnz = bn-1;
+                                            if (bnz>(bn-1)) continue;
                                             bin = bnx + bny + bnz;
 
                                             v *= elementsY[k].w;
