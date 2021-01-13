@@ -286,13 +286,13 @@ int main(int argc, char **argv){
                         for (int i=0; i<n_randfiles; i++){
                             if (hnodeR[i][row][col][mom].len>0){
                                 hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].nodepos = hnodeR[i][row][col][mom].nodepos;
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start = last_pointR[i];
+                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start = i*np + last_pointR[i];
                                 hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].len = hnodeR[i][row][col][mom].len;
                                 last_pointR[i] = last_pointR[i] + hnodeR[i][row][col][mom].len;
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end = last_pointR[i];
-                                for (int j=hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start; j<last_pointR[i]; j++){
+                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end = i*np + last_pointR[i];
+                                for (int j=hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start; j<hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end; j++){
                                     k_element = j-hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start;
-                                    h_ordered_pointsR_s[i*np + j] = hnodeR[i][row][col][mom].elements[k_element];
+                                    h_ordered_pointsR_s[j] = hnodeR[i][row][col][mom].elements[k_element];
                                 }
                                 idxR[i]++;
                             }
