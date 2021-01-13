@@ -93,6 +93,7 @@ void pcf_2iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
     time_spent=0; //Restarts timmer
     cucheck(cudaEventRecord(start_timmer));
     XX2iso<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node);
+    cout << "Data nonzero nodes" << nonzero_Dnodes << endl;
     for (int i=0; i<n_randfiles; i++){
         //Calculates grid dim for each file
         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
