@@ -101,18 +101,18 @@ void pcf_2ani(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
     cucheck(cudaDeviceSynchronize());
 
     cucheck(cudaMemcpy(DD, d_DD, bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
-    nameDD = "DDiso_";
+    nameDD = "DDani_";
     nameDD.append(histo_names[0]);
     save_histogram2D(nameDD, bn, DD);
     cucheck(cudaMemcpy(RR, d_RR, n_randfiles*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++){
-        nameRR = "RRiso_";
+        nameRR = "RRani_";
         nameRR.append(histo_names[i+1]);
         save_histogram2D(nameRR, bn, RR, i);
     }
     cucheck(cudaMemcpy(DR, d_DR, n_randfiles*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++){
-        nameDR = "DRiso_";
+        nameDR = "DRani_";
         nameDR.append(histo_names[i+1]);
         save_histogram2D(nameDR, bn, DR, i);
     }

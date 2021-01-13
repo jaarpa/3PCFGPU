@@ -7,6 +7,8 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -rd test/ -n 5000 -b 20 -d 150
 
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -bpc -f data.dat -r rand0.dat -n 32768 -b 20 -d 150 -s 250
+
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
 */
 
 #include <stdio.h>
