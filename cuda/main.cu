@@ -370,7 +370,7 @@ int main(int argc, char **argv){
                 if (analytic){
                     cout << "Call 3iso with bpc analytic" << endl;
                 } else {
-                    cout << "Call 3iso with bpc" << endl;
+                    pcf_3isoBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
                 }
             } else {
                 pcf_3iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
