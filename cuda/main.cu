@@ -186,7 +186,7 @@ int main(int argc, char **argv){
             for (int i=0; i<n_randfiles; i++){
                 nonzero_Rnodes[i] = 0;
                 idxR[i] = 0;
-                last_pointR[i] = i*np;
+                last_pointR[i] = 0;
                 acum_nonzero_Rnodes[i] = 0;
                 dataR[i] = new PointW3D[np];
                 open_files(rand_files[i], np, dataR[i], r_size_box);
