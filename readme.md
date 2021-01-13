@@ -16,10 +16,10 @@ The code in this repository is capable to compute and vizualize the correlation 
 
 The development of this code has profited from the very valuable input of a number of people. They are acknowledged here:
 
-    [Gustavo Niz](https://github.com/gnizq64)
-    [Fidel Sosa](https://github.com/fidelsosan)
-    [Oscar De la Cruz Echeveste](https://github.com/Oscar2401)
-    [Alejandro Gómez](https://github.com/AlejandroGoper)
-    [Juan Antonio Aramburo Pasapera](https://github.com/jaarpa)
+* [Gustavo Niz](https://github.com/gnizq64)
+* [Fidel Sosa](https://github.com/fidelsosan)
+* [Oscar De la Cruz Echeveste](https://github.com/Oscar2401)
+* [Alejandro Gómez](https://github.com/AlejandroGoper)
+* [Juan Antonio Aramburo Pasapera](https://github.com/jaarpa)
 
 With funds providede by the Universidad de Guanajuato
