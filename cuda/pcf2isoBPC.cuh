@@ -32,7 +32,7 @@ void pcf_2iso_BPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_points
 
     */
 
-        /* =======================================================================*/
+    /* =======================================================================*/
     /* ======================  Var declaration ===============================*/
     /* =======================================================================*/
 
@@ -114,18 +114,18 @@ void pcf_2iso_BPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_points
 
 
     cucheck(cudaMemcpy(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost));
-    nameDD = "DDiso_";
+    nameDD = "DDiso_BPC_";
     nameDD.append(histo_names[0]);
     save_histogram1D(nameDD, bn, DD);
     cucheck(cudaMemcpy(RR, d_RR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++){
-        nameRR = "RRiso_";
+        nameRR = "RRiso_BPC_";
         nameRR.append(histo_names[i+1]);
         save_histogram1D(nameRR, bn, RR, i);
     }
     cucheck(cudaMemcpy(DR, d_DR, n_randfiles*bn*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++){
-        nameDR = "DRiso_";
+        nameDR = "DRiso_BPC_";
         nameDR.append(histo_names[i+1]);
         save_histogram1D(nameDR, bn, DR, i);
     }
@@ -210,11 +210,11 @@ void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordere
     cucheck(cudaStreamCreate(&streamRR));
 
     std::string nameDD, nameRR, nameDR;
-    nameRR = "RRiso_";
+    nameRR = "RRiso_BPCanalytic_";
     nameRR.append(histo_names[0]);
-    nameRR = "DRiso_";
+    nameRR = "DRiso_BPCanalytic_";
     nameDR.append(histo_names[0]);
-    nameDD = "DDiso_";
+    nameDD = "DDiso_BPCanalytic_";
     nameDD.append(histo_names[0]);
 
     /* =======================================================================*/
@@ -223,7 +223,7 @@ void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordere
 
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
-
+    cout << "All right before malloc" << endl;
     // Allocate memory for the histogram as double
     DD = new double[bn];
     RR = new double[bn];
