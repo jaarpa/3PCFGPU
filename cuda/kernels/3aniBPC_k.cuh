@@ -96,7 +96,7 @@ __device__ void count123_ani(double *XXX, PointW3D *elements, int start1, int en
                             bin += bn_offset*bn*bn*bn*bn*bn;
 
                             v *= elements[k].w;
-                            atomicAdd(&XXY[bin],v);
+                            atomicAdd(&XXX[bin],v);
 
                         }
                     }
@@ -196,8 +196,8 @@ __device__ void count123_animixed(double *XXY, PointW3D *elementsX, PointW3D *el
                             bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
                             bin += bn_offset*bn*bn*bn*bn*bn;
 
-                            v *= elements[k].w;
-                            atomicAdd(&XXX[bin],v);
+                            v *= elementsY[k].w;
+                            atomicAdd(&XXY[bin],v);
                         }
                     }
                 }

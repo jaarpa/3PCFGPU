@@ -142,7 +142,7 @@ __global__ void XXY3ani(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                     int end2 = nodeX[idx2].end;
                     int end3 = nodeY[idx3].end;
                     int a, b, c, t, p, bin;
-                    float dd_max=dmax*dmax;
+                    float dd_max=dmax*dmax, ds_th = (float)(bn)/2;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
                     float dz12, dz23, dz31;
                     double d12, d23, d31, cth12, cth31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
@@ -194,7 +194,7 @@ __global__ void XXY3ani(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                                             bin = a*bn*bn*bn*bn + b*bn*bn*bn + c*bn*bn + t*bn + p;
                                             bin += bn_offset*bn*bn*bn*bn*bn;
 
-                                            v *= elements[k].w;
+                                            v *= elementsY[k].w;
                                             atomicAdd(&XXY[bin],v);
 
                                         }
