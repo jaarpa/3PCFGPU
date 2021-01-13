@@ -6,7 +6,6 @@
 #include <string.h>
 #include <math.h>
 #include "kernels/3isoBPC_k.cuh"
-#include "kernels/2isoBPC_k.cuh"
 
 void pcf_3isoBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float size_box, float dmax){
     /*
