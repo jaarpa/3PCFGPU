@@ -39,8 +39,9 @@ __global__ void XXX3ani(double *XXX, PointW3D *elements, DNode *nodeD, int nonze
                     int end2 = nodeD[idx2].end;
                     int end3 = nodeD[idx3].end;
                     int bnx, bny, bnz, bin;
-                    float dd_max=dmax*dmax;
+                    float dd_max=dmax*dmax, ds_th = (float)(bn)/2;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
+                    float dz12, dz23, dz31; 
                     double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
                     for (int i=nodeD[idx1].start; i<end1; i++){
@@ -54,16 +55,19 @@ __global__ void XXX3ani(double *XXX, PointW3D *elements, DNode *nodeD, int nonze
                             z2 = elements[j].z;
                             w2 = elements[j].w;
                             v = w1*w2;
-                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+                            dz12 = z2-z1;
+                            d12 = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + dz12*dz12;
                             if (d12 < dd_max && d12>0){
                                 d12 = sqrt(d12);
                                 for (int k=nodeD[idx3].start; k<end3; k++){
                                     x3 = elements[k].x;
                                     y3 = elements[k].y;
                                     z3 = elements[k].z;
-                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2);
+                                    dz23 = z3-z2;
+                                    d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + dz23*dz23;
                                     if (d23 < dd_max && d23>0){
-                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + (z3-z1)*(z3-z1);
+                                        dz31 = z3-z1
+                                        d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + dz31*dz31;
                                         if (d31 < dd_max && d31>0){
                                             d23 = sqrt(d23);
                                             d31 = sqrt(d31);

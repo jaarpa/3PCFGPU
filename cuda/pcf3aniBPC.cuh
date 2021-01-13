@@ -7,10 +7,10 @@
 #include <math.h>
 #include "kernels/3aniBPC_k.cuh"
 
-void pcf_3isoBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float size_box, float dmax){
+void pcf_3aniBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float size_box, float dmax){
     /*
-    Main function to calculate the isotropic 3 point correlation function. Saves three different histograms in the same location of this script
-    with the names DD.dat DR.dat RR.dat. This program do not consider periodic boundary conditions. The file must contain 4 columns, the first 3 
+    Main function to calculate the anisotropic 3 point correlation function. Saves three different histograms in the same location of this script
+    with the names DD.dat DR.dat RR.dat. This program does consider periodic boundary conditions. The file must contain 4 columns, the first 3 
     are the x,y,z coordinates and the 4 the weigh of the measurment.
 
     Args:
@@ -50,7 +50,7 @@ void pcf_3isoBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD
     }
 
     // Name of the files where the results are saved
-    string nameDDD = "DDDiso_BPC_", nameRRR = "RRRiso_BPC_", nameDDR = "DDRiso_BPC_", nameDRR = "DRRiso_BPC_";
+    string nameDDD = "DDDani_BPC_", nameRRR = "RRRani_BPC_", nameDDR = "DDRani_BPC_", nameDRR = "DRRani_BPC_";
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
@@ -60,21 +60,21 @@ void pcf_3isoBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD
     d_max_node*=d_max_node;
 
     // Allocate memory for the histogram as double
-    DDD = new double[bn*bn*bn];
-    RRR = new double[n_randfiles*bn*bn*bn];
-    DDR = new double[n_randfiles*bn*bn*bn];
-    DRR = new double[n_randfiles*bn*bn*bn];
+    DDD = new double[bn*bn*bn*bn*bn];
+    RRR = new double[n_randfiles*bn*bn*bn*bn*bn];
+    DDR = new double[n_randfiles*bn*bn*bn*bn*bn];
+    DRR = new double[n_randfiles*bn*bn*bn*bn*bn];
 
-    cucheck(cudaMalloc(&d_DDD, bn*bn*bn*sizeof(double)));
-    cucheck(cudaMalloc(&d_RRR, n_randfiles*bn*bn*bn*sizeof(double)));
-    cucheck(cudaMalloc(&d_DRR, n_randfiles*bn*bn*bn*sizeof(double)));
-    cucheck(cudaMalloc(&d_DDR, n_randfiles*bn*bn*bn*sizeof(double)));
+    cucheck(cudaMalloc(&d_DDD, bn*bn*bn*bn*bn*sizeof(double)));
+    cucheck(cudaMalloc(&d_RRR, n_randfiles*bn*bn*bn*bn*bn*sizeof(double)));
+    cucheck(cudaMalloc(&d_DRR, n_randfiles*bn*bn*bn*bn*bn*sizeof(double)));
+    cucheck(cudaMalloc(&d_DDR, n_randfiles*bn*bn*bn*bn*bn*sizeof(double)));
 
     //Restarts the main histograms in host to zero
-    cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*sizeof(double), streamDDD));
-    cucheck(cudaMemsetAsync(d_RRR, 0, n_randfiles*bn*bn*bn*sizeof(double), streamRRR[0]));
-    cucheck(cudaMemsetAsync(d_DRR, 0, n_randfiles*bn*bn*bn*sizeof(double), streamDRR[0]));
-    cucheck(cudaMemsetAsync(d_DDR, 0, n_randfiles*bn*bn*bn*sizeof(double), streamDDR[0]));
+    cucheck(cudaMemsetAsync(d_DDD, 0, bn*bn*bn*bn*bn*sizeof(double), streamDDD));
+    cucheck(cudaMemsetAsync(d_RRR, 0, n_randfiles*bn*bn*bn*bn*bn*sizeof(double), streamRRR[0]));
+    cucheck(cudaMemsetAsync(d_DRR, 0, n_randfiles*bn*bn*bn*bn*bn*sizeof(double), streamDRR[0]));
+    cucheck(cudaMemsetAsync(d_DDR, 0, n_randfiles*bn*bn*bn*bn*bn*sizeof(double), streamDDR[0]));
     cucheck(cudaStreamSynchronize(streamRRR[0]));
     cucheck(cudaStreamSynchronize(streamDRR[0]));
     cucheck(cudaStreamSynchronize(streamDDR[0]));
@@ -99,40 +99,40 @@ void pcf_3isoBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    XXX3iso_BPC<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
+    XXX3ani_BPC<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node);
     for (int i=0; i<n_randfiles; i++){
         //Calculates grid dim for each file
         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
         gridRRR.x = blocks_R;
         gridRRR.y = blocks_R;
         gridRRR.z = blocks_R;
-        XXX3iso_BPC<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i);
+        XXX3ani_BPC<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i);
         gridDDR.z = blocks_R;
-        XXY3iso_BPC<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, true);
+        XXY3ani_BPC<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, true);
         gridDRR.x = blocks_R;
         gridDRR.y = blocks_R;
-        XXY3iso_BPC<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, false);
+        XXY3ani_BPC<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i, false);
     }
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
 
     //Save the results
-    cucheck(cudaMemcpy(DDD, d_DDD, bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
+    cucheck(cudaMemcpy(DDD, d_DDD, bn*bn*bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
     nameDDD.append(histo_names[0]);
     save_histogram3D(nameDDD, bn, DDD);
 
-    cucheck(cudaMemcpy(RRR, d_RRR, n_randfiles*bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
+    cucheck(cudaMemcpy(RRR, d_RRR, n_randfiles*bn*bn*bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++){
         nameRRR.append(histo_names[i+1]);
         save_histogram3D(nameRRR, bn, RRR, i);
     }
-    cucheck(cudaMemcpy(DDR, d_DDR, n_randfiles*bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
+    cucheck(cudaMemcpy(DDR, d_DDR, n_randfiles*bn*bn*bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++){
         nameDDR.append(histo_names[i+1]);
         save_histogram3D(nameDDR, bn, DDR, i);
     }
-    cucheck(cudaMemcpy(DRR, d_DRR, n_randfiles*bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
+    cucheck(cudaMemcpy(DRR, d_DRR, n_randfiles*bn*bn*bn*bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++){
         nameDRR.append(histo_names[i+1]);
         save_histogram3D(nameDRR, bn, DRR, i);
