@@ -29,6 +29,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -f data.dat -r rand0.dat -
 #include "PCF_help.cuh"
 #include "create_grid.cuh"
 #include "pcf2ani.cuh"
+#include "pcf2aniBPC.cuh"
 #include "pcf2iso.cuh"
 #include "pcf2isoBPC.cuh"
 
@@ -389,7 +390,7 @@ int main(int argc, char **argv){
             }
         } else if (strcmp(argv[1],"2ani")==0){
             if (bpc){
-                cout << "Call 2ani with bpc" << endl;
+                pcf_2ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
             } else {
                 pcf_2ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
             }

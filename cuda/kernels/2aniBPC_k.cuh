@@ -343,7 +343,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
     }
 }
 
-__global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node, , int node_offset, int bn_offset){
+__global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int node_offset, int bn_offset){
     /*
     Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function with 
     boundary periodic conditions. It stores the counts in the XY histogram.
