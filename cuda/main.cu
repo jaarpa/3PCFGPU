@@ -370,7 +370,7 @@ int main(int argc, char **argv){
         if (strcmp(argv[1],"3iso")==0){
             if (bpc){
                 if (analytic){
-                    pcf_3isoBPC_analytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, size_node, size_box, dmax);
+                    pcf_3isoBPC_analytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, np, size_node, size_box, dmax);
                 } else {
                     pcf_3isoBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
                 }

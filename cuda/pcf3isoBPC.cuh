@@ -174,7 +174,7 @@ void pcf_3isoBPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD
 
 }
 
-void pcf_3isoBPC_analytic(string data_name, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, int bn, float size_node, float size_box, float dmax){
+void pcf_3isoBPC_analytic(string data_name, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, int bn, int np, float size_node, float size_box, float dmax){
     /*
     Main function to calculate the isotropic 3 point correlation function. Saves three different histograms in the same location of this script
     with the names DD.dat DR.dat RR.dat. This program do not consider periodic boundary conditions. The file must contain 4 columns, the first 3 
