@@ -108,10 +108,10 @@ void pcf_3iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
         gridRRR.z = blocks_R;
         XXX3iso<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
         gridDDR.z = blocks_R;
-        XXY3iso<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        XXY3iso<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i, isDDR=true);
         gridDRR.y = blocks_R;
         gridDRR.z = blocks_R;
-        XXY3iso<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        XXY3iso<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i, isDDR=false);
     }
 
     //Waits for all the kernels to complete
