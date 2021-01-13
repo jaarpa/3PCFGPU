@@ -68,7 +68,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         bnort = (int)(sqrtf(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn*bn*bn_offset
+                        bin += bn*bn*bn_offset;
 
                         v = w1*elements[j].w;
                         atomicAdd(&XX[bin],v);
@@ -103,7 +103,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -139,7 +139,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -175,7 +175,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -213,7 +213,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -252,7 +252,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -290,7 +290,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -330,7 +330,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -407,7 +407,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         bnort = (int)(sqrtf(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn*bn*bn_offset
+                        bin += bn*bn*bn_offset;
 
                         v = w1*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
@@ -443,7 +443,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -479,7 +479,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -515,7 +515,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -553,7 +553,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -592,7 +592,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -630,7 +630,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -670,7 +670,7 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrtf(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
