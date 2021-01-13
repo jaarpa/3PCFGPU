@@ -26,6 +26,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -bpc -f data.dat -r rand0.
 
 #include "PCF_help.cuh"
 #include "create_grid.cuh"
+#include "pcf2ani.cuh"
 #include "pcf2iso.cuh"
 #include "pcf2isoBPC.cuh"
 
