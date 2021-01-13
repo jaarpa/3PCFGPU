@@ -32,6 +32,7 @@ nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -f data.dat -r rand0.dat -
 #include "pcf2aniBPC.cuh"
 #include "pcf2iso.cuh"
 #include "pcf2isoBPC.cuh"
+#include "pcf3iso.cuh"
 
 using namespace std;
 
@@ -370,7 +371,7 @@ int main(int argc, char **argv){
                     cout << "Call 3iso with bpc" << endl;
                 }
             } else {
-                cout << "Call 3iso NO BPC" << endl;
+                pcf_3iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
             }
         } else if (strcmp(argv[1],"3ani")==0){
             if (bpc){

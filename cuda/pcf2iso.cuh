@@ -105,9 +105,8 @@ void pcf_2iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
 
     //Waits for all the kernels to complete
     cucheck(cudaDeviceSynchronize());
-    
 
-
+    //Save the results
     cucheck(cudaMemcpy(DD, d_DD, bn*sizeof(double), cudaMemcpyDeviceToHost));
     nameDD = "DDiso_";
     nameDD.append(histo_names[0]);
