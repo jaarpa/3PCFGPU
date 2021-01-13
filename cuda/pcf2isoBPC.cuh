@@ -212,13 +212,11 @@ void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordere
     std::string nameDD, nameRR, nameDR;
     nameRR = "RRiso_BPCanalytic_";
     nameRR.append(histo_names[0]);
-    nameRR = "DRiso_BPCanalytic_";
+    nameDR = "DRiso_BPCanalytic_";
     nameDR.append(histo_names[0]);
     nameDD = "DDiso_BPCanalytic_";
     nameDD.append(histo_names[0]);
 
-    cout << "All right before malloc" << endl;
-    
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
