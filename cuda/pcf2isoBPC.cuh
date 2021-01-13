@@ -163,7 +163,7 @@ void pcf_2iso_BPC(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_points
 
 }
 
-void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, int bn, int np, float size_node, float size_box, float dmax){
+void pcf_2iso_BPCanalytic(string histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, int bn, int np, float size_node, float size_box, float dmax){
 
     /*
     Main function to calculate the isotropic 2 point correlation function. Saves three different histograms in the same location of this script
@@ -211,11 +211,11 @@ void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordere
 
     std::string nameDD, nameRR, nameDR;
     nameRR = "RRiso_BPCanalytic_";
-    nameRR.append(histo_names[0]);
+    nameRR.append(histo_names);
     nameDR = "DRiso_BPCanalytic_";
-    nameDR.append(histo_names[0]);
+    nameDR.append(histo_names);
     nameDD = "DDiso_BPCanalytic_";
-    nameDD.append(histo_names[0]);
+    nameDD.append(histo_names);
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
