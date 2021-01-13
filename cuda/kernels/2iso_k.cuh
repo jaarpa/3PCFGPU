@@ -23,7 +23,7 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
     //Distributes all the indexes equitatively into the n_kernelc_calls.
     int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<nonzero_nodes && idx2<nonzero_nodes){
+    if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
@@ -78,9 +78,9 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
     */
 
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
+    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
