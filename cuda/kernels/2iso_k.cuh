@@ -25,8 +25,7 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
     int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
-        atomicAdd(&XX[bn_offset],1);
-        /*
+        
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
         float dd_nod12 = (nx2-nx1)*(nx2-nx1) + (ny2-ny1)*(ny2-ny1) + (nz2-nz1)*(nz2-nz1);
@@ -57,7 +56,7 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
                     }
                 }
             }
-        }*/
+        }
     }
 }
 
@@ -83,8 +82,7 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
 
     if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset)){
-        atomicAdd(&XY[bn_offset],1);
-        /*
+        
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
         float dd_nod12 = (nx2-nx1)*(nx2-nx1) + (ny2-ny1)*(ny2-ny1) + (nz2-nz1)*(nz2-nz1);
@@ -117,6 +115,6 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
                     }
                 }
             }
-        }*/
+        }
     }
 }
