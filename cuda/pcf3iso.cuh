@@ -42,7 +42,7 @@ void pcf_3iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
     streamRRR = new cudaStream_t[n_randfiles];
     streamDDR = new cudaStream_t[n_randfiles];
     streamDRR = new cudaStream_t[n_randfiles];
-    cucheck(cudaStreamCreate(&streamDD));
+    cucheck(cudaStreamCreate(&streamDDD));
     for (int i = 0; i < n_randfiles; i++){
         cucheck(cudaStreamCreate(&streamRRR[i]));
         cucheck(cudaStreamCreate(&streamDDR[i]));
@@ -99,19 +99,19 @@ void pcf_3iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
     //Launch the kernels
     time_spent=0; //Restarts timmer
     cudaEventRecord(start_timmer);
-    make_histoXXX<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node);
+    XXX3iso<<<gridDDD,threads_perblock,0,streamDDD>>>(d_DDD, d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node);
     for (int i=0; i<n_randfiles; i++){
         //Calculates grid dim for each file
         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
         gridRRR.x = blocks_R;
         gridRRR.y = blocks_R;
         gridRRR.z = blocks_R;
-        make_histoXXX<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        XXX3iso<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
         gridDDR.z = blocks_R;
-        make_histoXXY<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        XXY3iso<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
         gridDRR.y = blocks_R;
         gridDRR.z = blocks_R;
-        make_histoXXY<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        XXY3iso<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
     }
 
     //Waits for all the kernels to complete

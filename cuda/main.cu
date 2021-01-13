@@ -3,6 +3,8 @@
 Esta funcion lee los datos y crea el grid de nodos y luego llama a la función correspondiente 
 para crear y guardar los histogramas correspondientes.
 
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -f data.dat -r rand0.dat -n 5000 -b 30 -d 60
+
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -rd test/ -n 5000 -b 20 -d 150
 
