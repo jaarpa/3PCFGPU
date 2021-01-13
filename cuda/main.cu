@@ -4,6 +4,7 @@ Esta funcion lee los datos y crea el grid de nodos y luego llama a la función c
 para crear y guardar los histogramas correspondientes.
 
 nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
+nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -rd test/ -n 5000 -b 20 -d 150
 */
 
 #include <stdio.h>
@@ -312,9 +313,6 @@ int main(int argc, char **argv){
             cucheck(cudaMalloc(&d_ordered_pointsR, n_randfiles*np*sizeof(PointW3D)));
             cucheck(cudaMemcpy(dnodeR, hnodeR_s, tot_randnodes*sizeof(DNode), cudaMemcpyHostToDevice));
             cucheck(cudaMemcpy(d_ordered_pointsR, h_ordered_pointsR_s, n_randfiles*np*sizeof(PointW3D), cudaMemcpyHostToDevice));
-            cout << "Total number of nodes: " << tot_randnodes << endl
-            for (int l=0; l<n_randfiles; l++){
-                cout << "Aumulated nodes in file " << l << " are " << tot_randnodes[l] << endl;
             }
         }
         stop_timmer_host = clock();

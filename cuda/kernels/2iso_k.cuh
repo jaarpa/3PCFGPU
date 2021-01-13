@@ -21,6 +21,11 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
     */
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
+
+    if ((blockIdx.x * blockDim.x + threadIdx.x)==0 && (blockIdx.y * blockDim.y + threadIdx.y)==0){
+        printf("Grid dim x: %i, Grid dim y: %i", gridDim.x, gridDim.y);
+    }
+    
     int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
     if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
@@ -76,6 +81,9 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
     dmax: (float) The maximum distance of interest between points.
     d_max_node: (float) The maximum internodal distance.
     */
+    if ((blockIdx.x * blockDim.x + threadIdx.x)==0 && (blockIdx.y * blockDim.y + threadIdx.y)==0){
+        printf("Grid dim x: %i, Grid dim y: %i", gridDim.x, gridDim.y);
+    }
 
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
