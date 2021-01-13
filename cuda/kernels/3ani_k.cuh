@@ -38,11 +38,11 @@ __global__ void XXX3ani(double *XXX, PointW3D *elements, DNode *nodeD, int nonze
                     int end1 = nodeD[idx1].end;
                     int end2 = nodeD[idx2].end;
                     int end3 = nodeD[idx3].end;
-                    int bnx, bny, bnz, bin;
+                    int a, b, c, t, p, bin;
                     float dd_max=dmax*dmax, ds_th = (float)(bn)/2;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
                     float dz12, dz23, dz31; 
-                    double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
+                    double d12, d23, d31, v, cth12, cth31, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
                     for (int i=nodeD[idx1].start; i<end1; i++){
                         x1 = elements[i].x;
@@ -66,7 +66,7 @@ __global__ void XXX3ani(double *XXX, PointW3D *elements, DNode *nodeD, int nonze
                                     dz23 = z3-z2;
                                     d23 = (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + dz23*dz23;
                                     if (d23 < dd_max && d23>0){
-                                        dz31 = z3-z1
+                                        dz31 = z3-z1;
                                         d31 = (x3-x1)*(x3-x1) + (y3-y1)*(y3-y1) + dz31*dz31;
                                         if (d31 < dd_max && d31>0){
 
@@ -141,11 +141,11 @@ __global__ void XXY3ani(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                     int end1 = nodeX[idx1].end;
                     int end2 = nodeX[idx2].end;
                     int end3 = nodeY[idx3].end;
-                    int bnx, bny, bnz, bin;
+                    int a, b, c, t, p, bin;
                     float dd_max=dmax*dmax;
                     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
                     float dz12, dz23, dz31;
-                    double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
+                    double d12, d23, d31, cth12, cth31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
                     for (int i=nodeX[idx1].start; i<end1; i++){
                         x1 = elementsX[i].x;
@@ -195,7 +195,7 @@ __global__ void XXY3ani(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                                             bin += bn_offset*bn*bn*bn*bn*bn;
 
                                             v *= elements[k].w;
-                                            atomicAdd(&XXX[bin],v);
+                                            atomicAdd(&XXY[bin],v);
 
                                         }
                                     }

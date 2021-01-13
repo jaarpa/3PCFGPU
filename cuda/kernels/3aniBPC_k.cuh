@@ -35,11 +35,10 @@ __device__ void count123_ani(double *XXX, PointW3D *elements, int start1, int en
     fz_3: (bool) True if the node number 3 is proyected in the z direction.
     bn_offset: (int) Number of randomfile if there are many random files
     */
-
-    int bnx, bny, bnz, bin;
+    int a, b, c, t, p, bin;
     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
     float dx12, dy12, dz12, dx23, dy23, dz23, dx31, dy31, dz31;
-    double d12,d23,d31;
+    double d12,d23,d31, cth12, cth31;
     double v;
 
     for (int i=start1; i<end1; i++){
@@ -97,7 +96,7 @@ __device__ void count123_ani(double *XXX, PointW3D *elements, int start1, int en
                             bin += bn_offset*bn*bn*bn*bn*bn;
 
                             v *= elements[k].w;
-                            atomicAdd(&XXX[bin],v);
+                            atomicAdd(&XXY[bin],v);
 
                         }
                     }
@@ -138,10 +137,10 @@ __device__ void count123_animixed(double *XXY, PointW3D *elementsX, PointW3D *el
     bn_offset: (int) Number of randomfile if there are many random files
     */
 
-    int bnx, bny, bnz, bin;
+    int a, b, c, t, p, bin;
     float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
     float dx12, dy12, dz12, dx23, dy23, dz23, dx31, dy31, dz31;
-    double d12,d23,d31;
+    double d12,d23,d31, cth12, cth31;
     double v;
 
     for (int i=start1; i<end1; i++){
