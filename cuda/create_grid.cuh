@@ -29,14 +29,14 @@ struct DNode{ //Defines the node in the device without using elements to avoid d
     Point3D nodepos; //Position of the node
     int len;		// Number of points in the node
     int start; //prev element idx
-    int end;
+    int end; //last element idx [non inclusive]
 };
 
 void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
     /* Opens the daya files. Receives the file location, number of points to read and the array of points where the data is stored */
     ifstream file;
 
-    string mypathto_files = "../../../data/";
+    string mypathto_files = "../data/";
     //This creates the full path to where I have my data files
     name_file.insert(0,mypathto_files);
 
@@ -72,42 +72,8 @@ void open_files(string name_file, int pts, PointW3D *datos, float &size_box){
         }
     }
 
-    size_box=ceil(candidate_size_box+1);
+    if (size_box<=0) size_box=ceil(candidate_size_box+1);
 
-    file.close();
-}
-
-//====================================================================
-
-void save_histogram(string name, int bns, double *histo){
-    /* This function saves a one dimensional histogram in a file.
-    Receives the name of the file, number of bins in the histogram and the histogram array
-    */
-
-    string mypathto_files = "../../../results/";
-    //This creates the full path to where I have my data files
-    name.insert(0,mypathto_files);
-
-    ofstream file;
-    file.open(name.c_str(), ios::out | ios::binary);
-
-    if (file.fail()){
-        cout << "Failed to save the the histogram in " << name << endl;
-        exit(1);
-    }
-
-    int idx;
-
-    for (int i = 0; i < bns; i++){
-        for (int j = 0; j < bns; j++){
-            for (int k = 0; k < bns; k++){
-                idx = i*bns*bns + j*bns + k;
-                file << setprecision(12) << histo[idx] << ' ';
-            }
-            file << "\n";
-        }
-        file << "\n" << endl;
-    }
     file.close();
 }
 
@@ -169,4 +135,132 @@ void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_
         mom = (int)(dat[i].z/size_node);
         add(nod[row][col][mom].elements, nod[row][col][mom].len, dat[i].x, dat[i].y, dat[i].z, dat[i].w);
     }
+}
+
+//=================================================================== 
+void save_histogram1D(string name, int bns, double *histo, int nhistos=0){
+    /* This function saves a 1 dimensional histogram in a file.
+    Receives the name of the file, number of bins in the histogram and the histogram array
+    */
+
+    string mypathto_files = "../results/";
+    //This creates the full path to where I save the histograms files
+    name.insert(0,mypathto_files);
+
+    ofstream file2;
+    file2.open(name.c_str(), ios::out | ios::binary);
+
+    if (file2.fail()){
+        cout << "Failed to save the the histogram in " << name << endl;
+        exit(1);
+    }
+    
+    for (int i = 0; i < bns; i++){
+        file2 << setprecision(12) << histo[nhistos*bns + i] << endl;
+    }
+
+    file2.close();
+}
+
+//====================================================================
+void save_histogram2D(string name, int bns, double *histo, int nhistos=0){
+    /* This function saves a 2 dimensional histogram in a file.
+    Receives the name of the file, number of bins in the histogram and the histogram array
+    */
+    
+    string mypathto_files = "../results/";
+    //This creates the full path to where I have my data files
+    name.insert(0,mypathto_files);
+
+    ofstream file;
+    file.open(name.c_str(), ios::out | ios::binary);
+
+    if (file.fail()){
+        cout << "Failed to save the the histogram in " << name << endl;
+        exit(1);
+    }
+
+    int idx;
+
+    for (int i = 0; i < bns; i++){
+        for (int j = 0; j < bns; j++){
+            idx = nhistos*bns*bns + i*bns + j;
+            file << setprecision(12) << histo[idx] << ' ';
+        }
+
+		file << "\n";
+    }
+    file.close();
+}
+
+//====================================================================
+void save_histogram3D(string name, int bns, double *histo, int nhistos=0){
+    /* This function saves a 3 dimensional histogram in a file.
+    Receives the name of the file, number of bins in the histogram and the histogram array
+    */
+
+    string mypathto_files = "../results/";
+    //This creates the full path to where I have my data files
+    name.insert(0,mypathto_files);
+
+    ofstream file;
+    file.open(name.c_str(), ios::out | ios::binary);
+
+    if (file.fail()){
+        cout << "Failed to save the the histogram in " << name << endl;
+        exit(1);
+    }
+
+    int idx;
+
+    for (int i = 0; i < bns; i++){
+        for (int j = 0; j < bns; j++){
+            for (int k = 0; k < bns; k++){
+                idx = nhistos*bns*bns*bns + i*bns*bns + j*bns + k;
+                file << setprecision(12) << histo[idx] << ' ';
+            }
+            file << "\n";
+        }
+        file << "\n" << endl;
+    }
+    file.close();
+}
+
+//====================================================================
+void save_histogram5D(string name, int bns, double *histo, int nhistos=0){
+    /* This function saves a 5 dimensional histogram in a file.
+    Receives the name of the file, number of bins in the histogram and the histogram array
+    */
+
+    string mypathto_files = "../results/";
+    //This creates the full path to where I have my data files
+    name.insert(0,mypathto_files);
+    
+    ofstream file;
+    file.open(name.c_str(), ios::out | ios::binary);
+
+    if (file.fail()){
+        cout << "Failed to save the the histogram in " << name << endl;
+        exit(1);
+    }
+
+    int idx;
+
+    for (int i = 0; i < bns; i++){
+        for (int j = 0; j < bns; j++){
+            for (int k = 0; k < bns; k++){
+                for (int l = 0; l < bns; l++){
+                    for (int m = 0; m < bns; m++){
+                        idx = nhistos*bns*bns*bns*bns*bns + i*bns*bns*bns*bns + j*bns*bns*bns + k*bns*bns + l*bns + m;
+                        file << setprecision(12) << histo[idx] << ' ';
+                    }
+                    file << "\n";
+                }
+                file << "\n";
+            }
+            file << "\n";
+        }
+        file << "\n" << endl;
+    }
+    file.close();
 }

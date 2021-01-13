@@ -5,36 +5,38 @@
 //============ Kernels Section ======================================= 
 //====================================================================
 
-__global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
+__global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int node_offset=0, int bn_offset=0){
     /*
-    Kernel function to calculate the pure histograms. It stores the counts in the XX histogram.
+    Kernel function to calculate the pure histograms for the 2 point anisotropic correlation function WITH 
+    boundary periodic conditions. It stores the counts in the XX histogram.
 
     args:
     XX: (double*) The histogram where the distances are counted.
     elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-    node: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+    nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
+    size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
+    size_node: (float) Size of the nodes.
     */
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
-    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<nonzero_nodes && idx2<nonzero_nodes){
+    int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
-        float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+        float dd_max=dmax*dmax;
         float dxn12=fabsf(nx2-nx1), dyn12=fabsf(ny2-ny1), dzn12=fabsf(nz2-nz1);
         float dd_nod12_ort = dxn12*dxn12 + dyn12*dyn12;
         float dd_nod12_z = dzn12*dzn12;
         
         float x1,y1,z1,w1,x2,y2,z2;
-        float dd_z, dd_ort;
         float dx,dy,dz;
         int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
-        double v;
+        double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
         
         //Front vars
         float f_dmax = dmax+size_node;
@@ -61,10 +63,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                     if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                         
                         bnz = (int)(sqrt(dd_z)*ds)*bn;
-                        if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                        bnort = (int)(sqrtf(dd_ort)*ds);
-                        if (bnort>(bn-1)) bnort = bn-1;
+                        if (bnz>(bn*(bn-1))) continue;
+                        bnort = (int)(sqrt(dd_ort)*ds);
+                        if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
+                        bin += bn*bn*bn_offset;
 
                         v = w1*elements[j].w;
                         atomicAdd(&XX[bin],v);
@@ -95,10 +98,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                         if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -130,10 +134,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                         if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -165,10 +170,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                         if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -202,10 +208,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                         if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -240,10 +247,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                         if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -277,10 +285,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                         if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -316,10 +325,11 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
                         if (dd_z<=dd_max && dd_z>0 && dd_ort<=dd_max && dd_ort>0){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -332,37 +342,40 @@ __global__ void make_histoXX(double *XX, PointW3D *elements, DNode *nodeD, int n
     }
 }
 
-__global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node){
+__global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int node_offset, int bn_offset){
     /*
-    Kernel function to calculate the mixed histogram. It stores the counts in the XY histogram.
+    Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function with 
+    boundary periodic conditions. It stores the counts in the XY histogram.
 
     args:
     XY: (double*) The histogram where the distances are counted.
-    elementsD: (PointW3D*) Array of the points ordered coherently with the nodes.
-    nodeD: (DNode) Array of DNodes each of which define a node and the elements of elementD that correspond to that node.
-    elementsR: (PointW3D*) Array of the points ordered coherently with the nodes.
-    nodeR: (DNode) Array of RNodes each of which define a node and the elements of elementR that correspond to that node.
-    partitions: (int) Number of partitions that are fitted by box side.
+    elementsD: (PointW3D*) Array of the points ordered coherently with the nodes. For the data points.
+    nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the data points
+    nonzero_Dnodes: (int) Number of nonzero nodes where the points have been classificated. For the data points
+    elementsR: (PointW3D*) Array of the points ordered coherently with the nodes. For the random points.
+    nodeR: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the random points
+    nonzero_Rnodes: (int) Number of nonzero nodes where the points have been classificated. For the random points
     bn: (int) NUmber of bins in the XY histogram.
-    dmax: (dmax) The maximum distance of interest between points.
-    size_node: (float) Size of the nodes
+    dmax: (float) The maximum distance of interest between points.
+    d_max_node: (float) The maximum internodal distance.
+    size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
+    size_node: (float) Size of the nodes.
     */
     
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
+    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset)){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
         float dxn12=fabsf(nx2-nx1), dyn12=fabsf(ny2-ny1), dzn12=fabsf(nz2-nz1);
         float dd_nod12_ort = dxn12*dxn12+dyn12*dyn12;
         float dd_nod12_z = dzn12*dzn12;
-        float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
+        float dd_max=dmax*dmax;
         
         float x1,y1,z1,w1,x2,y2,z2;
         float dx,dy,dz;
-        float dd_z, dd_ort;
         int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
-        double v;
+        double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
         
         //Front vars
         float f_dmax = dmax+size_node;
@@ -388,10 +401,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                     if (dd_z<=dd_max && dd_ort<=dd_max){
                         
                         bnz = (int)(sqrt(dd_z)*ds)*bn;
-                        if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                        bnort = (int)(sqrtf(dd_ort)*ds);
-                        if (bnort>(bn-1)) bnort = bn-1;
+                        if (bnz>(bn*(bn-1))) continue;
+                        bnort = (int)(sqrt(dd_ort)*ds);
+                        if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
+                        bin += bn*bn*bn_offset;
 
                         v = w1*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
@@ -423,10 +437,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                         if (dd_z<=dd_max && dd_ort<=dd_max){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -458,10 +473,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                         if (dd_z<=dd_max && dd_ort<=dd_max){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -493,10 +509,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                         if (dd_z<=dd_max && dd_ort<=dd_max){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -530,10 +547,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                         if (dd_z<=dd_max && dd_ort<=dd_max){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -568,10 +586,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                         if (dd_z<=dd_max && dd_ort<=dd_max){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -605,10 +624,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                         if (dd_z<=dd_max && dd_ort<=dd_max){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -644,10 +664,11 @@ __global__ void make_histoXY(double *XY, PointW3D *elementsD, DNode *nodeD, int 
                         if (dd_z<=dd_max && dd_ort<=dd_max){
                             
                             bnz = (int)(sqrt(dd_z)*ds)*bn;
-                            if (bnz>(bn*(bn-1))) bnz = bn*(bn-1);
-                            bnort = (int)(sqrtf(dd_ort)*ds);
-                            if (bnort>(bn-1)) bnort = bn-1;
+                            if (bnz>(bn*(bn-1))) continue;
+                            bnort = (int)(sqrt(dd_ort)*ds);
+                            if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
+                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
