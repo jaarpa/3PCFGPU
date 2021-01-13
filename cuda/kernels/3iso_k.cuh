@@ -109,11 +109,11 @@ __global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
     d_max_node: (float) The maximum internodal distance.
     */
 
-    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
-    int idx3 = blockIdx.z * blockDim.z + threadIdx.z;
+    int idx1 = (!isDDR)*node_offset + blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = (!isDDR)*node_offset + blockIdx.y * blockDim.y + threadIdx.y;
+    int idx3 = isDDR*node_offset + blockIdx.z * blockDim.z + threadIdx.z;
     
-    if (idx1<nonzero_Xnodes && idx2<nonzero_Xnodes && idx3<nonzero_Ynodes){
+    if (idx1<(nonzero_Xnodes + (!isDDR)*node_offset) && idx2<(nonzero_Xnodes + (!isDDR)*node_offset) && idx3<(nonzero_Ynodes + isDDR*node_offset)){
         float nx1=nodeX[idx1].nodepos.x, ny1=nodeX[idx1].nodepos.y, nz1=nodeX[idx1].nodepos.z;
         float nx2=nodeX[idx2].nodepos.x, ny2=nodeX[idx2].nodepos.y, nz2=nodeX[idx2].nodepos.z;
         float dd_nod12 = (nx2-nx1)*(nx2-nx1)+(ny2-ny1)*(ny2-ny1)+(nz2-nz1)*(nz2-nz1);
@@ -163,6 +163,7 @@ __global__ void XXY3iso(double *XXY, PointW3D *elementsX, DNode *nodeX, int nonz
                                             bnz = (int)(d31*ds);
                                             if (bnz>(bn-1)) continue;
                                             bin = bnx + bny + bnz;
+                                            bin += bn*bn*bn*bn_offset;
 
                                             v *= elementsY[k].w;
                                             atomicAdd(&XXY[bin],v);

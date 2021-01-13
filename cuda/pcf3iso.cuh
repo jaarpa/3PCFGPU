@@ -94,7 +94,7 @@ void pcf_3iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
     //Dummy declaration
     dim3 gridRRR(2,2,1);
     dim3 gridDDR(blocks_D,blocks_D,1);
-    dim3 gridDRR(blocks_D,2,1);
+    dim3 gridDRR(2,2,blocks_D);
 
     //Launch the kernels
     time_spent=0; //Restarts timmer
@@ -109,8 +109,8 @@ void pcf_3iso(string *histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, i
         XXX3iso<<<gridRRR,threads_perblock,0,streamRRR[i]>>>(d_RRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
         gridDDR.z = blocks_R;
         XXY3iso<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, d_ordered_pointsD, dnodeD, nonzero_Dnodes, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i, true);
+        gridDRR.x = blocks_R;
         gridDRR.y = blocks_R;
-        gridDRR.z = blocks_R;
         XXY3iso<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, d_ordered_pointsR, dnodeR, nonzero_Rnodes[i], d_ordered_pointsD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i, false);
     }
 
