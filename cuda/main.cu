@@ -388,7 +388,7 @@ int main(int argc, char **argv){
             if (bpc){
                 cout << "Call 2ani with bpc" << endl;
             } else {
-                cout << "Call 2ani NO BPC" << endl;
+                pcf_2ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax)
             }
         }
 
