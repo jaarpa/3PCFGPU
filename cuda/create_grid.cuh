@@ -163,7 +163,7 @@ void save_histogram1D(string name, int bns, double *histo, int nhistos=0){
 }
 
 //====================================================================
-void save_histogram2D(string name, int bns, double *histo){
+void save_histogram2D(string name, int bns, double *histo, int nhistos=0){
     /* This function saves a 2 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
     */
@@ -184,7 +184,7 @@ void save_histogram2D(string name, int bns, double *histo){
 
     for (int i = 0; i < bns; i++){
         for (int j = 0; j < bns; j++){
-            idx = i*bns + j;
+            idx = nhistos*bns*bns + i*bns + j;
             file << setprecision(12) << histo[idx] << ' ';
         }
 

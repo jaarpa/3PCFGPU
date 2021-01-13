@@ -68,7 +68,7 @@ __global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
     }
 }
 
-__global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset0, int bn_offset){
+__global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset){
     /*
     Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function. 
     This version does not take into account boundary periodic conditions. It stores the counts in the XY histogram.
@@ -102,7 +102,7 @@ __global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
             float x1,y1,z1,w1,x2,y2,z2;
             float dd_z, dd_ort;
             float ds = ((float)(bn))/dmax, dd_max=dmax*dmax;
-            int bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
+            int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
             double v;
 
             for (int i=nodeD[idx1].start; i<end1; ++i){
