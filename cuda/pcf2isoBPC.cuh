@@ -217,13 +217,14 @@ void pcf_2iso_BPCanalytic(string *histo_names, DNode *dnodeD, PointW3D *d_ordere
     nameDD = "DDiso_BPCanalytic_";
     nameDD.append(histo_names[0]);
 
+    cout << "All right before malloc" << endl;
+    
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
 
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node*=d_max_node;
-    cout << "All right before malloc" << endl;
     // Allocate memory for the histogram as double
     DD = new double[bn];
     RR = new double[bn];
