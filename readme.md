@@ -1,4 +1,4 @@
-# Name of our project
+# 3PCFGPU
 
 *Code capable to compute the isotropic or anisotropic, two or three Points Correlation Functions (PCF), with or without Boundary Periodic Conditions (BPC) from galaxy catalogs, using parallel programming on GPU or CPU.*
 
