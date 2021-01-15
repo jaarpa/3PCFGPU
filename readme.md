@@ -105,8 +105,8 @@ The development of this code has profited from the very valuable input of a numb
 
 * [Aramburo Pasapera Juan Antonio](https://github.com/jaarpa)
 * [De la Cruz Echeveste Oscar](https://github.com/Oscar2401)
-* [Gómez Alejandro](https://github.com/AlejandroGoper)
-* [Niz Gustavo](https://github.com/gnizq64)
-* [Sosa Fidel](https://github.com/fidelsosan)
+* [Gómez Pérez Alejandro](https://github.com/AlejandroGoper)
+* [Niz Quevedo Gustavo](https://github.com/gnizq64)
+* [Sosa Nuñez Fidel](https://github.com/fidelsosan)
 
 With funds providede by the Universidad de Guanajuato
