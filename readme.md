@@ -45,6 +45,8 @@ Similarly every histogram result of the computations will be saved in the result
 
 #### CPU
 
+(In construction)
+
 #### GPU
 The master script must be placed in the cuda/ folder. You can run `./PCF --help` to get information about how to run this master script.
 
@@ -76,6 +78,7 @@ The optional argumets for a finer tuning are:
 The following commands use the provided data files in this repository and assumes the compilation has been performed as in the Installation section.
 
 #### CPU
+(In construction)
 
 #### GPU
 
