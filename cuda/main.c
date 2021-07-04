@@ -58,8 +58,8 @@ int main(int argc, char **argv)
     {
         //Read the parameters from command line
         int sample_size=0, bins=0, partitions=35, str_len = 0;
-        int bpc = 0, analytic=0, rand_dir = 0, rand_required=0, pip_calculation=0, size_box_provided=0; //Used as bools
-        float size_box = 0, dmax=0;
+        int bpc = 0, analytic=0, rand_dir = 0, rand_required=0, pip_calculation=0; //Used as bools
+        float size_box_provided = 0, dmax=0;
         char *data_name=NULL, *rand_name=NULL;
         for (int idpar=2; idpar<argc; idpar++)
         {
@@ -137,10 +137,9 @@ int main(int argc, char **argv)
             }
             else if (strcmp(argv[idpar],"-sb")==0)
             {
-                size_box = atof(argv[idpar+1]);
-                size_box_provided = 1;
+                size_box_provided = atof(argv[idpar+1]);
                 idpar++;
-                if (size_box < 0)
+                if (size_box_provided < 0)
                 {
                     fprintf(stderr, "Invalid size box (-sb). Size box must be larger than 0. \n");
                     exit(1);
@@ -186,8 +185,8 @@ int main(int argc, char **argv)
         clock_t stop_timmer_host, start_timmer_host;
         start_timmer_host = clock(); //To check time setting up data
         
-        float size_node, htime;
-        int npips=0, np = 0;
+        float size_node, htime, size_box=0;
+        int npips=0, np = 0, minimum_number_lines;
         char **histo_names;
 
         //Declare variables for data.
@@ -203,7 +202,7 @@ int main(int argc, char **argv)
         DNode *hnodeR_s, *dnodeR;
         Node ****hnodeR;
         float r_size_box=0;
-        int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR, rnp, n_randfiles=1, tot_randnodes=0, n_pipsR=0;
+        int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR, rnp=0, n_randfiles=1, tot_randnodes=0, n_pipsR=0;
         char **rand_files;
 
         /* =======================================================================*/
@@ -257,8 +256,8 @@ int main(int argc, char **argv)
                     while( (archivo=readdir(folder)) )
                     {
                         nombre_archivo = archivo->d_name;
-                        if (strcmp(nombre_archivo,".") == 0 && strcmp(nombre_archivo,"..") == 0) continue;
-                        if (strcmp(&(nombre_archivo)[strlen((nombre_archivo))-4],".pip") != 0) continue;
+                        if (strcmp(nombre_archivo,".") == 0 || strcmp(nombre_archivo,"..") == 0) continue;
+                        if (strcmp(&(nombre_archivo)[strlen((nombre_archivo))-4],".pip") == 0) continue;
                         histo_names[j+1] = strdup(nombre_archivo);
 
                         rand_files[j] = malloc((strlen(rand_name)+strlen(nombre_archivo)+1)*sizeof(char));
@@ -294,42 +293,64 @@ int main(int argc, char **argv)
             idxR = calloc(n_randfiles,sizeof(int));
             last_pointR = calloc(n_randfiles,sizeof(int));
             acum_nonzero_Rnodes = calloc(n_randfiles,sizeof(int));
+            if (pip_calculation) pipsR = calloc(n_randfiles, sizeof(int32_t *));
+
+            rnp = get_smallest_file(rand_files, n_randfiles); // Get the number of lines in the file with less entries
+            minimum_number_lines = rnp<np ? rnp : np;
+            if (sample_size == 0 || sample_size>minimum_number_lines)
+            {
+                sample_size = minimum_number_lines;
+                printf("Sample size set to %i according to the file with the least amount of entries \n", sample_size);
+            }
+
             for (int i=0; i<n_randfiles; i++)
             {
                 open_files(rand_files[i], &dataR[i],&rnp, &r_size_box);
-                
-                //Takes a sample if rnp is less than np
-                if (rnp<np) sample_size = rnp;
 
                 //Reset box size if not provided and r_size_box > size_box
-                if (!size_box_provided && r_size_box>size_box) size_box=r_size_box;
-            }
-        }
-        
-        //Read PIPs if required
-        if (pip_calculation)
-        {
-            open_pip_files(&pipsD, data_name, np, &n_pips);
-            if (rand_required)
-            {
-                printf("Random is required \n");
-                pipsR = calloc(n_randfiles, sizeof(int32_t *));
-                for (int i = 0; i < n_randfiles; i++) 
+                if (r_size_box>size_box) size_box=r_size_box;
+
+                //Read pips files of random data if required
+                if (pip_calculation)
                 {
-                    open_pip_files(&pipsR[i], rand_files[i], np, &n_pipsR);
+                    open_pip_files(&pipsR[i], rand_files[i], rnp, &n_pipsR);
+                    if (i==0) n_pips = n_pipsR;
                     if (n_pips != n_pipsR) 
                     {
-                        fprintf(stderr, "Length of data PIPs and random PIPs are not the same. Data pips has length %i but the random pip length of pip_%s is %i \n", n_pips, rand_files[i], n_pipsR);
+                        fprintf(stderr, "PIPS have different number of columns %s has %i while the previous file had %i\n", rand_files[i], n_pipsR, n_pips);
                         exit(1);
                     }
                 }
+                
+                //Takes a sample if sample_size != rnp is less than np
+                if (sample_size != rnp) printf("Takes a sample for %s \n", rand_files[i]);
+
             }
         }
 
-        //Take a random sample
-        if (sample_size != 0)
+        //Sets the size_box to the larges either the one found or the provided
+        if (size_box_provided < size_box)
         {
-            printf("It should take a random sample \n");
+            printf("Size box set to %f according to the largest register in provided files. \n", size_box);
+        }
+        else
+        {
+            size_box = size_box_provided;
+        }
+        
+        //Read PIPs if required
+        if (pip_calculation) open_pip_files(&pipsD, data_name, np, &n_pips);
+        if (n_pips != n_pipsR)
+        {
+            fprintf(stderr, "Length of data PIPs and random PIPs are not the same. \n Data pips has %i columns but the random pip has %i columns. \n", n_pips, n_pipsR);
+            exit(1);
+        }
+
+        //Take a random sample from data
+        if (sample_size > np) printf("Sample size set to %i according to the file with the least amount of entries \n", np);
+        if (sample_size != 0 && sample_size < np)
+        {
+            printf("It should take a random sample of data file \n");
             np = sample_size;
         }
 

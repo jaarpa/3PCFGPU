@@ -31,8 +31,9 @@ typedef struct { //Defines the node in the device without using elements to avoi
 } DNode;
 
 //=================================================================== 
+int get_smallest_file(char **file_names, int n_files);
 void open_files(char *name_file, PointW3D **data, int *pts, float *size_box);
-void open_pip_files(int32_t **pips, char *name_file, int pts, int *n_pips);
+void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips);
 
 //=================================================================== 
 //void add(PointW3D *array, int *lon, float _x, float _y, float _z, float _w);

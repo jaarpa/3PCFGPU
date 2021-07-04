@@ -10,6 +10,38 @@
     exit(1);\
     }\
 
+/* Complains if it cannot allocate the array */
+#define CHECKALLOC(p)  if(p == NULL) {\
+    fprintf(stderr, "%s (line %d): Error - unable to allocate required memory \n", __FILE__, __LINE__);\
+    exit(1);\
+}\
+
+int get_smallest_file(char **file_names, int n_files)
+{
+    size_t len = 0;
+    int smallest = -1, nlines=0;
+    char mypathto_files[] = "../data/";
+    char *full_path, *line = NULL;
+
+    for (int i = 0; i < n_files; i++)
+    {
+        full_path = calloc(strlen(mypathto_files)+strlen(file_names[i])+1, sizeof(char));
+        CHECKALLOC(full_path);
+        strcpy(full_path, mypathto_files);
+        strcat(full_path, file_names[i]); //Set up the full path
+
+        FILE *file;
+        file = fopen(full_path,"r"); //Open the file
+        while (getline(&line, &len, file) != -1) nlines++;
+        if (nlines<smallest || smallest == -1) smallest = nlines;
+
+        free(full_path);
+        nlines=0;
+    }
+    
+    return smallest;
+}
+
 void open_files(char *name_file, PointW3D **data, int *pts, float *size_box){
 
     //These will be function variables
@@ -17,7 +49,7 @@ void open_files(char *name_file, PointW3D **data, int *pts, float *size_box){
     char *full_path;
     full_path = calloc(strlen(mypathto_files)+strlen(name_file)+1, sizeof(char));
 
-    //CHECKALLOC(full_path);
+    CHECKALLOC(full_path);
 
     strcpy(full_path, mypathto_files);
     strcat(full_path, name_file); //Set up the full path
@@ -89,14 +121,14 @@ void open_files(char *name_file, PointW3D **data, int *pts, float *size_box){
     free(full_path);
 }
 
-void open_pip_files(int32_t **pips, char *name_file, int pts, int *n_pips){
+void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips){
 
     //These will be function variables
     char mypathto_files[] = "../data/";
     char *full_path;
 
     full_path = calloc(strlen(mypathto_files)+strlen(name_file)+1, sizeof(char));
-    //CHECKALLOC(full_path);
+    CHECKALLOC(full_path);
     strcpy(full_path, mypathto_files);
     strcat(full_path, name_file); //Set up the full path
     
@@ -148,15 +180,15 @@ void open_pip_files(int32_t **pips, char *name_file, int pts, int *n_pips){
     }
 
     rewind(file);
-    *pips = calloc( pts * (*n_pips), sizeof(int32_t) );
+    *pips = calloc( np * (*n_pips), sizeof(int32_t) );
 
-    //CHECKALLOC(*pips);
+    CHECKALLOC(*pips);
 
-    for (int i = 0; i < pts; i++)
+    for (int i = 0; i < np; i++)
     {
-        if (getline(&line, &len, file) == -1) 
+        if (getline(&line, &len, file) == -1)
         {
-            fprintf(stderr, "The pip file at %s has less points than the data file, it must have at leas the same number of entries.\n", full_path);
+            fprintf(stderr, "Number of pips entries and number of coordinated points does not match %s has %i while the coordinates file has %i. \n ", full_path, i, np);
             exit(1);
         }
         number = strtok(line, " ");
@@ -244,7 +276,7 @@ void save_histogram1D(char *name, int bns, double *histo, int nhistos){
     char mypathto_files[] = "../results/";
     char *full_path = calloc(strlen(mypathto_files)+strlen(name)+1, sizeof(char));
 
-    //CHECKALLOC(full_path);
+    CHECKALLOC(full_path);
 
     strcpy(full_path, mypathto_files);
     strcat(full_path, name); //Set up the full path
@@ -271,7 +303,7 @@ void save_histogram2D(char *name, int bns, double *histo, int nhistos){
     char mypathto_files[] = "../results/";
     char *full_path = calloc(strlen(mypathto_files)+strlen(name)+1, sizeof(char));
 
-    //CHECKALLOC(full_path);
+    CHECKALLOC(full_path);
 
     strcpy(full_path, mypathto_files);
     strcat(full_path, name); //Set up the full path
@@ -305,7 +337,7 @@ void save_histogram3D(char *name, int bns, double *histo, int nhistos){
     char mypathto_files[] = "../results/";
     char *full_path = calloc(strlen(mypathto_files)+strlen(name)+1, sizeof(char));
 
-    //CHECKALLOC(full_path);
+    CHECKALLOC(full_path);
 
     strcpy(full_path, mypathto_files);
     strcat(full_path, name); //Set up the full path
@@ -342,7 +374,7 @@ void save_histogram5D(char *name, int bns, double *histo, int nhistos){
     char mypathto_files[] = "../results/";
     char *full_path = calloc(strlen(mypathto_files)+strlen(name)+1, sizeof(char));
 
-    //CHECKALLOC(full_path);
+    CHECKALLOC(full_path);
 
     strcpy(full_path, mypathto_files);
     strcat(full_path, name); //Set up the full path
