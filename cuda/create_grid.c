@@ -92,13 +92,35 @@ void open_files(char *name_file, PointW3D **data, int *pts, float *size_box){
 void open_pip_files(int32_t **pips, char *name_file, int pts, int *n_pips){
 
     //These will be function variables
-    char mypathto_files[] = "../data/pip_";
+    char mypathto_files[] = "../data/";
     char *full_path;
 
     full_path = calloc(strlen(mypathto_files)+strlen(name_file)+1, sizeof(char));
     //CHECKALLOC(full_path);
     strcpy(full_path, mypathto_files);
     strcat(full_path, name_file); //Set up the full path
+    
+    //Changes the extension from .* to .pip
+    int last_point = 0, length = strlen(full_path);
+    for (int i = 0; i <= length; i++)
+    {
+        if (full_path[i] == '.') last_point = i;
+        if (full_path[i] == '\0' && last_point == 0) last_point = i;
+    }
+    if (last_point+4 > length)
+    {
+        char *temp = strdup(full_path);
+        free(full_path);
+        full_path = calloc(last_point+4, sizeof(char));
+        for (int i = 0; i <= length; i++) full_path[i] = temp[i];
+        free(temp);
+
+    }
+    full_path[last_point] = '.';
+    full_path[last_point+1] = 'p';
+    full_path[last_point+2] = 'i';
+    full_path[last_point+3] = 'p';
+    full_path[last_point+4] = '\0';
 
     FILE *file;
     file = fopen(full_path,"r"); //Open the file
@@ -113,7 +135,11 @@ void open_pip_files(int32_t **pips, char *name_file, int pts, int *n_pips){
     
     //Get the number of columns
     *n_pips=0;
-    if (getline(&line, &len, file) == -1) fprintf(stderr, "Recived empty file at %s \n", full_path);
+    if (getline(&line, &len, file) == -1)
+    {
+        fprintf(stderr, "Recived empty file at %s \n", full_path);
+        exit(1);
+    }
     number = strtok(line, " ");
     while (number != NULL)
     {
@@ -128,7 +154,11 @@ void open_pip_files(int32_t **pips, char *name_file, int pts, int *n_pips){
 
     for (int i = 0; i < pts; i++)
     {
-        if (getline(&line, &len, file) == -1) fprintf(stderr, "The pip file at %s has less points than the data file, it must have at leas the same number of entries.\n", full_path);
+        if (getline(&line, &len, file) == -1) 
+        {
+            fprintf(stderr, "The pip file at %s has less points than the data file, it must have at leas the same number of entries.\n", full_path);
+            exit(1);
+        }
         number = strtok(line, " ");
         while (number != NULL)
         {

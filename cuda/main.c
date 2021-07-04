@@ -232,7 +232,15 @@ int main(int argc, char **argv)
                 {
                     n_randfiles = 0;
                     struct dirent *archivo;
-                    while( (archivo=readdir(folder)) ) if (strcmp(archivo->d_name,".") != 0 && strcmp(archivo->d_name,"..") != 0) n_randfiles++;
+                    while( (archivo=readdir(folder)) )
+                        if (strcmp(archivo->d_name,".") != 0 && strcmp(archivo->d_name,"..") != 0)
+                            if (strcmp(&(archivo->d_name)[strlen((archivo->d_name))-4],".pip") != 0) n_randfiles++;
+
+                    if (!n_randfiles)
+                    {
+                        fprintf(stderr, "There are no suitable files in %s \n", directory_path);
+                        exit(1);
+                    }
 
                     //Reset the folder stream to actually read the files
                     closedir(folder);
@@ -249,17 +257,16 @@ int main(int argc, char **argv)
                     while( (archivo=readdir(folder)) )
                     {
                         nombre_archivo = archivo->d_name;
-                        if (strcmp(archivo->d_name,".") != 0 && strcmp(archivo->d_name,"..") != 0)
-                        {
-                            histo_names[j+1] = strdup(nombre_archivo);
+                        if (strcmp(nombre_archivo,".") == 0 && strcmp(nombre_archivo,"..") == 0) continue;
+                        if (strcmp(&(nombre_archivo)[strlen((nombre_archivo))-4],".pip") != 0) continue;
+                        histo_names[j+1] = strdup(nombre_archivo);
 
-                            rand_files[j] = malloc((strlen(rand_name)+strlen(nombre_archivo)+1)*sizeof(char));
-                            CHECKALLOC(rand_files[j]);
-                            strcpy(rand_files[j], rand_name);
-                            strcat(rand_files[j], nombre_archivo); //Set up the full path
+                        rand_files[j] = malloc((strlen(rand_name)+strlen(nombre_archivo)+1)*sizeof(char));
+                        CHECKALLOC(rand_files[j]);
+                        strcpy(rand_files[j], rand_name);
+                        strcat(rand_files[j], nombre_archivo); //Set up the full path
 
-                            j++;
-                        }
+                        j++;
                     }
                     closedir(folder);
                     
@@ -302,10 +309,10 @@ int main(int argc, char **argv)
         //Read PIPs if required
         if (pip_calculation)
         {
-            printf("It should read PIPs files \n");
             open_pip_files(&pipsD, data_name, np, &n_pips);
             if (rand_required)
             {
+                printf("Random is required \n");
                 pipsR = calloc(n_randfiles, sizeof(int32_t *));
                 for (int i = 0; i < n_randfiles; i++) 
                 {
@@ -316,13 +323,7 @@ int main(int argc, char **argv)
                         exit(1);
                     }
                 }
-
-                printf("Random is required \n");
             }
-            
-            printf("Last pip in position %i \n", np*n_pips);
-            printf("Last pip is %i \n", pipsD[np*n_pips - 1]);
-            
         }
 
         //Take a random sample
