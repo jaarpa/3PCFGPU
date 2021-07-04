@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 #include "create_grid.h"
 
 /* Complains if it cannot open a file */
@@ -16,6 +17,7 @@
     exit(1);\
 }\
 
+//==================== Files reading ================================
 int get_smallest_file(char **file_names, int n_files)
 {
     size_t len = 0;
@@ -69,50 +71,33 @@ void open_files(char *name_file, PointW3D **data, int *pts, float *size_box){
 
     //Allocate memory for data
     (*data) = calloc((*pts), sizeof(PointW3D));
+    CHECKALLOC(*data);
 
     //Read line by line again
     line = NULL;
     len = 0;
     char *number;
     int j=0;
-    if ((*size_box) > 0) {
-        while (getline(&line, &len, file) != -1) {
 
-            number = strtok(line, " ");
-            (*data + j)->x = atof(number);
+    while (getline(&line, &len, file) != -1) {
 
-            number = strtok(NULL, " ");
-            (*data + j)->y = atof(number);
+        number = strtok(line, " ");
+        (*data + j)->x = atof(number);
+        if ((*data + j)->x > (*size_box)) (*size_box) = (int)(*data + j)->x + 1;
 
-            number = strtok(NULL, " ");
-            (*data + j)->z = atof(number);
+        number = strtok(NULL, " ");
+        (*data + j)->y = atof(number);
+        if ((*data + j)->y > (*size_box)) (*size_box) = (int)(*data + j)->y + 1;
 
-            number = strtok(NULL, " ");
-            (*data + j)->w = atof(number);
+        number = strtok(NULL, " ");
+        (*data + j)->z = atof(number);
+        if ((*data + j)->z > (*size_box)) (*size_box) = (int)(*data + j)->z + 1;
 
-            j++;
-        }
-    } else {
-        while (getline(&line, &len, file) != -1) {
+        number = strtok(NULL, " ");
+        (*data + j)->w = atof(number);
+        if ((*data + j)->w > (*size_box)) (*size_box) = (int)(*data + j)->w + 1;
 
-            number = strtok(line, " ");
-            (*data + j)->x = atof(number);
-            if ((*data + j)->x > (*size_box)) (*size_box) = (int)(*data + j)->x + 1;
-
-            number = strtok(NULL, " ");
-            (*data + j)->y = atof(number);
-            if ((*data + j)->y > (*size_box)) (*size_box) = (int)(*data + j)->y + 1;
-
-            number = strtok(NULL, " ");
-            (*data + j)->z = atof(number);
-            if ((*data + j)->z > (*size_box)) (*size_box) = (int)(*data + j)->z + 1;
-
-            number = strtok(NULL, " ");
-            (*data + j)->w = atof(number);
-            if ((*data + j)->w > (*size_box)) (*size_box) = (int)(*data + j)->w + 1;
-
-            j++;
-        }
+        j++;
     }
     
 
@@ -144,6 +129,7 @@ void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips){
         char *temp = strdup(full_path);
         free(full_path);
         full_path = calloc(last_point+4, sizeof(char));
+        CHECKALLOC(full_path);
         for (int i = 0; i <= length; i++) full_path[i] = temp[i];
         free(temp);
 
@@ -205,7 +191,88 @@ void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips){
     free(full_path);
 }
 
-//=================================================================== 
+//================= Sampling of the data =============================
+void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int pips_width, int sample_size)
+{
+    if ((RAND_MAX - array_length)<100) printf("The array length %i is very close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
+    
+    srand(time(NULL)); // use current time as seed for random generator
+    int i, j, k;
+    int32_t *temp_pip = malloc(pips_width*sizeof(int32_t)), *pip_aux = malloc(sample_size*pips_width*sizeof(int32_t));
+    CHECKALLOC(temp_pip);
+    CHECKALLOC(pip_aux);
+    PointW3D temp_point, *points_aux = malloc(sample_size*sizeof(PointW3D));
+    CHECKALLOC(points_aux);
+    for (i = 0; i < array_length; i++)
+    {
+        j = i + rand() / (RAND_MAX / (array_length - i)+1);
+
+        for (k = 0; k < pips_width; k++)
+        {
+            temp_pip[k] = (*pips)[j*pips_width + k];
+            (*pips)[j*pips_width + k] = (*pips)[i*pips_width + k];
+            (*pips)[i*pips_width + k] = temp_pip[k];
+        }
+
+        //temp_pip = (*pips)[j];
+        //(*pips)[j] = (*pips)[i];
+        //(*pips)[i] = temp_pip;
+
+        temp_point = (*data)[j];
+        (*data)[j] = (*data)[i];
+        (*data)[i] = temp_point;
+    }
+    free(temp_pip);
+
+    for (i = 0; i < sample_size; i++)
+    {
+        for (k = 0; k < pips_width; k++)  pip_aux[i*pips_width + k] = (*pips)[i*pips_width + k];
+        //pip_aux[i] = (*pips)[i];
+        points_aux[i] = (*data)[i];
+    }
+
+    free(*pips);
+    *pips = malloc(sample_size*pips_width*sizeof(int32_t));
+    CHECKALLOC(*pips);
+    memcpy(*pips,pip_aux,sample_size*pips_width*sizeof(int32_t));
+    free(pip_aux);
+
+    free(*data);
+    *data = malloc(sample_size*sizeof(PointW3D));
+    CHECKALLOC(*data);
+    memcpy(*data,points_aux,sample_size*sizeof(PointW3D));
+    free(points_aux);
+}
+
+void random_sample(PointW3D **data, int array_length, int sample_size)
+{
+    if ((RAND_MAX - array_length)<100) printf("The array length %i is very close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
+    
+    srand(time(NULL)); // use current time as seed for random generator
+    int j;
+    PointW3D temp_point, *points_aux = malloc(sample_size*sizeof(PointW3D));
+    CHECKALLOC(points_aux);
+    for (int i = 0; i < array_length; i++)
+    {
+        j = i + rand() / (RAND_MAX / (array_length - i)+1);
+        temp_point = (*data)[j];
+        (*data)[j] = (*data)[i];
+        (*data)[i] = temp_point;
+    }
+
+    for (int i = 0; i < sample_size; i++)
+    {
+        points_aux[i] = (*data)[i];
+    }
+
+    free(*data);
+    *data = malloc(sample_size*sizeof(PointW3D));
+    CHECKALLOC(*data);
+    memcpy(*data,points_aux,sample_size*sizeof(PointW3D));
+    free(points_aux);
+}
+
+//=================== Creating the nodes =============================
 //void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     /*
     This function manages adding points to an specific Node. It receives the previous array, longitude and point to add
@@ -266,7 +333,7 @@ void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips){
     }
 } */
 
-//=================================================================== 
+//================== Saving the histograms ===========================
 void save_histogram1D(char *name, int bns, double *histo, int nhistos){
     /* This function saves a 1 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -293,7 +360,6 @@ void save_histogram1D(char *name, int bns, double *histo, int nhistos){
     free(full_path);
 }
 
-//====================================================================
 void save_histogram2D(char *name, int bns, double *histo, int nhistos){
     /* This function saves a 2 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -327,7 +393,6 @@ void save_histogram2D(char *name, int bns, double *histo, int nhistos){
     free(full_path);
 }
 
-//====================================================================
 void save_histogram3D(char *name, int bns, double *histo, int nhistos){
     /* This function saves a 3 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -364,7 +429,6 @@ void save_histogram3D(char *name, int bns, double *histo, int nhistos){
     free(full_path);
 }
 
-//====================================================================
 void save_histogram5D(char *name, int bns, double *histo, int nhistos){
     /* This function saves a 5 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array

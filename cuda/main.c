@@ -36,8 +36,15 @@ int main(int argc, char **argv)
 {
     /*
     Main function to calculate the correlation function of 2 and 3 points either isotropic or anisotropic. This is the master
-    script which calls the correct function. The file must contain 4 columns, the first 3 
-    are the x,y,z coordinates and the 4 the weight of the measurment.
+    script which calls the correct function, and reads and settles the data. The file must contain 4 columns
+    the first 3 columns in file are the x,y,z coordinates and the 4 the weight of the measurment. Even if pips calculation (-P)
+    will be performed the data file (-f) and random files (-r or -rd) must have 4 columns separated by spaces.
+    
+    The pip files must have a list of int32 integers every integer in row must be separated by spaces and it must have at least the
+    same number of rows as its data counterpart.
+
+    A random sample of the data can be obtained specifying the argument (-n) every file must have at least -n rows, if that is not the case
+    or -n is not specified the sample size is set to the number of rows of the file with less rows.
     */
 
     /* =======================================================================*/
@@ -57,7 +64,7 @@ int main(int argc, char **argv)
     else if (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)
     {
         //Read the parameters from command line
-        int sample_size=0, bins=0, partitions=35, str_len = 0;
+        int sample_size=0, bins=0, partitions=35;
         int bpc = 0, analytic=0, rand_dir = 0, rand_required=0, pip_calculation=0; //Used as bools
         float size_box_provided = 0, dmax=0;
         char *data_name=NULL, *rand_name=NULL;
@@ -76,11 +83,8 @@ int main(int argc, char **argv)
             }
             else if (strcmp(argv[idpar],"-f")==0)
             {
-                str_len = strlen(argv[idpar+1]);
-                if (str_len<100)
-                {
+                if (strlen(argv[idpar+1])<100)
                     data_name = strdup(argv[idpar+1]);
-                }
                 else
                 {
                     fprintf(stderr, "String exceded the maximum length or is not null terminated. \n");
@@ -91,11 +95,8 @@ int main(int argc, char **argv)
             else if (strcmp(argv[idpar],"-r")==0 || strcmp(argv[idpar],"-rd")==0)
             {
                 rand_dir = (strcmp(argv[idpar],"-rd")==0);
-                str_len = strlen(argv[idpar+1]);
-                if (str_len<100)
-                {
+                if (strlen(argv[idpar+1])<100)
                     rand_name = strdup(argv[idpar+1]);
-                }
                 else
                 {
                     fprintf(stderr, "String exceded the maximum length or is not null terminated. \n");
@@ -201,12 +202,11 @@ int main(int argc, char **argv)
         int32_t **pipsR;
         DNode *hnodeR_s, *dnodeR;
         Node ****hnodeR;
-        float r_size_box=0;
         int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR, rnp=0, n_randfiles=1, tot_randnodes=0, n_pipsR=0;
         char **rand_files;
 
         /* =======================================================================*/
-        /* ================== Define and prepare variables =======================*/
+        /* ================== Assign and prepare variables =======================*/
         /* =======================================================================*/
 
         //Read data
@@ -305,52 +305,48 @@ int main(int argc, char **argv)
 
             for (int i=0; i<n_randfiles; i++)
             {
-                open_files(rand_files[i], &dataR[i],&rnp, &r_size_box);
-
-                //Reset box size if not provided and r_size_box > size_box
-                if (r_size_box>size_box) size_box=r_size_box;
+                open_files(rand_files[i], &dataR[i],&rnp, &size_box);
 
                 //Read pips files of random data if required
                 if (pip_calculation)
                 {
-                    open_pip_files(&pipsR[i], rand_files[i], rnp, &n_pipsR);
-                    if (i==0) n_pips = n_pipsR;
+                    open_pip_files(&pipsR[i], rand_files[i], rnp, &n_pipsR); //rnp is used to check that the pip file has at least the same number of points as the data file
+                    
+                    if (i==0) n_pips = n_pipsR; //It has nothing to compare against in the first reading
                     if (n_pips != n_pipsR) 
                     {
-                        fprintf(stderr, "PIPS have different number of columns %s has %i while the previous file had %i\n", rand_files[i], n_pipsR, n_pips);
+                        fprintf(stderr, "PIP files have different number of columns. %s has %i while %s has %i\n", rand_files[i], n_pipsR, rand_files[i-1], n_pips);
                         exit(1);
                     }
-                }
-                
-                //Takes a sample if sample_size != rnp is less than np
-                if (sample_size != rnp) printf("Takes a sample for %s \n", rand_files[i]);
 
+                    //Takes a sample if sample_size != rnp is less than np
+                    if (rnp > sample_size) random_sample_wpips(&dataR[i], &pipsR[i], rnp, n_pipsR, sample_size);
+                } 
+                else if (rnp > sample_size) random_sample(&dataR[i], rnp, sample_size);
             }
         }
 
         //Sets the size_box to the larges either the one found or the provided
-        if (size_box_provided < size_box)
-        {
-            printf("Size box set to %f according to the largest register in provided files. \n", size_box);
-        }
-        else
-        {
-            size_box = size_box_provided;
-        }
+        if (size_box_provided < size_box) printf("Size box set to %f according to the largest register in provided files. \n", size_box);
+        else size_box = size_box_provided;
         
         //Read PIPs if required
-        if (pip_calculation) open_pip_files(&pipsD, data_name, np, &n_pips);
-        if (n_pips != n_pipsR)
+        if (pip_calculation)
         {
-            fprintf(stderr, "Length of data PIPs and random PIPs are not the same. \n Data pips has %i columns but the random pip has %i columns. \n", n_pips, n_pipsR);
-            exit(1);
+            open_pip_files(&pipsD, data_name, np, &n_pips);
+            if (n_pips != n_pipsR && rand_required)
+            {
+                fprintf(stderr, "Length of data PIPs and random PIPs are not the same. \n Data pips has %i columns but the random pip has %i columns. \n", n_pips, n_pipsR);
+                exit(1);
+            }
         }
 
         //Take a random sample from data
         if (sample_size > np) printf("Sample size set to %i according to the file with the least amount of entries \n", np);
         if (sample_size != 0 && sample_size < np)
         {
-            printf("It should take a random sample of data file \n");
+            if (pip_calculation) random_sample_wpips(&dataD, &pipsD, rnp, n_pips, sample_size);
+            else random_sample(&dataD, rnp, sample_size);
             np = sample_size;
         }
 
