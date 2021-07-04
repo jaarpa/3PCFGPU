@@ -3,4 +3,5 @@
 #Ignorando todos los arhivos inecesarios#
 *.out
 *.dat
+*.o
 3PCF.code-workspace
