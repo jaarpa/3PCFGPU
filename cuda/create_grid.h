@@ -89,9 +89,7 @@ Returns:
 */
 int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np);
 
-//void add(PointW3D *array, int *lon, float _x, float _y, float _z, float _w);
-
-//void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np);
+int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, int np);
 
 //================== Saving the histograms ===========================
 void save_histogram1D(char *name, int bns, double *histo, int nhistos);

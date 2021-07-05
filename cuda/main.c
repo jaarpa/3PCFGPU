@@ -191,19 +191,17 @@ int main(int argc, char **argv)
         char **histo_names;
 
         //Declare variables for data.
-        PointW3D *dataD;//, *h_ordered_pointsD, *d_ordered_pointsD;
+        PointW3D *dataD;//, *d_ordered_pointsD;
         int32_t *pipsD;
         DNode *hnodeD_s;//, *dnodeD;
-        //Node ***hnodeD;
-        int n_pips=0; //, last_pointD = 0, nonzero_Dnodes=0, k_element=0, idxD=0;
+        int nonzero_Dnodes, n_pips=0;
         
         //Declare variables for random.
         char **rand_files;
-        PointW3D **dataR;//, *h_ordered_pointsR_s, *d_ordered_pointsR;
+        PointW3D **dataR;// *d_ordered_pointsR;
         int32_t **pipsR;
-        //DNode *hnodeR_s, *dnodeR;
-        //Node ****hnodeR;
-        int rnp=0, n_randfiles=1, n_pipsR=0;//, *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  tot_randnodes=0;
+        DNode **hnodeR_s;//, *dnodeR;
+        int *nonzero_Rnodes, rnp=0, n_randfiles=1, n_pipsR=0;
 
         /* =======================================================================*/
         /* ================== Assign and prepare variables =======================*/
@@ -289,10 +287,6 @@ int main(int argc, char **argv)
             }
 
             dataR = calloc(n_randfiles, sizeof(PointW3D *));
-            //nonzero_Rnodes = calloc(n_randfiles,sizeof(int));
-            //idxR = calloc(n_randfiles,sizeof(int));
-            //last_pointR = calloc(n_randfiles,sizeof(int));
-            //acum_nonzero_Rnodes = calloc(n_randfiles,sizeof(int));
             if (pip_calculation) pipsR = calloc(n_randfiles, sizeof(int32_t *));
 
             rnp = get_smallest_file(rand_files, n_randfiles); // Get the number of lines in the file with less entries
@@ -358,132 +352,29 @@ int main(int argc, char **argv)
         printf("Succesfully readed the data and create samples in %f ms. \n", htime*1000);
 
         //Make the nodes
-        //*nod_s_dest, *dat, (*pips), partitions, size_node, np
-        //(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np);
         if (pip_calculation)
-        {
-            create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
-            printf("First node position (%f, %f, %f)", hnodeD_s[1].nodepos.x, hnodeD_s[1].nodepos.y, hnodeD_s[1].nodepos.z);
-            printf("Make dat nodes with pips\n");
-        }
+            nonzero_Dnodes = create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
         else
-            printf("Make dat nodes without pips\n");
+            nonzero_Dnodes = create_nodes(&hnodeD_s, &dataD, partitions, size_node, np);
 
         if (rand_required)
+        {
+            nonzero_Rnodes = calloc(n_randfiles,sizeof(int));
+            hnodeR_s = malloc(n_randfiles*sizeof(DNode*));
+
             if (pip_calculation)
-                printf("Make random nodes with pips\n");
+                for (int i = 0; i < n_randfiles; i++)
+                    nonzero_Rnodes[i] = create_nodes_wpips(&hnodeR_s[i], &dataR[i], &pipsR[i], n_pips, partitions, size_node, np);
             else
-                printf("Make random nodes without pips\n");
+                for (int i = 0; i < n_randfiles; i++)
+                    nonzero_Rnodes[i] = create_nodes(&hnodeR_s[i], &dataR[i], partitions, size_node, np);
+        }
 
-        //Make nodes
+        stop_timmer_host = clock();
+        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC - htime;
+        printf("Succesfully made the all nodes %f ms. \n", htime*1000);
+
         /*
-        if (rand_required){
-            hnodeR = calloc(n_randfiles, sizeof(Node ***));
-            CHECKALLOC(hnodeR);
-            for (int i=0; i<n_randfiles; i++){
-                hnodeR[i] = calloc(partitions, sizeof(Node **));
-                CHECKALLOC(hnodeR[i]);
-                for (int j=0; j<partitions; j++){
-                    hnodeR[i][j] = calloc(partitions, sizeof(Node *));
-                    CHECKALLOC(hnodeR[i][j]);
-                    for (int k=0; k<partitions; k++){
-                        hnodeR[i][j][k] = calloc(partitions, sizeof(Node));
-                        CHECKALLOC(hnodeR[i][j][k]);
-                    }
-                }
-            }
-        }
-        
-        hnodeD = calloc(partitions, sizeof(Node **));
-        CHECKALLOC(hnodeD);
-        for (int i=0; i<partitions; i++){
-            *(hnodeD+i) = calloc(partitions, sizeof(Node *));
-            CHECKALLOC(hnodeD[i]);
-            for (int j=0; j<partitions; j++){
-                *(*(hnodeD+i)+j) = calloc(partitions, sizeof(Node));
-                CHECKALLOC(hnodeD[i][j]);
-            }
-        }
-
-        //make_nodos(hnodeD, dataD, partitions, size_node, np);
-        if (rand_required){
-            for (int i=0; i<n_randfiles; i++){
-                make_nodos(hnodeR[i], dataR[i], partitions, size_node, np);
-            }
-        };
-
-        //Count nonzero data nodes
-        for(int row=0; row<partitions; row++){
-            for(int col=0; col<partitions; col++){
-                for(int mom=0; mom<partitions; mom++){
-                    if(hnodeD[row][col][mom].len>0)  nonzero_Dnodes+=1;
-
-                    if (rand_required){
-                        for (int i=0; i<n_randfiles; i++){
-                            if(hnodeR[i][row][col][mom].len>0) {
-                                nonzero_Rnodes[i]+=1;
-                                tot_randnodes+=1;
-                            }
-                            
-                        }
-                    }
-
-                }
-            }
-        }
-
-        if (rand_required){
-            for (int i=1; i<n_randfiles; i++){
-                acum_nonzero_Rnodes[i] = acum_nonzero_Rnodes[i-1] + nonzero_Rnodes[i-1];
-            }
-        }
-
-        //Deep copy into linear nodes and an ordered elements array
-        hnodeD_s = new DNode[nonzero_Dnodes];
-        h_ordered_pointsD = new PointW3D[np];
-        if (rand_required){
-            hnodeR_s = new DNode[tot_randnodes];
-            h_ordered_pointsR_s = new PointW3D[n_randfiles*np];
-        }
-
-        for(int row=0; row<partitions; row++){
-            for(int col=0; col<partitions; col++){
-                for(int mom=0; mom<partitions; mom++){
-            
-                    if (hnodeD[row][col][mom].len>0){
-                        hnodeD_s[idxD].nodepos = hnodeD[row][col][mom].nodepos;
-                        hnodeD_s[idxD].start = last_pointD;
-                        hnodeD_s[idxD].len = hnodeD[row][col][mom].len;
-                        last_pointD = last_pointD + hnodeD[row][col][mom].len;
-                        hnodeD_s[idxD].end = last_pointD;
-                        for (int j=hnodeD_s[idxD].start; j<last_pointD; j++){
-                            k_element = j-hnodeD_s[idxD].start;
-                            h_ordered_pointsD[j] = hnodeD[row][col][mom].elements[k_element];
-                        }
-                        idxD++;
-                    }
-
-                    if (rand_required){
-                        for (int i=0; i<n_randfiles; i++){
-                            if (hnodeR[i][row][col][mom].len>0){
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].nodepos = hnodeR[i][row][col][mom].nodepos;
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start = i*np + last_pointR[i];
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].len = hnodeR[i][row][col][mom].len;
-                                last_pointR[i] = last_pointR[i] + hnodeR[i][row][col][mom].len;
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end = i*np + last_pointR[i];
-                                for (int j=hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start; j<hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end; j++){
-                                    k_element = j-hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start;
-                                    h_ordered_pointsR_s[j] = hnodeR[i][row][col][mom].elements[k_element];
-                                }
-                                idxR[i]++;
-                            }
-                        }
-                    }
-
-                }
-            }
-        }
-
         //Allocate and copy the nodes into device memory
         CUCHECK(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
         CUCHECK(cudaMalloc(&d_ordered_pointsD, np*sizeof(PointW3D)));
@@ -503,44 +394,24 @@ int main(int argc, char **argv)
         /* =======================================================================*/
         /* ===================== Free unused host memory =========================*/
         /* =======================================================================*/
-        free(rand_name);
-
-        // for (int i=0; i<partitions; i++){
-        //     for (int j=0; j<partitions; j++){
-        //         free(hnodeD[i][j]);
-        //     }
-        //     free(hnodeD[i]);
-        // }    
-        // free(hnodeD);
-
         free(dataD);
         free(hnodeD_s);
         if (pip_calculation) free(pipsD);
         
-        // free(h_ordered_pointsD);
+        free(rand_name);
         if (rand_required)
         {
             for (int i = 0; i < n_randfiles; i++)
             {
                 free(rand_files[i]);
                 free(dataR[i]);
-                // for (int j=0; j<partitions; j++){
-                //     for (int k=0; k<partitions; k++){
-                //         free(hnodeR[i][j][k]);
-                //     }
-                //     free(hnodeR[i][j]);
-                // }
-                // free(hnodeR[i]);
+                free(hnodeR_s[i]);
                 if (pip_calculation) free(pipsR[i]);
             }
-            printf("Starting to free\n");
             free(rand_files);
             free(dataR);
+            free(hnodeR_s);
             if (pip_calculation) free(pipsR);
-            // free(hnodeR);
-            // free(idxR);
-            // free(last_pointR);
-            // free(hnodeR_s);
             // free(h_ordered_pointsR_s);
         }
 
@@ -596,8 +467,7 @@ int main(int argc, char **argv)
         {
             //CUCHECK(cudaFree(dnodeR));
             //CUCHECK(cudaFree(d_ordered_pointsR));
-            //free(nonzero_Rnodes);
-            //free(acum_nonzero_Rnodes);
+            free(nonzero_Rnodes);
             for (int i = 0; i < n_randfiles + 1; i++) free(histo_names[i]);
             free(histo_names);
         }
