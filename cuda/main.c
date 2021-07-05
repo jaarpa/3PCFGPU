@@ -362,7 +362,8 @@ int main(int argc, char **argv)
         //(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np);
         if (pip_calculation)
         {
-            //create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
+            create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
+            printf("First node position (%f, %f, %f)", hnodeD_s[1].nodepos.x, hnodeD_s[1].nodepos.y, hnodeD_s[1].nodepos.z);
             printf("Make dat nodes with pips\n");
         }
         else
@@ -513,7 +514,7 @@ int main(int argc, char **argv)
         // free(hnodeD);
 
         free(dataD);
-        //free(hnodeD_s);
+        free(hnodeD_s);
         if (pip_calculation) free(pipsD);
         
         // free(h_ordered_pointsD);
