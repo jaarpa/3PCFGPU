@@ -194,15 +194,13 @@ void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips){
 //================= Sampling of the data =============================
 void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int pips_width, int sample_size)
 {
-    if ((RAND_MAX - array_length)<100) printf("The array length %i is very close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
+    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
     
     srand(time(NULL)); // use current time as seed for random generator
     int i, j, k;
-    int32_t *temp_pip = malloc(pips_width*sizeof(int32_t)), *pip_aux = malloc(sample_size*pips_width*sizeof(int32_t));
+    int32_t *temp_pip = malloc(pips_width*sizeof(int32_t));
     CHECKALLOC(temp_pip);
-    CHECKALLOC(pip_aux);
-    PointW3D temp_point, *points_aux = malloc(sample_size*sizeof(PointW3D));
-    CHECKALLOC(points_aux);
+    PointW3D temp_point;
     for (i = 0; i < array_length; i++)
     {
         j = i + rand() / (RAND_MAX / (array_length - i)+1);
@@ -213,45 +211,25 @@ void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int 
             (*pips)[j*pips_width + k] = (*pips)[i*pips_width + k];
             (*pips)[i*pips_width + k] = temp_pip[k];
         }
-
-        //temp_pip = (*pips)[j];
-        //(*pips)[j] = (*pips)[i];
-        //(*pips)[i] = temp_pip;
-
         temp_point = (*data)[j];
         (*data)[j] = (*data)[i];
         (*data)[i] = temp_point;
     }
     free(temp_pip);
 
-    for (i = 0; i < sample_size; i++)
-    {
-        for (k = 0; k < pips_width; k++)  pip_aux[i*pips_width + k] = (*pips)[i*pips_width + k];
-        //pip_aux[i] = (*pips)[i];
-        points_aux[i] = (*data)[i];
-    }
-
-    free(*pips);
-    *pips = malloc(sample_size*pips_width*sizeof(int32_t));
+    *pips = realloc(*pips, sample_size*pips_width*sizeof(int32_t));
     CHECKALLOC(*pips);
-    memcpy(*pips,pip_aux,sample_size*pips_width*sizeof(int32_t));
-    free(pip_aux);
-
-    free(*data);
-    *data = malloc(sample_size*sizeof(PointW3D));
+    *data = realloc(*data, sample_size*sizeof(PointW3D));
     CHECKALLOC(*data);
-    memcpy(*data,points_aux,sample_size*sizeof(PointW3D));
-    free(points_aux);
 }
 
 void random_sample(PointW3D **data, int array_length, int sample_size)
 {
-    if ((RAND_MAX - array_length)<100) printf("The array length %i is very close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
+    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
     
     srand(time(NULL)); // use current time as seed for random generator
     int j;
-    PointW3D temp_point, *points_aux = malloc(sample_size*sizeof(PointW3D));
-    CHECKALLOC(points_aux);
+    PointW3D temp_point;
     for (int i = 0; i < array_length; i++)
     {
         j = i + rand() / (RAND_MAX / (array_length - i)+1);
@@ -260,19 +238,130 @@ void random_sample(PointW3D **data, int array_length, int sample_size)
         (*data)[i] = temp_point;
     }
 
-    for (int i = 0; i < sample_size; i++)
-    {
-        points_aux[i] = (*data)[i];
-    }
-
-    free(*data);
-    *data = malloc(sample_size*sizeof(PointW3D));
+    *data = realloc(*data, sample_size*sizeof(PointW3D));
     CHECKALLOC(*data);
-    memcpy(*data,points_aux,sample_size*sizeof(PointW3D));
-    free(points_aux);
 }
 
 //=================== Creating the nodes =============================
+int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np)
+{
+    int row, col, mom, idx, non_zero_idx, len, non_zero_nodes;
+    Node *hnode = calloc(partitions*partitions*partitions, sizeof(Node));
+
+    // First allocate memory as an empty node:
+    for (row=0; row<partitions; row++){
+        for (col=0; col<partitions; col++){
+            for (mom=0; mom<partitions; mom++){
+                idx = row*partitions*partitions + col*partitions + mom;
+                hnode[idx].nodepos.z = ((float)(mom)*(size_node));
+                hnode[idx].nodepos.y = ((float)(col)*(size_node));
+                hnode[idx].nodepos.x = ((float)(row)*(size_node));
+                hnode[idx].len = 0;
+                hnode[idx].elements = calloc(0,sizeof(PointW3D));
+                hnode[idx].pips = calloc(0,sizeof(int32_t));
+            }
+        }
+    }
+
+    // Classificate the ith elment of the data into a node and add that point to the node with the add function:
+    for (int i=0; i<np; i++){
+        row = (int)((*dat)[i].x/size_node);
+        col = (int)((*dat)[i].y/size_node);
+        mom = (int)((*dat)[i].z/size_node);
+        idx = row*partitions*partitions + col*partitions + mom;
+        len = ++hnode[idx].len;
+        hnode[idx].elements = realloc(hnode[idx].elements, len*sizeof(PointW3D));
+        hnode[idx].elements[len-1] = (*dat)[i];
+        hnode[idx].pips = realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
+        for (int j = 0; j < pips_width; j++)
+            hnode[idx].pips[len - 1 + j] = (*pips)[i * pips_width + j];
+    }
+
+    printf("size_node=%f \n", size_node);
+    //Check the original nodes
+    row = 7, col = 3, mom = 10;
+    idx = row*partitions*partitions + col*partitions + mom;
+    // while (hnode[idx].len == 0)
+    // {
+    //     row++, col++, mom++;
+    //     if (row == partitions || col == partitions || mom == partitions) row=0;
+    //     idx = row*partitions*partitions + col*partitions + mom;
+    // }
+    printf(
+        "Node %i, %i, %i has an idx of %i \n"
+        "a length of %i and position of (%f, %f, %f)\n"
+        "The first 3 elements are:\n",
+        row, col, mom, idx, hnode[idx].len, 
+        hnode[idx].nodepos.x, hnode[idx].nodepos.y, hnode[idx].nodepos.z
+        );
+    if (hnode[idx].len < 3) len = hnode[idx].len;
+    else len = 3;
+    for (int i = 0; i < len; i++)
+    {
+        printf("(%f, %f, %f, %f)\n", hnode[idx].elements[i].x, hnode[idx].elements[i].y, hnode[idx].elements[i].z, hnode[idx].elements[i].w);
+        for (int j = 0; j < pips_width; j++) printf("%i ", hnode[idx].pips[i*pips_width +j]);
+        printf("\n");
+    }
+    printf("\n");
+    row = 21, col = 3, mom = 9;
+    idx = row*partitions*partitions + col*partitions + mom;
+    while (hnode[idx].len == 0)
+    {
+        row++, col++, mom++;
+        if (row == partitions || col == partitions || mom == partitions) row=0;
+        idx = row*partitions*partitions + col*partitions + mom;
+    }
+    
+    printf(
+        "Node %i, %i, %i has an idx of %i \n"
+        "a length of %i and position of (%f, %f, %f)\n"
+        "The first 3 elements are:\n",
+        row, col, mom, idx, hnode[idx].len,
+        hnode[idx].nodepos.x, hnode[idx].nodepos.y, hnode[idx].nodepos.z
+        );
+    if (hnode[idx].len < 3) len = hnode[idx].len;
+    else len = 3;
+    for (int i = 0; i < len; i++)
+    {
+        printf("(%f, %f, %f, %f)\n", hnode[idx].elements[i].x, hnode[idx].elements[i].y, hnode[idx].elements[i].z, hnode[idx].elements[i].w);
+        for (int j = 0; j < pips_width; j++) printf("%i ", hnode[idx].pips[i*pips_width +j]);
+        printf("\n");
+    }
+    printf("\n");
+
+
+    //Counts non zero nodes
+    non_zero_nodes = 0;
+    for (idx = 0; idx<partitions*partitions*partitions; idx++) 
+        if (hnode[idx].len > 0)
+            non_zero_nodes++;
+
+    *nod = malloc(non_zero_nodes*sizeof(DNode));
+    idx = -1, non_zero_idx = 0, len = 0; //len is no the accumulated length of all the previous idx nodes
+    while (len < np)
+    {
+        idx++;
+        if (hnode[idx].len <= 0) continue;
+        (*nod)[non_zero_idx].nodepos = hnode[idx].nodepos;
+        (*nod)[non_zero_idx].len = hnode[idx].len;
+        (*nod)[non_zero_idx].start = len;
+        for (int i = 0; i < hnode[idx].len; i++)
+        {
+            (*dat)[len + i] = hnode[idx].elements[i];
+            for (int j = 0; j < pips_width; j++)
+                (*pips)[(len + 1)*pips_width + j] = hnode[idx].pips[i*pips_width + j];
+        }
+        len += hnode[idx].len;
+        (*nod)[non_zero_idx].end = len;
+        non_zero_idx++;
+    }
+
+    free(hnode);
+
+    return non_zero_nodes;    
+
+}
+
 //void add(PointW3D *&array, int &lon, float _x, float _y, float _z, float _w){
     /*
     This function manages adding points to an specific Node. It receives the previous array, longitude and point to add

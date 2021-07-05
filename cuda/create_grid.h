@@ -21,6 +21,7 @@ typedef struct {
     Point3D nodepos; //Position of the node
     int len;		// Number of points in the node
     PointW3D *elements;	// Points in the node
+    int32_t *pips; //Pips of the node
 } Node;
 
 typedef struct { //Defines the node in the device without using elements to avoid deep copy
@@ -72,6 +73,22 @@ void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int 
 void random_sample(PointW3D **data, int array_length, int sample_size);
 
 //=================== Creating the nodes =============================
+/*
+This function classifies the data into nodes
+
+Args:
+    nod: Node 3D array where the data will be classified
+    dat: array of PointW3D data to be classified and stored in the nodes
+    partitions: number nodes in each direction
+    size_node: dimensions of a single node
+    np: number of points in the dat array
+
+Returns:
+    None. But creates the dnodes in nod_s_dest, and orders the points in dat and pips
+
+*/
+int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np);
+
 //void add(PointW3D *array, int *lon, float _x, float _y, float _z, float _w);
 
 //void make_nodos(Node ***nod, PointW3D *dat, unsigned int partitions, float size_node, unsigned int np);
