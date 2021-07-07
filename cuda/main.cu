@@ -1,117 +1,167 @@
-
-/*
-Esta funcion lee los datos y crea el grid de nodos y luego llama a la función correspondiente 
-para crear y guardar los histogramas correspondientes.
-
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -f data.dat -rd test/ -n 5000 -b 20 -d 150 
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -bpc -f data.dat -r rand0.dat -n 32768 -b 20 -d 150 -s 250
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2iso -bpc -a -f data.dat -n 32768 -b 20 -d 150 -s 250
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -f data.dat -r rand0.dat -n 32768 -b 20 -d 150
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 2ani -bpc -f data.dat -r rand0.dat -n 32768 -b 20 -d 150 -s 250
-
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -f data.dat -r rand0.dat -n 10000 -b 30 -d 50
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -bpc -f data.dat -r rand0.dat -n 5000 -b 30 -d 60 -s 250
-nvcc -arch=sm_75 main.cu -o PCF.out && ./PCF.out 3iso -bpc -a -f data.dat -n 5000 -b 30 -d 60 -s 250
-*/
-
-#include <stdio.h>
-#include <time.h>
-#include <string>
-#include <dirent.h>
-
-/** CUDA check macro */
-#define cucheck(call){\
-    cudaError_t res = (call);\
-    if(res != cudaSuccess) {\
-        const char* err_str = cudaGetErrorString(res);\
-        fprintf(stderr, "%s (%d): %s in %s \n", __FILE__, __LINE__, err_str, #call);\
-        exit(-1);\
-    }\
+/* Complains if it cannot allocate the array */
+#define CHECKALLOC(p)  if(p == NULL) {\
+    fprintf(stderr, "%s (line %d): Error - unable to allocate required memory \n", __FILE__, __LINE__);\
+    exit(1);\
 }\
 
-#include "PCF_help.cuh"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <dirent.h>
+#include <string.h>
+#include <time.h>
+
+#include "help.cuh"
 #include "create_grid.cuh"
-#include "pcf2ani.cuh"
-#include "pcf2aniBPC.cuh"
-#include "pcf2iso.cuh"
-#include "pcf2isoBPC.cuh"
-#include "pcf3iso.cuh"
-#include "pcf3isoBPC.cuh"
-#include "pcf3ani.cuh"
-#include "pcf3aniBPC.cuh"
+//#include "pcf2ani.cuh"
+//#include "pcf2aniBPC.cuh"
+//#include "pcf2iso.cuh"
+//#include "pcf2isoBPC.cuh"
+//#include "pcf3iso.cuh"
+//#include "pcf3isoBPC.cuh"
+//#include "pcf3ani.cuh"
+//#include "pcf3aniBPC.cuh"
 
-using namespace std;
-
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
     /*
     Main function to calculate the correlation function of 2 and 3 points either isotropic or anisotropic. This is the master
-    script which calls the correct function. The file must contain 4 columns, the first 3 
-    are the x,y,z coordinates and the 4 the weigh of the measurment.
+    script which calls the correct function, and reads and settles the data. The file must contain 4 columns
+    the first 3 columns in file are the x,y,z coordinates and the 4 the weight of the measurment. Even if pips calculation (-P)
+    will be performed the data file (-f) and random files (-r or -rd) must have 4 columns separated by spaces.
+    
+    The pip files must have a list of int32 integers every integer in row must be separated by spaces and it must have at least the
+    same number of rows as its data counterpart.
+
+    A random sample of the data can be obtained specifying the argument (-n) every file must have at least -n rows, if that is not the case
+    or -n is not specified the sample size is set to the number of rows of the file with less rows.
     */
 
     /* =======================================================================*/
     /* ===================  Read command line args ===========================*/
     /* =======================================================================*/
 
-    if(argc == 2 && (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0)){
+    if (argc <= 6)
+    {
         show_help();
         return 0;
-    } else if (argc >= 8 && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)) {
-
+    } 
+    else if (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0)
+    {
+        show_help();
+        return 0;
+    }
+    else if (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"3ani")==0 || strcmp(argv[1],"2iso")==0 || strcmp(argv[1],"2ani")==0)
+    {
         //Read the parameters from command line
-        int np=0, bn=0, partitions=35;
-        bool bpc = false, analytic=false, rand_dir = false, size_box_provided=false, rand_required=false;
-        float size_box = 0, dmax=0;
-        string data_name, rand_name="";
-        for (int idpar=2; idpar<argc; idpar++){     
+        int sample_size=0, bins=0, partitions=35;
+        int bpc = 0, analytic=0, rand_dir = 0, rand_required=0, pip_calculation=0; //Used as bools
+        float size_box_provided = 0, dmax=0;
+        char *data_name=NULL, *rand_name=NULL;
+        for (int idpar=2; idpar<argc; idpar++)
+        {
             
-            if (strcmp(argv[idpar],"-n")==0){
-                np = stoi(argv[idpar+1]);
+            if (strcmp(argv[idpar],"-n")==0)
+            {
+                sample_size = atoi(argv[idpar+1]);
                 idpar++;
-            } else if (strcmp(argv[idpar],"-f")==0){
-                data_name = argv[idpar+1];
-                idpar++;
-            } else if (strcmp(argv[idpar],"-r")==0 || strcmp(argv[idpar],"-rd")==0){
-                rand_dir = (strcmp(argv[idpar],"-rd")==0);
-                rand_name = argv[idpar+1];
-                idpar++;
-            } else if (strcmp(argv[idpar],"-b")==0){
-                bn = stoi(argv[idpar+1]);
-                idpar++;
-            } else if (strcmp(argv[idpar],"-d")==0){
-                dmax = stof(argv[idpar+1]);
-                idpar++;
-            } else if (strcmp(argv[idpar],"-bpc")==0){
-                bpc = true;
-            } else if (strcmp(argv[idpar],"-a")==0){
-                analytic = true;
-            } else if (strcmp(argv[idpar],"-p")==0){
-                partitions = stof(argv[idpar+1]);
-                idpar++;
-            } else if (strcmp(argv[idpar],"-s")==0){
-                size_box = stof(argv[idpar+1]);
-                size_box_provided = true;
+                if (sample_size < 0)
+                {
+                    fprintf(stderr, "Invalid sample size (-n). Sample size must be larger than 0. \n");
+                    exit(1);
+                }
+            }
+            else if (strcmp(argv[idpar],"-f")==0)
+            {
+                if (strlen(argv[idpar+1])<100)
+                    data_name = strdup(argv[idpar+1]);
+                else
+                {
+                    fprintf(stderr, "String exceded the maximum length or is not null terminated. \n");
+                    exit(1);
+                }
                 idpar++;
             }
+            else if (strcmp(argv[idpar],"-r")==0 || strcmp(argv[idpar],"-rd")==0)
+            {
+                rand_dir = (strcmp(argv[idpar],"-rd")==0);
+                if (strlen(argv[idpar+1])<100)
+                    rand_name = strdup(argv[idpar+1]);
+                else
+                {
+                    fprintf(stderr, "String exceded the maximum length or is not null terminated. \n");
+                    exit(1);
+                }
+                idpar++;
+            }
+            else if (strcmp(argv[idpar],"-b")==0)
+            {
+                bins = atoi(argv[idpar+1]);
+                idpar++;
+                if (bins <= 0)
+                {
+                    fprintf(stderr, "Invalid number of bins (-b). The number of bins must be larger than 0. \n");
+                    exit(1);
+                }
+            }
+            else if (strcmp(argv[idpar],"-d")==0)
+            {
+                dmax = atof(argv[idpar+1]);
+                idpar++;
+                if (dmax <= 0)
+                {
+                    fprintf(stderr, "Invalid maximum distance (-d). The maximum distance must be larger than 0. \n");
+                    exit(1);
+                }
+            }
+            else if (strcmp(argv[idpar],"-bpc")==0) bpc = 1;
+            else if (strcmp(argv[idpar],"-a")==0) analytic = 1;
+            else if (strcmp(argv[idpar],"-p")==0)
+            {
+                partitions = atof(argv[idpar+1]);
+                idpar++;
+                if (partitions <= 0)
+                {
+                    fprintf(stderr, "Invalid number partitions (-p). The number of partitions must be larger than 0. \n");
+                    exit(1);
+                }
+            }
+            else if (strcmp(argv[idpar],"-sb")==0)
+            {
+                size_box_provided = atof(argv[idpar+1]);
+                idpar++;
+                if (size_box_provided < 0)
+                {
+                    fprintf(stderr, "Invalid size box (-sb). Size box must be larger than 0. \n");
+                    exit(1);
+                }
+            }
+            else if (strcmp(argv[idpar],"-P")==0) pip_calculation = 1;
+        }
 
-        }
         //Figure out if something very necessary is missing
-        if (np==0){
-            cout << "Missing number of points argument." << endl;
+        if (data_name==NULL)
+        {
+            fprintf(stderr, "Missing data file (-f). \n");
             exit(1);
         }
-        if (bn==0){
-            cout << "Missing number of bins argument." << endl;
+        if (bins==0)
+        {
+            fprintf(stderr, "Missing number of --bins (-b) argument. \n");
             exit(1);
         }
-        if (dmax==0){
-            cout << "Missing maximum distance argument." << endl;
+        if (dmax==0)
+        {
+            fprintf(stderr, "Missing maximum distance (-d) argument. \n");
             exit(1);
         }
-        if (!(bpc && analytic && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"2iso")==0))){
-            rand_required=true;
-            if (rand_name==""){
-                cout << "Missing random file(s) location." << endl;
+        if (!(bpc && analytic && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"2iso")==0)))
+        {
+            //If it is not any of the analytic options
+            rand_required=1; //Then a random file/directory is required
+            if (rand_name==NULL)
+            {
+                fprintf(stderr, "Missing random file(s) location (-r or -rd). \n");
                 exit(1);
             }
         }
@@ -124,305 +174,235 @@ int main(int argc, char **argv){
         /* =======================================================================*/
 
         clock_t stop_timmer_host, start_timmer_host;
-        start_timmer_host = clock();
+        start_timmer_host = clock(); //To check time setting up data
         
-        //Declare variables for data.
-        DNode *hnodeD_s, *dnodeD;
-        PointW3D *dataD, *h_ordered_pointsD, *d_ordered_pointsD;
-        Node ***hnodeD;
-        int nonzero_Dnodes=0, k_element=0, idxD=0, last_pointD = 0;
-        float size_node, htime;
+        float size_node, htime, size_box=0;
+        int npips=0, np = 0, minimum_number_lines;
+        char **histo_names;
 
+        //Declare variables for data.
+        PointW3D *dataD, *d_dataD;
+        int32_t *pipsD, *dpipsD;
+        DNode *hnodeD_s, *dnodeD;
+        int nonzero_Dnodes, n_pips=0;
+        
         //Declare variables for random.
-        DNode *hnodeR_s, *dnodeR;
-        PointW3D **dataR, *h_ordered_pointsR_s, *d_ordered_pointsR;
-        Node ****hnodeR;
-        float r_size_box=0;
-        int *nonzero_Rnodes, *acum_nonzero_Rnodes, *idxR, *last_pointR,  n_randfiles=1, tot_randnodes=0;
-        string *histo_names, *rand_files;
+        char **rand_files;
+        PointW3D **dataR, *d_dataR;
+        int32_t **pipsR, *dpipsR;
+        DNode **hnodeR_s, *dnodeR;
+        int *nonzero_Rnodes, tot_nonzero_Rnodes=0, rnp=0, n_randfiles=1, n_pipsR=0;
 
         /* =======================================================================*/
-        /* ================== Define and prepare variables =======================*/
+        /* ================== Assign and prepare variables =======================*/
         /* =======================================================================*/
 
         //Read data
-        dataD = new PointW3D[np];
-        open_files(data_name, np, dataD, size_box);
+        open_files(data_name, &dataD, &np, &size_box);
         
         //Read rand only if rand was required.
-        if (rand_required){
+        if (rand_required)
+        {
 
             //Check if a directory of random files was provided to change n_randfiles
             //Instead of rand name should be an array with the name of each rand array or something like that.
-            if (rand_dir){
-                string ruta_carpeta=rand_name;
-                ruta_carpeta.insert(0,"../data/");
-                if(DIR *folder = opendir(ruta_carpeta.c_str())){
+            if (rand_dir)
+            {
+                char *directory_path = (char*)malloc((9+strlen(rand_name))*sizeof(char));
+                CHECKALLOC(directory_path);
+                char data_path[] = "../data/";
+                strcpy(directory_path, data_path);
+                strcat(directory_path, rand_name); //Set up the full path
+                DIR *folder = opendir(directory_path);
 
+                if(folder != NULL)
+                {
                     n_randfiles = 0;
-                    string nombre_archivo;
-                    while(dirent *archivos = readdir(folder)){
-                        nombre_archivo = archivos->d_name;
-                        if( nombre_archivo != "." && nombre_archivo != ".." ) n_randfiles++;
-                    }
-                    closedir(folder);
-                    folder = opendir(ruta_carpeta.c_str());
+                    struct dirent *archivo;
+                    while( (archivo=readdir(folder)) )
+                        if (strcmp(archivo->d_name,".") != 0 && strcmp(archivo->d_name,"..") != 0)
+                            if (strcmp(&(archivo->d_name)[strlen((archivo->d_name))-4],".pip") != 0) n_randfiles++;
 
-                    rand_files = new string[n_randfiles];
-                    histo_names = new string[n_randfiles+1];
-                    histo_names[0] = data_name;
+                    if (!n_randfiles)
+                    {
+                        fprintf(stderr, "There are no suitable files in %s \n", directory_path);
+                        exit(1);
+                    }
+
+                    //Reset the folder stream to actually read the files
+                    closedir(folder);
+                    folder = opendir(directory_path);
+
+                    rand_files = (char **)malloc(n_randfiles * sizeof(char *));
+                    CHECKALLOC(rand_files);
+                    histo_names = (char **)malloc((1 + n_randfiles) * sizeof(char *));
+                    CHECKALLOC(histo_names);
+                    histo_names[0] = strdup(data_name);
+
                     int j = 0;
-                    while(dirent *archivos = readdir(folder)){
-                        nombre_archivo = archivos->d_name;
-                        if( nombre_archivo != "." && nombre_archivo != ".." ) {
-                            histo_names[j+1] = nombre_archivo;
-                            nombre_archivo.insert(0,rand_name);
-                            rand_files[j] = nombre_archivo;
-                            j++;
-                        }
+                    char *nombre_archivo;
+                    while( (archivo=readdir(folder)) )
+                    {
+                        nombre_archivo = archivo->d_name;
+                        if (strcmp(nombre_archivo,".") == 0 || strcmp(nombre_archivo,"..") == 0) continue;
+                        if (strcmp(&(nombre_archivo)[strlen((nombre_archivo))-4],".pip") == 0) continue;
+                        histo_names[j+1] = strdup(nombre_archivo);
+
+                        rand_files[j] = (char*)malloc((strlen(rand_name)+strlen(nombre_archivo)+1)*sizeof(char));
+                        CHECKALLOC(rand_files[j]);
+                        strcpy(rand_files[j], rand_name);
+                        strcat(rand_files[j], nombre_archivo); //Set up the full path
+
+                        j++;
                     }
                     closedir(folder);
+                    
                 }
-            } else {
-                rand_files = new string[1];
-                rand_files[0] = rand_name;
-                histo_names = new string[2];
-                histo_names[0] = data_name;
-                histo_names[1] = rand_name;
+                else
+                {
+                    fprintf(stderr, "Unable to open directory %s \n", directory_path);
+                    exit(1);
+                }
+                free(directory_path);
             }
-            
-            dataR = new PointW3D*[n_randfiles];
-            nonzero_Rnodes = new int[n_randfiles];
-            idxR = new int[n_randfiles];
-            last_pointR = new int[n_randfiles];
-            acum_nonzero_Rnodes = new int[n_randfiles];
-            for (int i=0; i<n_randfiles; i++){
-                nonzero_Rnodes[i] = 0;
-                idxR[i] = 0;
-                last_pointR[i] = 0;
-                acum_nonzero_Rnodes[i] = 0;
-                dataR[i] = new PointW3D[np];
-                open_files(rand_files[i], np, dataR[i], r_size_box);
-                
-                //Set box size
-                if (!size_box_provided){
-                    if (r_size_box>size_box) size_box=r_size_box;
-                }
+            else
+            {
+                rand_files = (char**)malloc(n_randfiles * sizeof(char *));
+                CHECKALLOC(rand_files);
+                rand_files[0] = strdup(rand_name);
+                histo_names = (char**)malloc((1 + n_randfiles) * sizeof(char *));
+                CHECKALLOC(histo_names);
+                histo_names[0] = strdup(data_name);
+                histo_names[1] = strdup(rand_name);
             }
 
+            dataR = (PointW3D**)calloc(n_randfiles, sizeof(PointW3D *));
+            if (pip_calculation) pipsR = (int32_t**)calloc(n_randfiles, sizeof(int32_t *));
+
+            rnp = get_smallest_file(rand_files, n_randfiles); // Get the number of lines in the file with less entries
+            minimum_number_lines = rnp<np ? rnp : np;
+            if (sample_size == 0 || sample_size>minimum_number_lines)
+            {
+                sample_size = minimum_number_lines;
+                printf("Sample size set to %i according to the file with the least amount of entries \n", sample_size);
+            }
+
+            for (int i=0; i<n_randfiles; i++)
+            {
+                open_files(rand_files[i], &dataR[i],&rnp, &size_box);
+
+                //Read pips files of random data if required
+                if (pip_calculation)
+                {
+                    open_pip_files(&pipsR[i], rand_files[i], rnp, &n_pipsR); //rnp is used to check that the pip file has at least the same number of points as the data file
+                    
+                    if (i==0) n_pips = n_pipsR; //It has nothing to compare against in the first reading
+                    if (n_pips != n_pipsR) 
+                    {
+                        fprintf(stderr, "PIP files have different number of columns. %s has %i while %s has %i\n", rand_files[i], n_pipsR, rand_files[i-1], n_pips);
+                        exit(1);
+                    }
+
+                    //Takes a sample if sample_size != rnp is less than np
+                    if (rnp > sample_size) random_sample_wpips(&dataR[i], &pipsR[i], rnp, n_pipsR, sample_size);
+                } 
+                else if (rnp > sample_size) random_sample(&dataR[i], rnp, sample_size);
+            }
+        }
+
+        //Sets the size_box to the larges either the one found or the provided
+        if (size_box_provided < size_box) printf("Size box set to %f according to the largest register in provided files. \n", size_box);
+        else size_box = size_box_provided;
+        
+        //Read PIPs if required
+        if (pip_calculation)
+        {
+            open_pip_files(&pipsD, data_name, np, &n_pips);
+            if (n_pips != n_pipsR && rand_required)
+            {
+                fprintf(stderr, "Length of data PIPs and random PIPs are not the same. \n Data pips has %i columns but the random pip has %i columns. \n", n_pips, n_pipsR);
+                exit(1);
+            }
+        }
+
+        //Take a random sample from data
+        if (sample_size > np) printf("Sample size set to %i according to the file with the least amount of entries \n", np);
+        if (sample_size != 0 && sample_size < np)
+        {
+            if (pip_calculation) random_sample_wpips(&dataD, &pipsD, rnp, n_pips, sample_size);
+            else random_sample(&dataD, rnp, sample_size);
+            np = sample_size;
         }
 
         //Set nodes size
         size_node = size_box/(float)(partitions);
 
-        //Make nodes
-        if (rand_required){
-            hnodeR = new Node***[n_randfiles];
-            for (int i=0; i<n_randfiles; i++){
-                hnodeR[i] = new Node**[partitions];
-                for (int j=0; j<partitions; j++){
-                    hnodeR[i][j] = new Node*[partitions];
-                    for (int k=0; k<partitions; k++){
-                        hnodeR[i][j][k] = new Node[partitions];
-                    }
-                }
-            }
-        }
-        
-        hnodeD = new Node**[partitions];
-        for (int i=0; i<partitions; i++){
-            *(hnodeD+i) = new Node*[partitions];
-            for (int j=0; j<partitions; j++){
-                *(*(hnodeD+i)+j) = new Node[partitions];
-            }
-        }
-
-        make_nodos(hnodeD, dataD, partitions, size_node, np);
-        if (rand_required){
-            for (int i=0; i<n_randfiles; i++){
-                make_nodos(hnodeR[i], dataR[i], partitions, size_node, np);
-            }
-        };
-
-        //Count nonzero data nodes
-        for(int row=0; row<partitions; row++){
-            for(int col=0; col<partitions; col++){
-                for(int mom=0; mom<partitions; mom++){
-                    if(hnodeD[row][col][mom].len>0)  nonzero_Dnodes+=1;
-
-                    if (rand_required){
-                        for (int i=0; i<n_randfiles; i++){
-                            if(hnodeR[i][row][col][mom].len>0) {
-                                nonzero_Rnodes[i]+=1;
-                                tot_randnodes+=1;
-                            }
-                            
-                        }
-                    }
-
-                }
-            }
-        }
-
-        if (rand_required){
-            for (int i=1; i<n_randfiles; i++){
-                acum_nonzero_Rnodes[i] = acum_nonzero_Rnodes[i-1] + nonzero_Rnodes[i-1];
-            }
-        }
-
-        //Deep copy into linear nodes and an ordered elements array
-        hnodeD_s = new DNode[nonzero_Dnodes];
-        h_ordered_pointsD = new PointW3D[np];
-        if (rand_required){
-            hnodeR_s = new DNode[tot_randnodes];
-            h_ordered_pointsR_s = new PointW3D[n_randfiles*np];
-        }
-
-        for(int row=0; row<partitions; row++){
-            for(int col=0; col<partitions; col++){
-                for(int mom=0; mom<partitions; mom++){
-            
-                    if (hnodeD[row][col][mom].len>0){
-                        hnodeD_s[idxD].nodepos = hnodeD[row][col][mom].nodepos;
-                        hnodeD_s[idxD].start = last_pointD;
-                        hnodeD_s[idxD].len = hnodeD[row][col][mom].len;
-                        last_pointD = last_pointD + hnodeD[row][col][mom].len;
-                        hnodeD_s[idxD].end = last_pointD;
-                        for (int j=hnodeD_s[idxD].start; j<last_pointD; j++){
-                            k_element = j-hnodeD_s[idxD].start;
-                            h_ordered_pointsD[j] = hnodeD[row][col][mom].elements[k_element];
-                        }
-                        idxD++;
-                    }
-
-                    if (rand_required){
-                        for (int i=0; i<n_randfiles; i++){
-                            if (hnodeR[i][row][col][mom].len>0){
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].nodepos = hnodeR[i][row][col][mom].nodepos;
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start = i*np + last_pointR[i];
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].len = hnodeR[i][row][col][mom].len;
-                                last_pointR[i] = last_pointR[i] + hnodeR[i][row][col][mom].len;
-                                hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end = i*np + last_pointR[i];
-                                for (int j=hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start; j<hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].end; j++){
-                                    k_element = j-hnodeR_s[acum_nonzero_Rnodes[i] + idxR[i]].start;
-                                    h_ordered_pointsR_s[j] = hnodeR[i][row][col][mom].elements[k_element];
-                                }
-                                idxR[i]++;
-                            }
-                        }
-                    }
-
-                }
-            }
-        }
-
-        //Allocate and copy the nodes into device memory
-        cucheck(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
-        cucheck(cudaMalloc(&d_ordered_pointsD, np*sizeof(PointW3D)));
-        cucheck(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
-        cucheck(cudaMemcpy(d_ordered_pointsD, h_ordered_pointsD, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
-        if (rand_required){
-            cucheck(cudaMalloc(&dnodeR, tot_randnodes*sizeof(DNode)));
-            cucheck(cudaMalloc(&d_ordered_pointsR, n_randfiles*np*sizeof(PointW3D)));
-            cucheck(cudaMemcpy(dnodeR, hnodeR_s, tot_randnodes*sizeof(DNode), cudaMemcpyHostToDevice));
-            cucheck(cudaMemcpy(d_ordered_pointsR, h_ordered_pointsR_s, n_randfiles*np*sizeof(PointW3D), cudaMemcpyHostToDevice));
-        }
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
-        cout << "Succesfully readed the data. All set to compute the histograms in " << htime*1000 << " miliseconds" << endl;
+        printf("Succesfully readed the data and create samples in %f ms. \n", htime*1000);
+
+        //Make the nodes
+        if (pip_calculation)
+            nonzero_Dnodes = create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
+        else
+            nonzero_Dnodes = create_nodes(&hnodeD_s, &dataD, partitions, size_node, np);
+
+        if (rand_required)
+        {
+            nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
+            hnodeR_s =(DNode**)malloc(n_randfiles*sizeof(DNode*));
+
+            if (pip_calculation)
+                for (int i = 0; i < n_randfiles; i++)
+                    nonzero_Rnodes[i] = create_nodes_wpips(&hnodeR_s[i], &dataR[i], &pipsR[i], n_pips, partitions, size_node, np);
+            else
+                for (int i = 0; i < n_randfiles; i++)
+                    nonzero_Rnodes[i] = create_nodes(&hnodeR_s[i], &dataR[i], partitions, size_node, np);
+        }
+
+        stop_timmer_host = clock();
+        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC - htime;
+        printf("Succesfully made the all nodes %f ms in host. \n", htime*1000);
 
         /* =======================================================================*/
-        /* ===================== Free unused host memory =========================*/
+        /* ======================= Launch the cuda code ==========================*/
         /* =======================================================================*/
-
-        for (int i=0; i<partitions; i++){
-            for (int j=0; j<partitions; j++){
-                delete[] hnodeD[i][j];
-            }
-            delete[] hnodeD[i];
-        }    
-        delete[] hnodeD;
-        delete[] dataD;
-        delete[] hnodeD_s;
-        delete[] h_ordered_pointsD;
         
-        if (rand_required){
-            for (int i=0; i<n_randfiles; i++){
-                delete[] dataR[i];
-                for (int j=0; j<partitions; j++){
-                    for (int k=0; k<partitions; k++){
-                        delete[] hnodeR[i][j][k];
-                    }
-                    delete[] hnodeR[i][j];
-                }
-                delete[] hnodeR[i];
-            }
-            delete[] dataR;
-            delete[] hnodeR;
-            delete[] idxR;
-            delete[] last_pointR;
-            delete[] hnodeR_s;
-            delete[] h_ordered_pointsR_s;
-        }
-
-        /* =======================================================================*/
-        /* ============ Launch the right histogram maker function ================*/
-        /* =======================================================================*/
-
-        if (strcmp(argv[1],"3iso")==0){
-            if (bpc){
-                if (analytic){
-                    pcf_3isoBPC_analytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, np, size_node, size_box, dmax);
-                } else {
-                    pcf_3isoBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
-                }
-            } else {
-                pcf_3iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
-            }
-        } else if (strcmp(argv[1],"3ani")==0){
-            if (bpc){
-                pcf_3aniBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
-            } else {
-                pcf_3ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
-            }
-        } else if (strcmp(argv[1],"2iso")==0){
-            if (bpc){
-                if (analytic){
-                    pcf_2iso_BPCanalytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, np, size_node, size_box, dmax);
-                } else {
-                    pcf_2iso_BPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
-                }
-            } else {
-                pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
-            }
-        } else if (strcmp(argv[1],"2ani")==0){
-            if (bpc){
-                pcf_2aniBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
-            } else {
-                pcf_2ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
-            }
-        }
+        //compute_pcf();
 
         /* =======================================================================*/
         /* ========================== Free memory ================================*/
         /* =======================================================================*/
-
-        cucheck(cudaFree(dnodeD));
-        cucheck(cudaFree(d_ordered_pointsD));
-
-        if (rand_required){
-            cucheck(cudaFree(dnodeR));
-            cucheck(cudaFree(d_ordered_pointsR));
-            delete[] nonzero_Rnodes;
-            delete[] acum_nonzero_Rnodes;
-            delete[] rand_files;
-            delete[] histo_names;
-        }
+        free(dataD);
+        free(hnodeD_s);
+        if (pip_calculation) free(pipsD);
+        free(data_name);
         
-        cout << "Program terminated..." << endl;
+        free(rand_name);
+        if (rand_required)
+        {
+            for (int i = 0; i < n_randfiles; i++)
+            {
+                free(rand_files[i]);
+                free(dataR[i]);
+                free(hnodeR_s[i]);
+                if (pip_calculation) free(pipsR[i]);
+            }
+            free(rand_files);
+            free(dataR);
+            free(hnodeR_s);
+            if (pip_calculation) free(pipsR);
+            free(nonzero_Rnodes);
+            for (int i = 0; i < n_randfiles + 1; i++) free(histo_names[i]);
+            free(histo_names);
+        }
 
-    } else {
-        cout << "Invalid <calc_type> option or not enough parameters. \nSee --help for more information." << endl;
+        printf("Program terminated...\n");
+
+    }
+    else
+    {
+        fprintf(stderr, "Invalid <calc_type> option or not enough parameters. \nSee --help for more information. \n");
         exit(1);
     }
     return 0;

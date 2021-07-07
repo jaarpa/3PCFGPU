@@ -1,16 +1,10 @@
-all: a.out
+objects = main.o help.o create_grid.o
 
-a.out: main.o create_grid.o help.o
-	gcc main.o create_grid.o help.o
+all: $(objects)
+	nvcc $(objects) -o PCF.out
 
-main.o: main.c create_grid.h help.h
-	gcc -c main.c
-
-create_grid.o: create_grid.c create_grid.h
-	gcc -c create_grid.c
-
-help.o: help.c help.h
-	gcc -c help.c
+%.o: %.cu
+	nvcc -x cu -I. -dc $< -o $@
 
 clean:
-	rm main.o create_grid.o help.o
+	rm -f *.o *.out
