@@ -191,17 +191,17 @@ int main(int argc, char **argv)
         char **histo_names;
 
         //Declare variables for data.
-        PointW3D *dataD;//, *d_ordered_pointsD;
-        int32_t *pipsD;
-        DNode *hnodeD_s;//, *dnodeD;
+        PointW3D *dataD, *d_dataD;
+        int32_t *pipsD, *dpipsD;
+        DNode *hnodeD_s, *dnodeD;
         int nonzero_Dnodes, n_pips=0;
         
         //Declare variables for random.
         char **rand_files;
-        PointW3D **dataR;// *d_ordered_pointsR;
-        int32_t **pipsR;
-        DNode **hnodeR_s;//, *dnodeR;
-        int *nonzero_Rnodes, rnp=0, n_randfiles=1, n_pipsR=0;
+        PointW3D **dataR, *d_dataR;
+        int32_t **pipsR, *dpipsR;
+        DNode **hnodeR_s, *dnodeR;
+        int *nonzero_Rnodes, tot_nonzero_Rnodes=0, rnp=0, n_randfiles=1, n_pipsR=0;
 
         /* =======================================================================*/
         /* ================== Assign and prepare variables =======================*/
@@ -374,7 +374,36 @@ int main(int argc, char **argv)
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC - htime;
         printf("Succesfully made the all nodes %f ms. \n", htime*1000);
 
-        /*
+        CUCHECK(cudaMalloc(&d_dataD, np*sizeof(PointW3D)));
+        CUCHECK(cudaMemcpy(d_dataD, dataD, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
+
+        CUCHECK(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
+        CUCHECK(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
+        if (pip_calculation)
+        {
+            CUCHECK(cudaMalloc(&dpipsD, np*n_pips*sizeof(int32_t)));
+            CUCHECK(cudaMemcpy(dpipsD, pipsD, np*n_pips*sizeof(int32_t), cudaMemcpyHostToDevice));
+        }
+
+        if (rand_required)
+        {
+            for (int i = 0; i < n_randfiles; i++)
+                tot_nonzero_Rnodes += nonzero_Rnodes[i];
+            CUCHECK(cudaMalloc(&d_dataR, n_randfiles*np*sizeof(PointW3D)));
+            CUCHECK(cudaMalloc(&dnodeR, tot_nonzero_Rnodes*sizeof(DNode)));
+            if (pip_calculation)
+            {
+                CUCHECK(cudaMalloc(&dpipsR, n_randfiles*np*n_pips*sizeof(int32_t)))
+            };
+            for (int i = 0; i < n_randfiles; i++)
+            {
+                CUCHECK(cudaMemcpy(d_dataR, &dataR[i*np], np*sizeof(PointW3D), cudaMemcpyHostToDevice));
+                CUCHECK(cudaMemcpy(dnodeR, &hnodeR_s[i], nonzero_Rnodes[i]*sizeof(DNode), cudaMemcpyHostToDevice));
+                CUCHECK(cudaMemcpy(dpipsR, &pipsR[i*np*n_pips], np*n_pips*sizeof(int32_t), cudaMemcpyHostToDevice));
+            }
+            
+        }
+
         //Allocate and copy the nodes into device memory
         CUCHECK(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
         CUCHECK(cudaMalloc(&d_ordered_pointsD, np*sizeof(PointW3D)));
@@ -389,7 +418,6 @@ int main(int argc, char **argv)
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
         cout << "Succesfully readed the data. All set to compute the histograms in " << htime*1000 << " miliseconds" << endl;
-        */
 
         /* =======================================================================*/
         /* ===================== Free unused host memory =========================*/
