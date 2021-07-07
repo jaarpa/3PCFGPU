@@ -1,3 +1,13 @@
+/** CUDA check macro */
+#define CUCHECK(call){\
+    cudaError_t res = (call);\
+    if(res != cudaSuccess) {\
+        const char* err_str = cudaGetErrorString(res);\
+        fprintf(stderr, "%s (%d): %s in %s \n", __FILE__, __LINE__, err_str, #call);\
+        exit(-1);\
+    }\
+}\
+
 /* Complains if it cannot allocate the array */
 #define CHECKALLOC(p)  if(p == NULL) {\
     fprintf(stderr, "%s (line %d): Error - unable to allocate required memory \n", __FILE__, __LINE__);\
@@ -177,21 +187,21 @@ int main(int argc, char **argv)
         start_timmer_host = clock(); //To check time setting up data
         
         float size_node, htime, size_box=0;
-        int npips=0, np = 0, minimum_number_lines;
-        char **histo_names;
+        int np = 0, minimum_number_lines;
+        char **histo_names = NULL;
 
         //Declare variables for data.
-        PointW3D *dataD, *d_dataD;
-        int32_t *pipsD, *dpipsD;
-        DNode *hnodeD_s, *dnodeD;
+        PointW3D *dataD = NULL, *d_dataD = NULL;
+        int32_t *pipsD = NULL, *dpipsD = NULL;
+        DNode *hnodeD_s = NULL, *dnodeD = NULL;
         int nonzero_Dnodes, n_pips=0;
         
         //Declare variables for random.
-        char **rand_files;
-        PointW3D **dataR, *d_dataR;
-        int32_t **pipsR, *dpipsR;
-        DNode **hnodeR_s, *dnodeR;
-        int *nonzero_Rnodes, tot_nonzero_Rnodes=0, rnp=0, n_randfiles=1, n_pipsR=0;
+        char **rand_files = NULL;
+        PointW3D **dataR = NULL, *flattened_dataR = NULL, *d_dataR = NULL;
+        int32_t **pipsR = NULL, *flattened_pipsR = NULL, *dpipsR = NULL;
+        DNode **hnodeR_s = NULL, *flattened_hnodeR_s = NULL, *dnodeR = NULL;
+        int *nonzero_Rnodes = NULL, *acum_nonzero_Rnodes = NULL, tot_nonzero_Rnodes=0, rnp=0, n_randfiles=1, n_pipsR=0;
 
         /* =======================================================================*/
         /* ================== Assign and prepare variables =======================*/
@@ -277,7 +287,12 @@ int main(int argc, char **argv)
             }
 
             dataR = (PointW3D**)calloc(n_randfiles, sizeof(PointW3D *));
-            if (pip_calculation) pipsR = (int32_t**)calloc(n_randfiles, sizeof(int32_t *));
+            CHECKALLOC(dataR);
+            if (pip_calculation)
+            {
+                pipsR = (int32_t**)calloc(n_randfiles, sizeof(int32_t *));
+                CHECKALLOC(pipsR);
+            }
 
             rnp = get_smallest_file(rand_files, n_randfiles); // Get the number of lines in the file with less entries
             minimum_number_lines = rnp<np ? rnp : np;
@@ -337,10 +352,6 @@ int main(int argc, char **argv)
         //Set nodes size
         size_node = size_box/(float)(partitions);
 
-        stop_timmer_host = clock();
-        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
-        printf("Succesfully readed the data and create samples in %f ms. \n", htime*1000);
-
         //Make the nodes
         if (pip_calculation)
             nonzero_Dnodes = create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
@@ -350,7 +361,11 @@ int main(int argc, char **argv)
         if (rand_required)
         {
             nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
+            CHECKALLOC(nonzero_Rnodes);
+            acum_nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
+            CHECKALLOC(acum_nonzero_Rnodes);
             hnodeR_s =(DNode**)malloc(n_randfiles*sizeof(DNode*));
+            CHECKALLOC(hnodeR_s);
 
             if (pip_calculation)
                 for (int i = 0; i < n_randfiles; i++)
@@ -360,25 +375,66 @@ int main(int argc, char **argv)
                     nonzero_Rnodes[i] = create_nodes(&hnodeR_s[i], &dataR[i], partitions, size_node, np);
         }
 
-        stop_timmer_host = clock();
-        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC - htime;
-        printf("Succesfully made the all nodes %f ms in host. \n", htime*1000);
-
-        /* =======================================================================*/
-        /* ======================= Launch the cuda code ==========================*/
-        /* =======================================================================*/
+        //Flatten the R Nodes
+        if (rand_required)
+        {
+            flattened_dataR = (PointW3D*)malloc(n_randfiles*np*sizeof(PointW3D));
+            CHECKALLOC(flattened_dataR);
+            if (pip_calculation)
+            {
+                flattened_pipsR = (int32_t*)malloc(n_randfiles*np*n_pips*sizeof(int32_t));
+                CHECKALLOC(flattened_pipsR);
+            }
+            for (int i = 0; i<n_randfiles; i++)
+            {
+                acum_nonzero_Rnodes[i] = tot_nonzero_Rnodes;
+                tot_nonzero_Rnodes += nonzero_Rnodes[i];
+            }
+            flattened_hnodeR_s = (DNode*)malloc(tot_nonzero_Rnodes*sizeof(DNode));
+            CHECKALLOC(flattened_hnodeR_s);
+            for (int i = 0; i < n_randfiles; i++)
+            {
+                memcpy(&flattened_dataR[i*np], dataR[i], np*sizeof(PointW3D));
+                memcpy(&flattened_hnodeR_s[acum_nonzero_Rnodes[i]], hnodeR_s[i], nonzero_Rnodes[i]*sizeof(DNode));
+                if (pip_calculation) memcpy(&flattened_pipsR[i*np*n_pips], pipsR[i], np*n_pips*sizeof(int32_t));
+            }
+        }
         
-        //compute_pcf();
+        //Copy to Device
+        CUCHECK(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
+        CUCHECK(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
+        CUCHECK(cudaMalloc(&d_dataD, np*sizeof(PointW3D)));
+        CUCHECK(cudaMemcpy(d_dataD, hnodeD_s, nonzero_Dnodes*sizeof(PointW3D), cudaMemcpyHostToDevice));
+        if (pip_calculation)
+        {
+            CUCHECK(cudaMalloc(&dpipsD, np*n_pips*sizeof(int32_t)));
+            CUCHECK(cudaMemcpy(dpipsD, pipsD, np*n_pips*sizeof(int32_t), cudaMemcpyHostToDevice));
+        }
+        
+        if (rand_required)
+        {
+            CUCHECK(cudaMalloc(&dnodeR, tot_nonzero_Rnodes*sizeof(DNode)));
+            CUCHECK(cudaMemcpy(dnodeR, flattened_hnodeR_s, tot_nonzero_Rnodes*sizeof(DNode), cudaMemcpyHostToDevice));
+            CUCHECK(cudaMalloc(&d_dataR, n_randfiles*np*sizeof(PointW3D)));
+            CUCHECK(cudaMemcpy(d_dataR, flattened_dataR,  n_randfiles*np*sizeof(PointW3D), cudaMemcpyHostToDevice));
+            if (pip_calculation)
+            {
+                CUCHECK(cudaMalloc(&dpipsR, n_randfiles*np*n_pips*sizeof(int32_t)));
+                CUCHECK(cudaMemcpy(dpipsR, flattened_pipsR, n_randfiles*np*n_pips*sizeof(int32_t), cudaMemcpyHostToDevice));
+            }
+        }
+ 
+        stop_timmer_host = clock();
+        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
+        printf("All set up for computations in %f ms in host. \n", htime*1000);       
 
         /* =======================================================================*/
-        /* ========================== Free memory ================================*/
+        /* ================== Free unused host memory ============================*/
         /* =======================================================================*/
+
         free(dataD);
         free(hnodeD_s);
         if (pip_calculation) free(pipsD);
-        free(data_name);
-        
-        free(rand_name);
         if (rand_required)
         {
             for (int i = 0; i < n_randfiles; i++)
@@ -392,6 +448,68 @@ int main(int argc, char **argv)
             free(dataR);
             free(hnodeR_s);
             if (pip_calculation) free(pipsR);
+            free(flattened_dataR);
+            free(flattened_hnodeR_s);
+            if (pip_calculation) free(flattened_pipsR);
+        }
+        
+        free(rand_name);
+        
+        /* =======================================================================*/
+        /* ======================= Launch the cuda code ==========================*/
+        /* =======================================================================*/
+        
+        /*
+        if (strcmp(argv[1],"3iso")==0){
+            if (bpc){
+                if (analytic){
+                    pcf_3isoBPC_analytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, np, size_node, size_box, dmax);
+                } else {
+                    pcf_3isoBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
+                }
+            } else {
+                pcf_3iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+            }
+        } else if (strcmp(argv[1],"3ani")==0){
+            if (bpc){
+                pcf_3aniBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
+            } else {
+                pcf_3ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+            }
+        } else if (strcmp(argv[1],"2iso")==0){
+            if (bpc){
+                if (analytic){
+                    pcf_2iso_BPCanalytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bn, np, size_node, size_box, dmax);
+                } else {
+                    pcf_2iso_BPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
+                }
+            } else {
+                pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+            }
+        } else if (strcmp(argv[1],"2ani")==0){
+            if (bpc){
+                pcf_2aniBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, size_box, dmax);
+            } else {
+                pcf_2ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bn, size_node, dmax);
+            }
+        }
+        */
+
+        /* =======================================================================*/
+        /* ========================== Free memory ================================*/
+        /* =======================================================================*/
+
+        CUCHECK(cudaFree(dnodeD));
+        CUCHECK(cudaFree(d_dataD));
+        CUCHECK(cudaFree(dpipsD));
+        CUCHECK(cudaFree(dnodeR));
+        CUCHECK(cudaFree(d_dataR));
+        CUCHECK(cudaFree(dpipsR));
+
+        free(data_name);
+
+        if (rand_required)
+        {
             free(nonzero_Rnodes);
             for (int i = 0; i < n_randfiles + 1; i++) free(histo_names[i]);
             free(histo_names);
