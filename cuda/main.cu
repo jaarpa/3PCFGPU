@@ -404,7 +404,7 @@ int main(int argc, char **argv)
         CUCHECK(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
         CUCHECK(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
         CUCHECK(cudaMalloc(&d_dataD, np*sizeof(PointW3D)));
-        CUCHECK(cudaMemcpy(d_dataD, dataD, nonzero_Dnodes*sizeof(PointW3D), cudaMemcpyHostToDevice));
+        CUCHECK(cudaMemcpy(d_dataD, dataD, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
         if (pip_calculation)
         {
             CUCHECK(cudaMalloc(&dpipsD, np*n_pips*sizeof(int32_t)));
