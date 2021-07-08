@@ -64,7 +64,7 @@ size_node: (float) Size of the nodes.
 */
 __global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
 
-__global__ void saxpy(int n, float a, float *x, float *y);
+__global__ void read_node(PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes);
 
 #ifdef __cplusplus
 }

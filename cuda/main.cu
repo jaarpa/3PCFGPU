@@ -404,7 +404,7 @@ int main(int argc, char **argv)
         CUCHECK(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
         CUCHECK(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
         CUCHECK(cudaMalloc(&d_dataD, np*sizeof(PointW3D)));
-        CUCHECK(cudaMemcpy(d_dataD, hnodeD_s, nonzero_Dnodes*sizeof(PointW3D), cudaMemcpyHostToDevice));
+        CUCHECK(cudaMemcpy(d_dataD, dataD, nonzero_Dnodes*sizeof(PointW3D), cudaMemcpyHostToDevice));
         if (pip_calculation)
         {
             CUCHECK(cudaMalloc(&dpipsD, np*n_pips*sizeof(int32_t)));
@@ -426,7 +426,17 @@ int main(int argc, char **argv)
  
         stop_timmer_host = clock();
         htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
-        printf("All set up for computations in %f ms in host. \n", htime*1000);       
+        printf("All set up for computations in %f ms in host. \n", htime*1000);
+        
+        printf("From host\n");
+        int i = 13;
+        printf("First node \n");
+        printf("starts = %i ends=%i pos=(%f %f %f) length=%i\n", hnodeD_s[i].start, hnodeD_s[i].end, hnodeD_s[i].nodepos.x, hnodeD_s[i].nodepos.y, hnodeD_s[i].nodepos.z, hnodeD_s[i].len);
+        printf("Data in that node\n");
+        int za;
+        for (za = hnodeD_s[i].start; za < hnodeD_s[i].end; za++)
+            printf("%f %f %f %f \n", dataD[za].x, dataD[za].y, dataD[za].z, dataD[za].w);
+        printf("From host\n");
 
         /* =======================================================================*/
         /* ================== Free unused host memory ============================*/
