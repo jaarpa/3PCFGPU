@@ -1,10 +1,10 @@
-objects = main.o help.o create_grid.o
+objects = main.o help.o create_grid.o pcf2ani.o
 
 all: $(objects)
-	nvcc $(objects) -o PCF.out
+	nvcc -arch=sm_60 $(objects) -o PCF.out
 
 %.o: %.cu
-	nvcc -x cu -I. -dc $< -o $@
+	nvcc -arch=sm_60 -x cu -I. -dc $< -o $@
 
 clean:
 	rm -f *.o *.out
