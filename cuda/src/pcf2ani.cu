@@ -42,7 +42,7 @@
     exit(1);\
 }\
 
-#define PREFIX_LENGTH 5
+#define PREFIX_LENGTH 6
 
 void pcf_2ani(char **histo_names, DNode *dnodeD, PointW3D *dataD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *dataR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax)
 {
@@ -50,9 +50,6 @@ void pcf_2ani(char **histo_names, DNode *dnodeD, PointW3D *dataD, int nonzero_Dn
     /* =======================================================================*/
     /* ======================  Var declaration ===============================*/
     /* =======================================================================*/
-
-    read_node<<<1,1>>>(dataD, dnodeD, nonzero_Dnodes);
-    CUCHECK(cudaDeviceSynchronize());
 
     float d_max_node, time_spent;
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
@@ -125,16 +122,16 @@ void pcf_2ani(char **histo_names, DNode *dnodeD, PointW3D *dataD, int nonzero_Dn
     time_spent=0; //Restarts timmer
     CUCHECK(cudaEventRecord(start_timmer));
     XX2ani<<<gridD,threads_perblock,0,streamDD>>>(d_DD, dataD, dnodeD, nonzero_Dnodes, bn, dmax, d_max_node, 0, 0);
-    // for (int i=0; i<n_randfiles; i++)
-    // {
-    //     //Calculates grid dim for each file
-    //     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-    //     gridR.x = blocks_R;
-    //     gridR.y = blocks_R;
-    //     XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, dataR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
-    //     gridDR.y = blocks_R;
-    //     XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, dataD, dnodeD, nonzero_Dnodes, dataR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
-    // }
+    for (int i=0; i<n_randfiles; i++)
+    {
+        //Calculates grid dim for each file
+        blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
+        gridR.x = blocks_R;
+        gridR.y = blocks_R;
+        XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, dataR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+        gridDR.y = blocks_R;
+        XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, dataD, dnodeD, nonzero_Dnodes, dataR, dnodeR, nonzero_Rnodes[i], bn, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+    }
 
     //Waits for all the kernels to complete
     CUCHECK(cudaDeviceSynchronize());
@@ -305,16 +302,4 @@ __global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
             }
         }
     }
-}
-
-__global__ void read_node(PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes)
-{
-    int i = 13;
-    printf("First node \n");
-    printf("starts = %i ends=%i pos=(%f %f %f) length=%i\n", nodeD[i].start, nodeD[i].end, nodeD[i].nodepos.x, nodeD[i].nodepos.y, nodeD[i].nodepos.z, nodeD[i].len);
-    printf("Data in that node\n");
-    int za;
-    for (za = nodeD[i].start; za < nodeD[i].end; za++)
-        printf("%f %f %f %f \n", elementsD[za].x, elementsD[za].y, elementsD[za].z, elementsD[za].w);
-    
 }

@@ -1,6 +1,3 @@
-//For signals
-#include <stddef.h>
-#include <signal.h>
 //Criterion
 #include <criterion/criterion.h>
 //Standard C libraries
@@ -389,10 +386,4 @@ Test(pcf_prep_dirtests, make_nodes_wpips)
     free(data_ordered);
     free(pipsD);
     free(hnodeD_s);
-}
-
-// This test will pass
-Test(pcf_prep_dirtests, passing_receivedsignal, .signal = SIGSEGV, .disabled=true) {
-    int *ptr = NULL;
-    *ptr = 42;
 }

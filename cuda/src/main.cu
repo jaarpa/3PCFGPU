@@ -360,6 +360,10 @@ int main(int argc, char **argv)
                 CUCHECK(cudaMemcpy(dpipsR, flattened_pipsR, n_randfiles*np*n_pips*sizeof(int32_t), cudaMemcpyHostToDevice));
             }
         }
+ 
+        stop_timmer_host = clock();
+        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
+        printf("All set up for computations in %f ms in host. \n", htime*1000);
 
         /* =======================================================================*/
         /* ================== Free unused host memory ============================*/
