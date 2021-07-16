@@ -14,6 +14,28 @@
     }\
 }\
 
+#if !defined(__CUDA_ARCH__) || defined(DOUBLE_ATOMIC_ADD_ARCHLT600) || __CUDA_ARCH__ >= 600
+#else
+    #define DOUBLE_ATOMIC_ADD_ARCHLT600
+    __device__ double atomicAdd(double* address, double val)
+    {
+        unsigned long long int* address_as_ull =
+                                  (unsigned long long int*)address;
+        unsigned long long int old = *address_as_ull, assumed;
+    
+        do {
+            assumed = old;
+            old = atomicCAS(address_as_ull, assumed,
+                            __double_as_longlong(val +
+                                   __longlong_as_double(assumed)));
+    
+        // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
+        } while (assumed != old);
+    
+        return __longlong_as_double(old);
+    }
+#endif
+
 /* Complains if it cannot allocate the array */
 #define CHECKALLOC(p)  if(p == NULL) {\
     fprintf(stderr, "%s (line %d): Error - unable to allocate required memory \n", __FILE__, __LINE__);\

@@ -70,7 +70,6 @@ int main(int argc, char **argv)
         char *data_name=NULL, *rand_name=NULL;
         for (int idpar=2; idpar<argc; idpar++)
         {
-            
             if (strcmp(argv[idpar],"-n")==0)
             {
                 sample_size = atoi(argv[idpar+1]);
@@ -187,167 +186,105 @@ int main(int argc, char **argv)
         start_timmer_host = clock(); //To check time setting up data
         
         float size_node, htime, size_box=0;
-        int np = 0, minimum_number_lines;
+        int np = 0, minimum_file_lines;
         char **histo_names = NULL;
 
         //Declare variables for data.
         PointW3D *dataD = NULL, *d_dataD = NULL;
         int32_t *pipsD = NULL, *dpipsD = NULL;
         DNode *hnodeD_s = NULL, *dnodeD = NULL;
-        int nonzero_Dnodes, n_pips=0;
+        int nonzero_Dnodes;
+        int n_pips=0;
         
         //Declare variables for random.
         char **rand_files = NULL;
         PointW3D **dataR = NULL, *flattened_dataR = NULL, *d_dataR = NULL;
         int32_t **pipsR = NULL, *flattened_pipsR = NULL, *dpipsR = NULL;
         DNode **hnodeR_s = NULL, *flattened_hnodeR_s = NULL, *dnodeR = NULL;
-        int *nonzero_Rnodes = NULL, *acum_nonzero_Rnodes = NULL, tot_nonzero_Rnodes=0, rnp=0, n_randfiles=1, n_pipsR=0;
+        int *nonzero_Rnodes = NULL, *acum_nonzero_Rnodes = NULL, *rnp=NULL, tot_nonzero_Rnodes=0, n_randfiles=1, n_pipsR=0;
 
         /* =======================================================================*/
         /* ================== Assign and prepare variables =======================*/
         /* =======================================================================*/
 
         //Read data
-        open_files(data_name, &dataD, &np, &size_box);
+        open_files(data_name, &dataD, &np);
+        //Read PIPs if required
+        if (pip_calculation)
+            open_pip_files(&pipsD, data_name, np, &n_pips);
         
         //Read rand only if rand was required.
         if (rand_required)
         {
 
-            //Check if a directory of random files was provided to change n_randfiles
-            //Instead of rand name should be an array with the name of each rand array or something like that.
-            if (rand_dir)
+            //read_random_files
+            read_random_files(&rand_files, &histo_names, &rnp, &dataR, &n_randfiles, rand_name, rand_dir);
+            histo_names[0] = strdup(data_name);
+
+            //Get the smallest number of points
+            minimum_file_lines = rnp[0];
+            for (int i=1; i<n_randfiles; i++ )
+                minimum_file_lines = rnp[i]<minimum_file_lines ? rnp[i] : minimum_file_lines;
+            minimum_file_lines = np<minimum_file_lines ? np : minimum_file_lines;
+            if (sample_size == 0 || sample_size>minimum_file_lines)
             {
-                char *directory_path = (char*)malloc((9+strlen(rand_name))*sizeof(char));
-                CHECKALLOC(directory_path);
-                char data_path[] = "../data/";
-                strcpy(directory_path, data_path);
-                strcat(directory_path, rand_name); //Set up the full path
-                DIR *folder = opendir(directory_path);
-
-                if(folder != NULL)
-                {
-                    n_randfiles = 0;
-                    struct dirent *archivo;
-                    while( (archivo=readdir(folder)) )
-                        if (strcmp(archivo->d_name,".") != 0 && strcmp(archivo->d_name,"..") != 0)
-                            if (strcmp(&(archivo->d_name)[strlen((archivo->d_name))-4],".pip") != 0) n_randfiles++;
-
-                    if (!n_randfiles)
-                    {
-                        fprintf(stderr, "There are no suitable files in %s \n", directory_path);
-                        exit(1);
-                    }
-
-                    //Reset the folder stream to actually read the files
-                    closedir(folder);
-                    folder = opendir(directory_path);
-
-                    rand_files = (char **)malloc(n_randfiles * sizeof(char *));
-                    CHECKALLOC(rand_files);
-                    histo_names = (char **)malloc((1 + n_randfiles) * sizeof(char *));
-                    CHECKALLOC(histo_names);
-                    histo_names[0] = strdup(data_name);
-
-                    int j = 0;
-                    char *nombre_archivo;
-                    while( (archivo=readdir(folder)) )
-                    {
-                        nombre_archivo = archivo->d_name;
-                        if (strcmp(nombre_archivo,".") == 0 || strcmp(nombre_archivo,"..") == 0) continue;
-                        if (strcmp(&(nombre_archivo)[strlen((nombre_archivo))-4],".pip") == 0) continue;
-                        histo_names[j+1] = strdup(nombre_archivo);
-
-                        rand_files[j] = (char*)malloc((strlen(rand_name)+strlen(nombre_archivo)+1)*sizeof(char));
-                        CHECKALLOC(rand_files[j]);
-                        strcpy(rand_files[j], rand_name);
-                        strcat(rand_files[j], nombre_archivo); //Set up the full path
-
-                        j++;
-                    }
-                    closedir(folder);
-                    
-                }
-                else
-                {
-                    fprintf(stderr, "Unable to open directory %s \n", directory_path);
-                    exit(1);
-                }
-                free(directory_path);
-            }
-            else
-            {
-                rand_files = (char**)malloc(n_randfiles * sizeof(char *));
-                CHECKALLOC(rand_files);
-                rand_files[0] = strdup(rand_name);
-                histo_names = (char**)malloc((1 + n_randfiles) * sizeof(char *));
-                CHECKALLOC(histo_names);
-                histo_names[0] = strdup(data_name);
-                histo_names[1] = strdup(rand_name);
+                sample_size = minimum_file_lines;
+                printf("Sample size set to %i according to the file with the least amount of entries \n", sample_size);
             }
 
-            dataR = (PointW3D**)calloc(n_randfiles, sizeof(PointW3D *));
-            CHECKALLOC(dataR);
             if (pip_calculation)
             {
                 pipsR = (int32_t**)calloc(n_randfiles, sizeof(int32_t *));
                 CHECKALLOC(pipsR);
-            }
 
-            rnp = get_smallest_file(rand_files, n_randfiles); // Get the number of lines in the file with less entries
-            minimum_number_lines = rnp<np ? rnp : np;
-            if (sample_size == 0 || sample_size>minimum_number_lines)
-            {
-                sample_size = minimum_number_lines;
-                printf("Sample size set to %i according to the file with the least amount of entries \n", sample_size);
-            }
-
-            for (int i=0; i<n_randfiles; i++)
-            {
-                open_files(rand_files[i], &dataR[i],&rnp, &size_box);
-
-                //Read pips files of random data if required
-                if (pip_calculation)
+                for (int i=0; i<n_randfiles; i++)
                 {
-                    open_pip_files(&pipsR[i], rand_files[i], rnp, &n_pipsR); //rnp is used to check that the pip file has at least the same number of points as the data file
-                    
-                    if (i==0) n_pips = n_pipsR; //It has nothing to compare against in the first reading
+                    open_pip_files(&pipsR[i], rand_files[i], rnp[i], &n_pipsR); //rnp is used to check that the pip file has at least the same number of points as the data file
                     if (n_pips != n_pipsR) 
                     {
                         fprintf(stderr, "PIP files have different number of columns. %s has %i while %s has %i\n", rand_files[i], n_pipsR, rand_files[i-1], n_pips);
                         exit(1);
                     }
-
-                    //Takes a sample if sample_size != rnp is less than np
-                    if (rnp > sample_size) random_sample_wpips(&dataR[i], &pipsR[i], rnp, n_pipsR, sample_size);
-                } 
-                else if (rnp > sample_size) random_sample(&dataR[i], rnp, sample_size);
+                    if (rnp[i]>sample_size)
+                        random_sample_wpips(&dataR[i], &pipsR[i], rnp[i], n_pips, sample_size);
+                }
             }
+            else //Take random samples from the random data
+                for (int i=0; i<n_randfiles; i++)
+                    if (rnp[i]>sample_size)
+                        random_sample(&dataR[i], rnp[i], sample_size);
         }
 
-        //Sets the size_box to the larges either the one found or the provided
-        if (size_box_provided < size_box) printf("Size box set to %f according to the largest register in provided files. \n", size_box);
-        else size_box = size_box_provided;
-        
-        //Read PIPs if required
-        if (pip_calculation)
-        {
-            open_pip_files(&pipsD, data_name, np, &n_pips);
-            if (n_pips != n_pipsR && rand_required)
-            {
-                fprintf(stderr, "Length of data PIPs and random PIPs are not the same. \n Data pips has %i columns but the random pip has %i columns. \n", n_pips, n_pipsR);
-                exit(1);
-            }
-        }
-
-        //Take a random sample from data
+        //Take a random samples from data
         if (sample_size > np) printf("Sample size set to %i according to the file with the least amount of entries \n", np);
-        if (sample_size != 0 && sample_size < np)
+        if (sample_size > 0 && sample_size < np)
         {
-            if (pip_calculation) random_sample_wpips(&dataD, &pipsD, rnp, n_pips, sample_size);
-            else random_sample(&dataD, rnp, sample_size);
+            if (pip_calculation) random_sample_wpips(&dataD, &pipsD, rnp[0], n_pips, sample_size);
+            else random_sample(&dataD, rnp[0], sample_size);
             np = sample_size;
         }
+
+        //Sets the size_box to the largest either the one found or the provided
+        if (rand_required)
+        {
+            for (int i=0; i< n_randfiles; i++)
+            {
+                for (int j=0; j< np; j++)
+                {
+                    if (dataR[i][j].x>size_box) size_box=(int)(dataR[i][j].x)+1;
+                    if (dataR[i][j].x>size_box) size_box=(int)(dataR[i][j].y)+1;
+                    if (dataR[i][j].x>size_box) size_box=(int)(dataR[i][j].z)+1;
+                }
+            }
+        }
+        for (int i=0; i<np; i++)
+        {
+            if (dataD[i].x>size_box) size_box=(int)(dataD[i].x)+1;
+            if (dataD[i].y>size_box) size_box=(int)(dataD[i].y)+1;
+            if (dataD[i].z>size_box) size_box=(int)(dataD[i].z)+1;
+        }
+        if (size_box_provided < size_box) printf("Size box set to %f according to the largest register in provided files. \n", size_box);
+        else size_box = size_box_provided;
 
         //Set nodes size
         size_node = size_box/(float)(partitions);
@@ -357,7 +294,7 @@ int main(int argc, char **argv)
             nonzero_Dnodes = create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
         else
             nonzero_Dnodes = create_nodes(&hnodeD_s, &dataD, partitions, size_node, np);
-
+        
         if (rand_required)
         {
             nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
@@ -366,7 +303,7 @@ int main(int argc, char **argv)
             CHECKALLOC(acum_nonzero_Rnodes);
             hnodeR_s =(DNode**)malloc(n_randfiles*sizeof(DNode*));
             CHECKALLOC(hnodeR_s);
-
+            
             if (pip_calculation)
                 for (int i = 0; i < n_randfiles; i++)
                     nonzero_Rnodes[i] = create_nodes_wpips(&hnodeR_s[i], &dataR[i], &pipsR[i], n_pips, partitions, size_node, np);
@@ -374,7 +311,7 @@ int main(int argc, char **argv)
                 for (int i = 0; i < n_randfiles; i++)
                     nonzero_Rnodes[i] = create_nodes(&hnodeR_s[i], &dataR[i], partitions, size_node, np);
         }
-
+        
         //Flatten the R Nodes
         if (rand_required)
         {
@@ -423,20 +360,6 @@ int main(int argc, char **argv)
                 CUCHECK(cudaMemcpy(dpipsR, flattened_pipsR, n_randfiles*np*n_pips*sizeof(int32_t), cudaMemcpyHostToDevice));
             }
         }
- 
-        stop_timmer_host = clock();
-        htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
-        printf("All set up for computations in %f ms in host. \n", htime*1000);
-        
-        printf("From host\n");
-        int i = 13;
-        printf("First node \n");
-        printf("starts = %i ends=%i pos=(%f %f %f) length=%i\n", hnodeD_s[i].start, hnodeD_s[i].end, hnodeD_s[i].nodepos.x, hnodeD_s[i].nodepos.y, hnodeD_s[i].nodepos.z, hnodeD_s[i].len);
-        printf("Data in that node\n");
-        int za;
-        for (za = hnodeD_s[i].start; za < hnodeD_s[i].end; za++)
-            printf("%f %f %f %f \n", dataD[za].x, dataD[za].y, dataD[za].z, dataD[za].w);
-        printf("From host\n");
 
         /* =======================================================================*/
         /* ================== Free unused host memory ============================*/

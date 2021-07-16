@@ -38,21 +38,6 @@ typedef struct { //Defines the node in the device without using elements to avoi
 //==================== Files reading ================================
 
 /*
-This function receives an array (char **file_names) of (int n_files) char arrays with the location of files relative to ../data/ and reads
-them all to find which of them has the minimum number of lines.
-params:
-    char **file_names: array of char arrays with the location of files relative to ../data/
-    int n_files: Number of char arrays in file_names
-
-returns:
-    int np: Number of lines that the file with less line has.
-
-example:
-    int rnp = get_smallest_file(file_names, n_files);
-*/
-int get_smallest_file(char **file_names, int n_files);
-
-/*
 This function opens and reads a file located at ../data/ + char *name_file, stores the data in the PointW3D **data array,
 stores the number of lines in the file in the int *pts value, and the largest component of the points in float *size_box.
 
@@ -69,8 +54,9 @@ returns:
 example:
     open_files(rand_files[i], &dataR[i], &rnp, &size_box);
 */
-void open_files(char *name_file, PointW3D **data, int *pts, float *size_box);
+void open_files(char *name_file, PointW3D **data, int *pts);
 void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips);
+void read_random_files(char ***rand_files, char ***histo_names, int **rnp, PointW3D ***dataR, int *n_randfiles, char *rand_name, int rand_dir);
 
 //================= Sampling of the data =============================
 void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int pips_width, int sample_size);
