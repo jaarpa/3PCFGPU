@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
 #include "create_grid.cuh"
 
 /*
@@ -25,6 +26,7 @@ dmax: (float)
 
 */
 void pcf_2ani(char **histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax);
+void pcf_2ani_wpips(char **histo_names, DNode *dnodeD, PointW3D *dataD, int32_t *dpipsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *dataR, int32_t *dpipsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_pips, int n_randfiles, int bn, float size_node, float dmax);
 
 //====================================================================
 //============ Kernels Section ======================================= 
@@ -43,6 +45,7 @@ dmax: (float) The maximum distance of interest between points.
 d_max_node: (float) The maximum internodal distance.
 */
 __global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, int node_offset=0, int bn_offset=0);
+__global__ void XX2ani_wpips(double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_nodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
 
 /*
 Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function. 
@@ -63,8 +66,7 @@ size_box: (float) The size of the box where the points were contained. It is use
 size_node: (float) Size of the nodes.
 */
 __global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
-
-__global__ void read_node(PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes);
+__global__ void XY2ani_wpips(double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
 
 #ifdef __cplusplus
 }
