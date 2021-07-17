@@ -7,7 +7,7 @@
 
 for i in $(seq 0 1 9)
 do
-	./PCF.out 3iso -f data_512Pc_$i.dat -r rand0_512MPc_$i.dat -n 50653 -b 30 -d 140
+	./PCF.out 3iso -f data_512MPc_$i.dat -r rand0_512MPc_$i.dat -n 50653 -b 30 -d 140
 done
 
 echo "===================================================="
