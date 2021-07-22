@@ -24,7 +24,7 @@
 #include "help.cuh"
 #include "create_grid.cuh"
 #include "pcf2ani.cuh"
-//#include "pcf2aniBPC.cuh"
+#include "pcf2aniBPC.cuh"
 //#include "pcf2iso.cuh"
 //#include "pcf2isoBPC.cuh"
 //#include "pcf3iso.cuh"
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    int sample_size = 0, bins = 0, partitions = 35;
+    int bins = 0, partitions = 35;
     //Used as bools
     int bpc = 0, analytic = 0, rand_dir = 0, rand_required = 0, pip_calculation = 0;
     float size_box_provided = 0, dmax = 0;
@@ -71,20 +71,7 @@ int main(int argc, char **argv)
     //Read the parameters from command line
     for (int idpar = 2; idpar < argc; idpar++)
     {
-        if (strcmp(argv[idpar],"-n") == 0)
-        {
-            sample_size = atoi(argv[idpar+1]);
-            idpar++;
-            if (sample_size < 0)
-            {
-                fprintf(stderr, 
-                    "Invalid sample size (-n). "
-                    "Sample size must be larger than 0. \n"
-                );
-                exit(1);
-            }
-        }
-        else if (strcmp(argv[idpar],"-f") == 0)
+        if (strcmp(argv[idpar],"-f") == 0)
         {
             if (strlen(argv[idpar+1]) < 100)
                 data_name = strdup(argv[idpar+1]);
@@ -206,7 +193,7 @@ int main(int argc, char **argv)
     start_timmer_host = clock(); //To check time setting up data
     
     float size_node = 0, htime = 0, size_box = 0;
-    int np = 0, minimum_file_lines = 0;
+    int np = 0;
     char **histo_names = NULL;
 
     //Declare variables for data.
@@ -244,24 +231,6 @@ int main(int argc, char **argv)
         read_random_files(&rand_files, &histo_names, &rnp, &dataR, &n_randfiles, rand_name, rand_dir);
         histo_names[0] = strdup(data_name);
 
-        //Get the smallest number of points
-        minimum_file_lines = rnp[0];
-        for (int i = 1; i < n_randfiles; i++)
-            if (rnp[i] < minimum_file_lines)
-                minimum_file_lines = rnp[i];
-
-        if (np < minimum_file_lines) minimum_file_lines = np;
-
-        if (sample_size == 0 || sample_size > minimum_file_lines)
-        {
-            sample_size = minimum_file_lines;
-            printf(
-                "Sample size set to %i according to the file with the "
-                "least amount of entries \n", 
-                sample_size
-            );
-        }
-
         if (pip_calculation)
         {
             pipsR = (int32_t**)malloc(n_randfiles*sizeof(int32_t *));
@@ -280,29 +249,8 @@ int main(int argc, char **argv)
                     );
                     exit(1);
                 }
-                if (rnp[i] > sample_size)
-                    random_sample_wpips(&dataR[i], &pipsR[i], rnp[i], pips_width, sample_size);
             }
         }
-        else //Take random samples from the random data (no PIPs)
-            for (int i = 0; i < n_randfiles; i++)
-                if (rnp[i] > sample_size)
-                    random_sample(&dataR[i], rnp[i], sample_size);
-    }
-
-    //Take a random samples from data
-    if (sample_size > np) 
-        printf(
-            "Sample size set to %i according to the file with the least "
-            "amount of entries \n", np
-        );
-    if (sample_size > 0 && sample_size < np)
-    {
-        if (pip_calculation)
-            random_sample_wpips(&dataD, &pipsD, rnp[0], pips_width, sample_size);
-        else
-            random_sample(&dataD, rnp[0], sample_size);
-        np = sample_size;
     }
 
     //Sets the size_box to the largest either the one found or the provided
@@ -482,7 +430,6 @@ int main(int argc, char **argv)
     }
     else
     {
-        pcf_2ani(histo_names, dnodeD, d_dataD, nonzero_Dnodes, dnodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, dmax);
         /*
         if (strcmp(argv[1],"3iso")==0){
             if (bpc){
@@ -510,14 +457,23 @@ int main(int argc, char **argv)
             } else {
                 pcf_2iso(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, dmax);
             }
-        } else if (strcmp(argv[1],"2ani")==0){
-            if (bpc){
-                pcf_2aniBPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
-            } else {
-                pcf_2ani(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, dmax);
-            }
-        }
+        } else 
         */
+        if (strcmp(argv[1],"2ani")==0)
+        {
+            if (bpc)
+                pcf_2aniBPC(
+                    histo_names, dnodeD, d_dataD, nonzero_Dnodes,
+                    dnodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, 
+                    bins, size_node, size_box, dmax
+                );
+            else
+                pcf_2ani(
+                    histo_names, dnodeD, d_dataD, nonzero_Dnodes, 
+                    dnodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, 
+                    bins, size_node, dmax
+                );
+        }
     }
     
 

@@ -5,7 +5,7 @@
 #Compiler 
 COMP=nvcc
 #Compiler flags
-FLGS=-g -G -arch=sm_61
+FLGS=-G -arch=sm_61
 
 #Directories
 SRCDIR=src

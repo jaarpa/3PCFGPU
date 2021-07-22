@@ -199,7 +199,7 @@ Test(pcf_prep_dirtests, read_pip_file)
     free(pipsD);
 }
 
-Test(pcf_prep_dirtests, random_sample_wpips)
+Test(pcf_prep_dirtests, random_sample_wpips, .disabled=true)
 {   
     int np, n_pips;
     int i, j, k, shufledinordered=0;

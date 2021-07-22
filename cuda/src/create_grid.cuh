@@ -7,39 +7,52 @@
 extern "C" {
 #endif
 
-typedef struct {
-	float x;
-	float y; 
-	float z;
+typedef struct
+{
+    float x;
+    float y;
+    float z;
 } Point3D;
 
 //Point with weight value. Structure
-typedef struct {
+typedef struct
+{
     float x;
-    float y; 
+    float y;
     float z;
     float w;
 } PointW3D;
 
-typedef struct {
-    Point3D nodepos; //Position of the node
-    int len;		// Number of points in the node
-    PointW3D *elements;	// Points in the node
-    int32_t *pips; //Pips of the node
+typedef struct
+{
+    //Position of the node
+    Point3D nodepos;
+    // Number of points in the node
+    int len;
+    // Points in the node
+    PointW3D *elements;
+    //Pips of the node
+    int32_t *pips;
 } Node;
 
-typedef struct { //Defines the node in the device without using elements to avoid deep copy
-    Point3D nodepos; //Position of the node
-    int len;		// Number of points in the node
-    int start; //prev element idx
-    int end; //last element idx [non inclusive]
+//Defines the node in the device without using elements to avoid deep copy
+typedef struct
+{ 
+    Point3D nodepos;
+    int len;
+    // prev element idx
+    int start;
+    // last element idx [non inclusive]
+    int end;
 } DNode;
 
 //==================== Files reading ================================
 
 /*
-This function opens and reads a file located at ../data/ + char *name_file, stores the data in the PointW3D **data array,
-stores the number of lines in the file in the int *pts value, and the largest component of the points in float *size_box.
+This function opens and reads a file located at ../data/ + char *name_file, 
+stores the data in the PointW3D **data array, stores the number of lines in the 
+file in the int *pts value, and the largest component of the points in float 
+*size_box.
 
 It is destructive relative to the data, pts and size_box variables.
 params:
@@ -57,10 +70,6 @@ example:
 void open_files(char *name_file, PointW3D **data, int *pts);
 void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips);
 void read_random_files(char ***rand_files, char ***histo_names, int **rnp, PointW3D ***dataR, int *n_randfiles, char *rand_name, int rand_dir);
-
-//================= Sampling of the data =============================
-void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int pips_width, int sample_size);
-void random_sample(PointW3D **data, int array_length, int sample_size);
 
 //=================== Creating the nodes =============================
 /*

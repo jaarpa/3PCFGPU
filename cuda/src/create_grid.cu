@@ -18,8 +18,60 @@
     exit(1);\
 }\
 
-#define DATADIR "../data/"
-#define RESULTDIR "../results/"
+#define DATADIR "/home/jaarpa/3PCFGPU/data/"
+#define RESULTDIR "/home/jaarpa/3PCFGPU/results/"
+
+
+//================= Sampling of the data =============================
+void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int pips_width, int sample_size)
+{
+    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
+    
+    srand(time(NULL)); // use current time as seed for random generator
+    int i, j, k;
+    int32_t *temp_pip = (int32_t *)malloc(pips_width*sizeof(int32_t));
+    CHECKALLOC(temp_pip);
+    PointW3D temp_point;
+    for (i = 0; i < array_length; i++)
+    {
+        j = i + rand() / (RAND_MAX / (array_length - i)+1);
+
+        for (k = 0; k < pips_width; k++)
+        {
+            temp_pip[k] = (*pips)[j*pips_width + k];
+            (*pips)[j*pips_width + k] = (*pips)[i*pips_width + k];
+            (*pips)[i*pips_width + k] = temp_pip[k];
+        }
+        temp_point = (*data)[j];
+        (*data)[j] = (*data)[i];
+        (*data)[i] = temp_point;
+    }
+    free(temp_pip);
+
+    *pips = (int32_t*)realloc(*pips, sample_size*pips_width*sizeof(int32_t));
+    CHECKALLOC(*pips);
+    *data = (PointW3D*)realloc(*data, sample_size*sizeof(PointW3D));
+    CHECKALLOC(*data);
+}
+
+void random_sample(PointW3D **data, int array_length, int sample_size)
+{
+    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
+    
+    srand(time(NULL)); // use current time as seed for random generator
+    int j;
+    PointW3D temp_point;
+    for (int i = 0; i < array_length; i++)
+    {
+        j = i + rand() / (RAND_MAX / (array_length - i)+1);
+        temp_point = (*data)[j];
+        (*data)[j] = (*data)[i];
+        (*data)[i] = temp_point;
+    }
+
+    *data = (PointW3D*)realloc(*data, sample_size*sizeof(PointW3D));
+    CHECKALLOC(*data);
+}
 
 //==================== Files reading ================================
 void open_files(char *name_file, PointW3D **data, int *pts)
@@ -243,57 +295,6 @@ void read_random_files(char ***rand_files, char ***histo_names, int **rnp, Point
 
     for (int i=0; i<(*n_randfiles); i++)
         open_files((*rand_files)[i], &(*dataR)[i], &(*rnp)[i]);
-}
-
-//================= Sampling of the data =============================
-void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int pips_width, int sample_size)
-{
-    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
-    
-    srand(time(NULL)); // use current time as seed for random generator
-    int i, j, k;
-    int32_t *temp_pip = (int32_t *)malloc(pips_width*sizeof(int32_t));
-    CHECKALLOC(temp_pip);
-    PointW3D temp_point;
-    for (i = 0; i < array_length; i++)
-    {
-        j = i + rand() / (RAND_MAX / (array_length - i)+1);
-
-        for (k = 0; k < pips_width; k++)
-        {
-            temp_pip[k] = (*pips)[j*pips_width + k];
-            (*pips)[j*pips_width + k] = (*pips)[i*pips_width + k];
-            (*pips)[i*pips_width + k] = temp_pip[k];
-        }
-        temp_point = (*data)[j];
-        (*data)[j] = (*data)[i];
-        (*data)[i] = temp_point;
-    }
-    free(temp_pip);
-
-    *pips = (int32_t*)realloc(*pips, sample_size*pips_width*sizeof(int32_t));
-    CHECKALLOC(*pips);
-    *data = (PointW3D*)realloc(*data, sample_size*sizeof(PointW3D));
-    CHECKALLOC(*data);
-}
-
-void random_sample(PointW3D **data, int array_length, int sample_size)
-{
-    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
-    
-    srand(time(NULL)); // use current time as seed for random generator
-    int j;
-    PointW3D temp_point;
-    for (int i = 0; i < array_length; i++)
-    {
-        j = i + rand() / (RAND_MAX / (array_length - i)+1);
-        temp_point = (*data)[j];
-        (*data)[j] = (*data)[i];
-        (*data)[i] = temp_point;
-    }
-
-    *data = (PointW3D*)realloc(*data, sample_size*sizeof(PointW3D));
-    CHECKALLOC(*data);
 }
 
 //=================== Creating the nodes =============================
