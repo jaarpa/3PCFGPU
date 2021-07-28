@@ -151,32 +151,35 @@ int main(int argc, char **argv)
                 exit(1);
             }
         }
-        else if (strcmp(argv[idpar],"-bpc") == 0) bpc = 1;
-        else if (strcmp(argv[idpar],"-a") == 0) analytic = 1;
-        else if (strcmp(argv[idpar],"-P") == 0) pip_calculation = 1;
+        else if (strcmp(argv[idpar],"-bpc") == 0)
+            bpc = 1;
+        else if (strcmp(argv[idpar],"-a") == 0)
+            analytic = 1;
+        else if (strcmp(argv[idpar],"-P") == 0)
+            pip_calculation = 1;
     }
 
     //Figure out if something very necessary is missing
-    if (data_name==NULL)
+    if (data_name == NULL)
     {
         fprintf(stderr, "Missing data file (-f). \n");
         exit(1);
     }
-    if (bins==0)
+    if (bins == 0)
     {
         fprintf(stderr, "Missing number of --bins (-b) argument. \n");
         exit(1);
     }
-    if (dmax==0)
+    if (dmax == 0)
     {
         fprintf(stderr, "Missing maximum distance (-d) argument. \n");
         exit(1);
     }
-    if (!(bpc && analytic && (strcmp(argv[1],"3iso")==0 || strcmp(argv[1],"2iso")==0)))
+    if (!(bpc && analytic && (strcmp(argv[1],"3iso") == 0 || strcmp(argv[1],"2iso") == 0)))
     {
         //If it is not any of the analytic options
-        rand_required=1; //Then a random file/directory is required
-        if (rand_name==NULL)
+        rand_required = 1; //Then a random file/directory is required
+        if (rand_name == NULL)
         {
             fprintf(stderr, "Missing random file(s) location (-r or -rd). \n");
             exit(1);
@@ -197,9 +200,9 @@ int main(int argc, char **argv)
     char **histo_names = NULL;
 
     //Declare variables for data.
-    DNode *hnodeD_s = NULL, *dnodeD = NULL;
+    DNode *h_nodeD = NULL, *dnodeD = NULL;
     PointW3D *dataD = NULL, *d_dataD = NULL;
-    int32_t *pipsD = NULL, *dpipsD = NULL;
+    int32_t *pipsD = NULL, *d_pipsD = NULL;
     int nonzero_Dnodes = 0, pips_width = 0;
     
     //Declare variables for random.
@@ -207,9 +210,9 @@ int main(int argc, char **argv)
     PointW3D **dataR = NULL;
     PointW3D *flattened_dataR = NULL, *d_dataR = NULL;
     int32_t **pipsR = NULL;
-    int32_t *flattened_pipsR = NULL, *dpipsR = NULL;
-    DNode **hnodeR_s = NULL;
-    DNode *flattened_hnodeR_s = NULL, *dnodeR = NULL;
+    int32_t *flattened_pipsR = NULL, *d_pipsR = NULL;
+    DNode **nodeR2_2D = NULL;
+    DNode *h_nodeR = NULL, *dnodeR = NULL;
     int *nonzero_Rnodes = NULL, *acum_nonzero_Rnodes = NULL, *rnp = NULL;
     int tot_nonzero_Rnodes = 0, pips_widthR = 0, n_randfiles = 1;
 
@@ -217,18 +220,21 @@ int main(int argc, char **argv)
     /* ================== Assign and prepare variables =======================*/
     /* =======================================================================*/
 
-    //Read data
-    open_files(data_name, &dataD, &np);
+    /* ============================ Read data ================================*/
+    open_files(&dataD, &np, data_name);
     //Read PIPs if required
     if (pip_calculation)
-        open_pip_files(&pipsD, data_name, np, &pips_width);
+        open_pip_files(&pipsD, &pips_width, data_name, np);
     
     //Read rand only if rand was required.
     if (rand_required)
     {
 
         //read_random_files
-        read_random_files(&rand_files, &histo_names, &rnp, &dataR, &n_randfiles, rand_name, rand_dir);
+        read_random_files(
+            &rand_files, &histo_names, &rnp, &dataR, &n_randfiles,
+            rand_name, rand_dir
+        );
         histo_names[0] = strdup(data_name);
 
         if (pip_calculation)
@@ -238,7 +244,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < n_randfiles; i++)
             {
                 //rnp to check that pip file has at least rnp points
-                open_pip_files(&pipsR[i], rand_files[i], rnp[i], &pips_widthR); 
+                open_pip_files(&pipsR[i], &pips_widthR, rand_files[i], rnp[i]); 
                 if (pips_width != pips_widthR) 
                 {
                     fprintf(stderr, 
@@ -253,6 +259,7 @@ int main(int argc, char **argv)
         }
     }
 
+    /* ========================= Set the size box ============================*/
     //Sets the size_box to the largest either the one found or the provided
     if (rand_required)
     {
@@ -282,27 +289,24 @@ int main(int argc, char **argv)
     //Set nodes size
     size_node = size_box/(float)(partitions);
 
-    //Make the nodes
-    if (pip_calculation)
-        nonzero_Dnodes = create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, pips_width, partitions, size_node, np);
-    else
-        nonzero_Dnodes = create_nodes(&hnodeD_s, &dataD, partitions, size_node, np);
+    /* ========================== Make the nodes =============================*/
     
+    //Data nodes
+    nonzero_Dnodes = create_nodes(&h_nodeD, &dataD, &pipsD, pips_width, partitions, size_node, np);
+    //Copy the data nodes to the device asynchronously
+    
+    //Random nodes gird
     if (rand_required)
     {
         nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
         CHECKALLOC(nonzero_Rnodes);
         acum_nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
         CHECKALLOC(acum_nonzero_Rnodes);
-        hnodeR_s =(DNode**)malloc(n_randfiles*sizeof(DNode*));
-        CHECKALLOC(hnodeR_s);
-        
-        if (pip_calculation)
-            for (int i = 0; i < n_randfiles; i++)
-                nonzero_Rnodes[i] = create_nodes_wpips(&hnodeR_s[i], &dataR[i], &pipsR[i], pips_width, partitions, size_node, np);
-        else
-            for (int i = 0; i < n_randfiles; i++)
-                nonzero_Rnodes[i] = create_nodes(&hnodeR_s[i], &dataR[i], partitions, size_node, np);
+        nodeR2_2D =(DNode**)malloc(n_randfiles*sizeof(DNode*));
+        CHECKALLOC(nodeR2_2D);
+
+        for (int i = 0; i < n_randfiles; i++)
+            nonzero_Rnodes[i] = create_nodes(&nodeR2_2D[i], &dataR[i], &pipsR[i], pips_width, partitions, size_node, np);
     }
     
     //Flatten the R Nodes
@@ -320,37 +324,37 @@ int main(int argc, char **argv)
             acum_nonzero_Rnodes[i] = tot_nonzero_Rnodes;
             tot_nonzero_Rnodes += nonzero_Rnodes[i];
         }
-        flattened_hnodeR_s = (DNode*)malloc(tot_nonzero_Rnodes*sizeof(DNode));
-        CHECKALLOC(flattened_hnodeR_s);
+        h_nodeR = (DNode*)malloc(tot_nonzero_Rnodes*sizeof(DNode));
+        CHECKALLOC(h_nodeR);
         for (int i = 0; i < n_randfiles; i++)
         {
             memcpy(&flattened_dataR[i*np], dataR[i], np*sizeof(PointW3D));
-            memcpy(&flattened_hnodeR_s[acum_nonzero_Rnodes[i]], hnodeR_s[i], nonzero_Rnodes[i]*sizeof(DNode));
+            memcpy(&h_nodeR[acum_nonzero_Rnodes[i]], nodeR2_2D[i], nonzero_Rnodes[i]*sizeof(DNode));
             if (pip_calculation) memcpy(&flattened_pipsR[i*np*pips_width], pipsR[i], np*pips_width*sizeof(int32_t));
         }
     }
     
     //Copy to Device
     CUCHECK(cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode)));
-    CUCHECK(cudaMemcpy(dnodeD, hnodeD_s, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
+    CUCHECK(cudaMemcpy(dnodeD, h_nodeD, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice));
     CUCHECK(cudaMalloc(&d_dataD, np*sizeof(PointW3D)));
     CUCHECK(cudaMemcpy(d_dataD, dataD, np*sizeof(PointW3D), cudaMemcpyHostToDevice));
     if (pip_calculation)
     {
-        CUCHECK(cudaMalloc(&dpipsD, np*pips_width*sizeof(int32_t)));
-        CUCHECK(cudaMemcpy(dpipsD, pipsD, np*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice));
+        CUCHECK(cudaMalloc(&d_pipsD, np*pips_width*sizeof(int32_t)));
+        CUCHECK(cudaMemcpy(d_pipsD, pipsD, np*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice));
     }
     
     if (rand_required)
     {
         CUCHECK(cudaMalloc(&dnodeR, tot_nonzero_Rnodes*sizeof(DNode)));
-        CUCHECK(cudaMemcpy(dnodeR, flattened_hnodeR_s, tot_nonzero_Rnodes*sizeof(DNode), cudaMemcpyHostToDevice));
+        CUCHECK(cudaMemcpy(dnodeR, h_nodeR, tot_nonzero_Rnodes*sizeof(DNode), cudaMemcpyHostToDevice));
         CUCHECK(cudaMalloc(&d_dataR, n_randfiles*np*sizeof(PointW3D)));
         CUCHECK(cudaMemcpy(d_dataR, flattened_dataR,  n_randfiles*np*sizeof(PointW3D), cudaMemcpyHostToDevice));
         if (pip_calculation)
         {
-            CUCHECK(cudaMalloc(&dpipsR, n_randfiles*np*pips_width*sizeof(int32_t)));
-            CUCHECK(cudaMemcpy(dpipsR, flattened_pipsR, n_randfiles*np*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice));
+            CUCHECK(cudaMalloc(&d_pipsR, n_randfiles*np*pips_width*sizeof(int32_t)));
+            CUCHECK(cudaMemcpy(d_pipsR, flattened_pipsR, n_randfiles*np*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice));
         }
     }
 
@@ -363,24 +367,24 @@ int main(int argc, char **argv)
     /* =======================================================================*/
 
     cudaFreeHost(dataD);
-    free(hnodeD_s);
-    if (pip_calculation) free(pipsD);
+    cudaFreeHost(h_nodeD);
+    if (pip_calculation) cudaFreeHost(pipsD);
     if (rand_required)
     {
         for (int i = 0; i < n_randfiles; i++)
         {
             free(rand_files[i]);
             cudaFreeHost(dataR[i]);
-            free(hnodeR_s[i]);
-            if (pip_calculation) free(pipsR[i]);
+            cudaFreeHost(nodeR2_2D[i]);
+            if (pip_calculation) cudaFreeHost(pipsR[i]);
         }
         free(rand_files);
         free(rnp);
         free(dataR);
-        free(hnodeR_s);
+        free(nodeR2_2D);
         if (pip_calculation) free(pipsR);
         free(flattened_dataR);
-        free(flattened_hnodeR_s);
+        free(h_nodeR);
         if (pip_calculation) free(flattened_pipsR);
     }
     
@@ -391,18 +395,18 @@ int main(int argc, char **argv)
     /* =======================================================================*/
     if (pip_calculation)
     {   if (strcmp(argv[1],"2ani") == 0)
-            pcf_2ani_wpips(histo_names, dnodeD, d_dataD, dpipsD, nonzero_Dnodes, dnodeR, d_dataR, dpipsR, nonzero_Rnodes, acum_nonzero_Rnodes, pips_width, n_randfiles, bins, size_node, dmax);
+            pcf_2ani_wpips(histo_names, dnodeD, d_dataD, d_pipsD, nonzero_Dnodes, dnodeR, d_dataR, d_pipsR, nonzero_Rnodes, acum_nonzero_Rnodes, pips_width, n_randfiles, bins, size_node, dmax);
         else if (strcmp(argv[1],"2iso") == 0)
             pcf_2iso_wpips(
-                dnodeD, d_dataD, dpipsD, nonzero_Dnodes,
-                dnodeR, d_dataR, dpipsR, nonzero_Rnodes,
+                dnodeD, d_dataD, d_pipsD, nonzero_Dnodes,
+                dnodeR, d_dataR, d_pipsR, nonzero_Rnodes,
                 acum_nonzero_Rnodes, pips_width,
                 histo_names, n_randfiles, bins, size_node, dmax
             );
         else if (strcmp(argv[1],"3iso")==0)
             pcf_3iso_wpips(
-                dnodeD, d_dataD, dpipsD, nonzero_Dnodes,
-                dnodeR, d_dataR, dpipsR, nonzero_Rnodes, acum_nonzero_Rnodes,
+                dnodeD, d_dataD, d_pipsD, nonzero_Dnodes,
+                dnodeR, d_dataR, d_pipsR, nonzero_Rnodes, acum_nonzero_Rnodes,
                 histo_names, n_randfiles, bins, size_node, dmax, pips_width
             );
         /*
@@ -532,14 +536,14 @@ int main(int argc, char **argv)
     CUCHECK(cudaFree(dnodeD));
     CUCHECK(cudaFree(d_dataD));
     if (pip_calculation)
-        CUCHECK(cudaFree(dpipsD));
+        CUCHECK(cudaFree(d_pipsD));
     free(data_name);
 
     if (rand_required)
     {
         CUCHECK(cudaFree(dnodeR));
         CUCHECK(cudaFree(d_dataR));
-        CUCHECK(cudaFree(dpipsR));
+        CUCHECK(cudaFree(d_pipsR));
         free(nonzero_Rnodes);
         for (int i = 0; i < n_randfiles + 1; i++) free(histo_names[i]);
         free(histo_names);

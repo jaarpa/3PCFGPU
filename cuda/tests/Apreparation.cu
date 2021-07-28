@@ -42,7 +42,7 @@ Test(pcf_prep_dirtests, read_data_files)
 {
     PointW3D *dataD=NULL;
     int np;
-    open_files(data_name, &dataD, &np);
+    open_files(&dataD, &np, data_name);
     cr_assert(dataD!=NULL, "data_name should not be null\n");
     cr_assert(np==32768, "Should have readed 32768 points readed %i \n", np);
     //First point
@@ -60,7 +60,7 @@ Test(pcf_prep_dirtests, read_data_files)
     cr_assert_float_eq(dataD[np-1].y, 238.387161, 0.000001, "Wrong first y got %f should be 238.387161\n", dataD[np-1].y);
     cr_assert_float_eq(dataD[np-1].z, 233.842285, 0.000001, "Wrong first z got %f should be 233.842285\n", dataD[np-1].z);
     cr_assert_float_eq(dataD[np-1].w, 1, 0.000001, "Wrong first w got %f should be 1\n", dataD[np-1].w);
-    free(dataD);
+    cudaFreeHost(dataD);
 
 }
 
@@ -166,7 +166,7 @@ Test(pcf_prep_dirtests, read_rand_files)
     for (int i=0; i<n_randfiles; i++){
         free(histo_names[i+1]);
         free(rand_files[i]);
-        free(dataR[i]);
+        cudaFreeHost(dataR[i]);
     }
     free(histo_names);
     free(rand_files);
@@ -183,7 +183,7 @@ Test(pcf_prep_dirtests, read_pip_file)
     int32_t pip_middle[] = {2078839517, 1092752850, 767665266, 1253688171, 188418701, 966179054, 205809551, 2016493685, 1793712407, 972990695};
     int32_t pip_last[] = {2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147479551, 2147483647, 2147418111};
 
-    open_pip_files(&pipsD, data_name, np, &n_pips);
+    open_pip_files(&pipsD, &n_pips, data_name, np);
     cr_assert_not_null(pipsD, "pipsD is null!!\n");
     cr_assert(n_pips==10, "Should read 10 integers, readed %i \n", n_pips);
     //Check first
@@ -195,16 +195,17 @@ Test(pcf_prep_dirtests, read_pip_file)
     //Check last
     for (int i=0; i<n_pips; i++)
         cr_assert(pipsD[(np-1)*n_pips + i]==pip_last[i], "Pip[%i] in the last entry should be %i but %i was read\n",i ,pipsD[(np-1)*n_pips + i],pip_last[i]);
-    free(pipsD);
+    cudaFreeHost(pipsD);
 }
 
 Test(pcf_prep_dirtests, make_nodes)
 {
-    int np, nonzero_Dnodes;
+    int np, nonzero_Dnodes, no_pips_width = 0;
     float size_box=0, size_node=0;
+    int32_t *no_pips = NULL;
     PointW3D *dataD;
     DNode *hnodeD_s = NULL;
-    open_files(data_name, &dataD, &np);
+    open_files(&dataD, &np, data_name);
     cr_assert(np==32768, "Should have readed 32768 points readed %i \n", np);
     for (int i=0; i<np; i++)
     {
@@ -216,7 +217,7 @@ Test(pcf_prep_dirtests, make_nodes)
     size_node = size_box/(float)(partitions);
     cr_assert_float_eq(size_node, 7.14285, 0.0001, "Got a different size_node %f but was expecting 7.14285", size_node);
 
-    nonzero_Dnodes = create_nodes(&hnodeD_s, &dataD, partitions, size_node, np);
+    nonzero_Dnodes = create_nodes(&hnodeD_s, &dataD, &no_pips, no_pips_width, partitions, size_node, np);
 
     cr_assert_not_null(hnodeD_s, "hnodeD_s is NULL\n");
     cr_assert_not_null(dataD, "dataD is NULL\n");
@@ -252,8 +253,8 @@ Test(pcf_prep_dirtests, make_nodes)
         }
     }
 
-    free(dataD);
-    free(hnodeD_s);
+    cudaFreeHost(dataD);
+    cudaFreeHost(hnodeD_s);
 }
 
 Test(pcf_prep_dirtests, make_nodes_wpips)
@@ -264,10 +265,10 @@ Test(pcf_prep_dirtests, make_nodes_wpips)
     float size_box=0, size_node=0;
     PointW3D *dataD, *data_ordered;
     DNode *hnodeD_s = NULL;
-    open_files(data_name, &dataD, &np);
-    open_files(data_name, &data_ordered, &np);
-    open_pip_files(&pipsD, data_name, np, &n_pips);
-    open_pip_files(&pips_ordered, data_name, np, &n_pips);
+    open_files(&dataD, &np, data_name);
+    open_files(&data_ordered, &np, data_name);
+    open_pip_files(&pipsD, &n_pips, data_name, np);
+    open_pip_files(&pips_ordered, &n_pips, data_name, np);
     cr_assert(np==32768, "Should have readed 32768 points readed %i \n", np);
     cr_assert(n_pips==10, "Should have readed 10 pips but readed %i \n", n_pips);
     for (int i=0; i<np; i++)
@@ -280,7 +281,7 @@ Test(pcf_prep_dirtests, make_nodes_wpips)
     size_node = size_box/(float)(partitions);
     cr_assert_float_eq(size_node, 7.14285, 0.0001, "Got a different size_node %f but was expecting 7.14285", size_node);
 
-    nonzero_Dnodes = create_nodes_wpips(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
+    nonzero_Dnodes = create_nodes(&hnodeD_s, &dataD, &pipsD, n_pips, partitions, size_node, np);
 
     cr_assert_not_null(hnodeD_s, "hnodeD_s is NULL\n");
     cr_assert_not_null(dataD, "dataD is NULL\n");
@@ -338,8 +339,8 @@ Test(pcf_prep_dirtests, make_nodes_wpips)
         shufledinordered = 0;
     }
 
-    free(dataD);
-    free(data_ordered);
-    free(pipsD);
-    free(hnodeD_s);
+    cudaFreeHost(dataD);
+    cudaFreeHost(data_ordered);
+    cudaFreeHost(pipsD);
+    cudaFreeHost(hnodeD_s);
 }

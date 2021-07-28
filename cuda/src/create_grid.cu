@@ -22,7 +22,7 @@
 #define RESULTDIR "/home/jaarpa/3PCFGPU/results/"
 
 //==================== Files reading ================================
-void open_files(char *name_file, PointW3D **data, int *pts)
+void open_files(PointW3D **data, int *pts, char *name_file)
 {
 
     //These will be function variables
@@ -49,7 +49,7 @@ void open_files(char *name_file, PointW3D **data, int *pts)
     rewind(file);
 
     //Allocate memory for data
-    (*data) = (PointW3D *)calloc((*pts), sizeof(PointW3D));
+    cudaMallocHost(data, (*pts)*sizeof(PointW3D));
     CHECKALLOC(*data);
 
     //Read line by line again
@@ -81,7 +81,7 @@ void open_files(char *name_file, PointW3D **data, int *pts)
     free(full_path);
 }
 
-void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips)
+void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
 {
 
     //These will be function variables
@@ -142,7 +142,7 @@ void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips)
     }
 
     rewind(file);
-    *pips = (int32_t*)calloc( np * (*n_pips), sizeof(int32_t) );
+    cudaMallocHost(pips, np * (*n_pips) * sizeof(int32_t));
 
     CHECKALLOC(*pips);
 
@@ -242,11 +242,11 @@ void read_random_files(char ***rand_files, char ***histo_names, int **rnp, Point
     CHECKALLOC((*rnp));
 
     for (int i=0; i<(*n_randfiles); i++)
-        open_files((*rand_files)[i], &(*dataR)[i], &(*rnp)[i]);
+        open_files( &(*dataR)[i], &(*rnp)[i], (*rand_files)[i]);
 }
 
 //=================== Creating the nodes =============================
-int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np)
+int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np)
 {
     int row, col, mom, idx, non_zero_idx, len, non_zero_nodes;
     Node *hnode = (Node *)calloc(partitions*partitions*partitions, sizeof(Node));
@@ -275,9 +275,13 @@ int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_wid
         len = ++hnode[idx].len;
         hnode[idx].elements = (PointW3D *)realloc(hnode[idx].elements, len*sizeof(PointW3D));
         hnode[idx].elements[len-1] = (*dat)[i];
-        hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
-        for (int j = 0; j < pips_width; j++)
-            hnode[idx].pips[(len - 1)*pips_width + j] = (*pips)[i * pips_width + j];
+        if (*pips != NULL)
+        {
+            hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
+            for (int j = 0; j < pips_width; j++)
+                hnode[idx].pips[(len - 1)*pips_width + j] = (*pips)[i * pips_width + j];
+        }
+        
     }
 
     //Counts non zero nodes
@@ -286,8 +290,9 @@ int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_wid
         if (hnode[idx].len > 0)
             non_zero_nodes++;
 
-    *nod = (DNode *)malloc(non_zero_nodes*sizeof(DNode));
-    idx = -1, non_zero_idx = 0, len = 0; //len is no the accumulated length of all the previous idx nodes
+    cudaMallocHost(nod, non_zero_nodes*sizeof(DNode));
+    CHECKALLOC(nod);
+    idx = -1, non_zero_idx = 0, len = 0; //len is now the accumulated length of all the previous idx nodes
     while (len < np)
     {
         idx++;
@@ -298,7 +303,9 @@ int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_wid
         for (int n_pto = 0; n_pto < hnode[idx].len; n_pto++)
         {
             (*dat)[len + n_pto] = hnode[idx].elements[n_pto];
-            for (int n_pip = 0; n_pip < pips_width; n_pip++) (*pips)[(len + n_pto)*pips_width + n_pip] = hnode[idx].pips[n_pto*pips_width + n_pip];
+            if (*pips != NULL)
+                for (int n_pip = 0; n_pip < pips_width; n_pip++)
+                    (*pips)[(len + n_pto)*pips_width + n_pip] = hnode[idx].pips[n_pto*pips_width + n_pip];
         }
         len += hnode[idx].len;
         (*nod)[non_zero_idx].end = len;
@@ -316,6 +323,7 @@ int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_wid
 
 }
 
+/*
 int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, int np)
 {
     int row, col, mom, idx, non_zero_idx, len, non_zero_nodes;
@@ -379,7 +387,7 @@ int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, i
     return non_zero_nodes;    
 
 }
-
+*/
 //================== Saving the histograms ===========================
 void save_histogram1D(char *name, int bns, double *histo, int nhistos)
 {

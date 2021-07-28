@@ -49,10 +49,10 @@ typedef struct
 //==================== Files reading ================================
 
 /*
-This function opens and reads a file located at ../data/ + char *name_file, 
-stores the data in the PointW3D **data array, stores the number of lines in the 
-file in the int *pts value, and the largest component of the points in float 
-*size_box.
+Now data needs to be deallocated with cudaFreeHost. This function opens and reads
+a file located at ../data/ + char *name_file, stores the data in the PointW3D 
+**data array, stores the number of lines in the file in the int *pts value, 
+and the largest component of the points in float *size_box.
 
 It is destructive relative to the data, pts and size_box variables.
 params:
@@ -67,8 +67,8 @@ returns:
 example:
     open_files(rand_files[i], &dataR[i], &rnp, &size_box);
 */
-void open_files(char *name_file, PointW3D **data, int *pts);
-void open_pip_files(int32_t **pips, char *name_file, int np, int *n_pips);
+void open_files(PointW3D **data, int *pts, char *name_file);
+void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np);
 void read_random_files(char ***rand_files, char ***histo_names, int **rnp, PointW3D ***dataR, int *n_randfiles, char *rand_name, int rand_dir);
 
 //=================== Creating the nodes =============================
@@ -86,9 +86,9 @@ Returns:
     None. But creates the dnodes in nod_s_dest, and orders the points in dat and pips
 
 */
-int create_nodes_wpips(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np);
+int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np);
 
-int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, int np);
+//int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, int np);
 
 //================== Saving the histograms ===========================
 void save_histogram1D(char *name, int bns, double *histo, int nhistos);
