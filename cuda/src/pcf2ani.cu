@@ -199,7 +199,6 @@ void pcf_2ani_wpips(char **histo_names, DNode *dnodeD, PointW3D *dataD, int32_t 
     /* ======================  Var declaration ===============================*/
     /* =======================================================================*/
     const int PREFIX_LENGTH = 12;
-    
     float d_max_node, time_spent;
     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
     int  blocks_D, blocks_R, threads_perblock_dim = 32;
@@ -288,7 +287,6 @@ void pcf_2ani_wpips(char **histo_names, DNode *dnodeD, PointW3D *dataD, int32_t 
     CUCHECK(cudaDeviceSynchronize());
 
     CUCHECK(cudaMemcpy(DD, d_DD, bn*bn*sizeof(double), cudaMemcpyDeviceToHost));
-    //Falta cambiar como se asignan los nombres a los histogramas que se van a guardar para que sea con estilo C
     nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
     strcpy(&nameDD[PREFIX_LENGTH-1],histo_names[0]);
     save_histogram2D(nameDD, bn, DD, 0);

@@ -5,18 +5,46 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "CUDA C++: Launch",
+            "name": "2ani-pips",
             "type": "cuda-gdb",
             "request": "launch",
             "program": "${workspaceFolder}/cuda/bin/PCF",
             "args": "2ani -f data_500.dat -r rand0_500.dat -d 150 -b 50 -P",
         },
         {
-            "name": "Python: Current File",
-            "type": "python",
+            "name": "2ani",
+            "type": "cuda-gdb",
             "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
-        }
+            "program": "${workspaceFolder}/cuda/bin/PCF",
+            "args": "2ani -f data_500.dat -r rand0_500.dat -d 150 -b 50",
+        },
+        {
+            "name": "2iso-pips",
+            "type": "cuda-gdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/cuda/bin/PCF",
+            "args": "2iso -f data_500.dat -r rand0_500.dat -d 150 -b 50 -P",
+        },
+        {
+            "name": "2iso",
+            "type": "cuda-gdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/cuda/bin/PCF",
+            "args": "2iso -f data_500.dat -r rand0_500.dat -d 150 -b 50",
+        },
+        {
+            "name": "3iso-pips",
+            "type": "cuda-gdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/cuda/bin/PCF",
+            "args": "3iso -f data_500.dat -r rand0_500.dat -d 150 -b 50 -P",
+        },
+        {
+            "name": "3iso",
+            "type": "cuda-gdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/cuda/bin/PCF",
+            "args": "3iso -f data_500.dat -r rand0_500.dat -d 150 -b 50",
+        },
     ]
 }

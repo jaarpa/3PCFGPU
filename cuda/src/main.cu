@@ -27,7 +27,7 @@
 #include "pcf2aniBPC.cuh"
 #include "pcf2iso.cuh"
 //#include "pcf2isoBPC.cuh"
-//#include "pcf3iso.cuh"
+#include "pcf3iso.cuh"
 //#include "pcf3isoBPC.cuh"
 //#include "pcf3ani.cuh"
 //#include "pcf3aniBPC.cuh"
@@ -399,6 +399,12 @@ int main(int argc, char **argv)
                 acum_nonzero_Rnodes, pips_width,
                 histo_names, n_randfiles, bins, size_node, dmax
             );
+        else if (strcmp(argv[1],"3iso")==0)
+            pcf_3iso_wpips(
+                dnodeD, d_dataD, dpipsD, nonzero_Dnodes,
+                dnodeR, d_dataR, dpipsR, nonzero_Rnodes, acum_nonzero_Rnodes,
+                histo_names, n_randfiles, bins, size_node, dmax, pips_width
+            );
         /*
         if (strcmp(argv[1],"3iso")==0){
             if (bpc){
@@ -493,6 +499,23 @@ int main(int argc, char **argv)
                 */
             } else {
                 pcf_2iso(
+                    dnodeD, d_dataD, nonzero_Dnodes,
+                    dnodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes,
+                    histo_names, n_randfiles, bins, size_node, dmax
+                );
+            }
+        }
+        else if (strcmp(argv[1],"3iso")==0){
+            if (bpc){
+                /*
+                if (analytic){
+                    pcf_3isoBPC_analytic_wpips(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bins, np, size_node, size_box, dmax);
+                } else {
+                    pcf_3isoBPC_wpips(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
+                }
+                */
+            } else {
+                pcf_3iso(
                     dnodeD, d_dataD, nonzero_Dnodes,
                     dnodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes,
                     histo_names, n_randfiles, bins, size_node, dmax
