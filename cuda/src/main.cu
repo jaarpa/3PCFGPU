@@ -25,7 +25,7 @@
 #include "create_grid.cuh"
 #include "pcf2ani.cuh"
 #include "pcf2aniBPC.cuh"
-//#include "pcf2iso.cuh"
+#include "pcf2iso.cuh"
 //#include "pcf2isoBPC.cuh"
 //#include "pcf3iso.cuh"
 //#include "pcf3isoBPC.cuh"
@@ -362,7 +362,7 @@ int main(int argc, char **argv)
     /* ================== Free unused host memory ============================*/
     /* =======================================================================*/
 
-    free(dataD);
+    cudaFreeHost(dataD);
     free(hnodeD_s);
     if (pip_calculation) free(pipsD);
     if (rand_required)
@@ -370,7 +370,7 @@ int main(int argc, char **argv)
         for (int i = 0; i < n_randfiles; i++)
         {
             free(rand_files[i]);
-            free(dataR[i]);
+            cudaFreeHost(dataR[i]);
             free(hnodeR_s[i]);
             if (pip_calculation) free(pipsR[i]);
         }
@@ -390,8 +390,15 @@ int main(int argc, char **argv)
     /* ======================= Launch the cuda code ==========================*/
     /* =======================================================================*/
     if (pip_calculation)
-    {
-        pcf_2ani_wpips(histo_names, dnodeD, d_dataD, dpipsD, nonzero_Dnodes, dnodeR, d_dataR, dpipsR, nonzero_Rnodes, acum_nonzero_Rnodes, pips_width, n_randfiles, bins, size_node, dmax);
+    {   if (strcmp(argv[1],"2ani") == 0)
+            pcf_2ani_wpips(histo_names, dnodeD, d_dataD, dpipsD, nonzero_Dnodes, dnodeR, d_dataR, dpipsR, nonzero_Rnodes, acum_nonzero_Rnodes, pips_width, n_randfiles, bins, size_node, dmax);
+        else if (strcmp(argv[1],"2iso") == 0)
+            pcf_2iso_wpips(
+                dnodeD, d_dataD, dpipsD, nonzero_Dnodes,
+                dnodeR, d_dataR, dpipsR, nonzero_Rnodes,
+                acum_nonzero_Rnodes, pips_width,
+                histo_names, n_randfiles, bins, size_node, dmax
+            );
         /*
         if (strcmp(argv[1],"3iso")==0){
             if (bpc){
@@ -473,6 +480,24 @@ int main(int argc, char **argv)
                     dnodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, 
                     bins, size_node, dmax
                 );
+        }
+        else if (strcmp(argv[1],"2iso")==0)
+        {
+            if (bpc){
+                /*
+                if (analytic){
+                    pcf_2iso_BPCanalytic(data_name, dnodeD, d_ordered_pointsD, nonzero_Dnodes, bins, np, size_node, size_box, dmax);
+                } else {
+                    pcf_2iso_BPC(histo_names, dnodeD, d_ordered_pointsD, nonzero_Dnodes, dnodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
+                }
+                */
+            } else {
+                pcf_2iso(
+                    dnodeD, d_dataD, nonzero_Dnodes,
+                    dnodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes,
+                    histo_names, n_randfiles, bins, size_node, dmax
+                );
+            }
         }
     }
     

@@ -21,58 +21,6 @@
 #define DATADIR "/home/jaarpa/3PCFGPU/data/"
 #define RESULTDIR "/home/jaarpa/3PCFGPU/results/"
 
-
-//================= Sampling of the data =============================
-void random_sample_wpips(PointW3D **data, int32_t **pips, int array_length, int pips_width, int sample_size)
-{
-    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
-    
-    srand(time(NULL)); // use current time as seed for random generator
-    int i, j, k;
-    int32_t *temp_pip = (int32_t *)malloc(pips_width*sizeof(int32_t));
-    CHECKALLOC(temp_pip);
-    PointW3D temp_point;
-    for (i = 0; i < array_length; i++)
-    {
-        j = i + rand() / (RAND_MAX / (array_length - i)+1);
-
-        for (k = 0; k < pips_width; k++)
-        {
-            temp_pip[k] = (*pips)[j*pips_width + k];
-            (*pips)[j*pips_width + k] = (*pips)[i*pips_width + k];
-            (*pips)[i*pips_width + k] = temp_pip[k];
-        }
-        temp_point = (*data)[j];
-        (*data)[j] = (*data)[i];
-        (*data)[i] = temp_point;
-    }
-    free(temp_pip);
-
-    *pips = (int32_t*)realloc(*pips, sample_size*pips_width*sizeof(int32_t));
-    CHECKALLOC(*pips);
-    *data = (PointW3D*)realloc(*data, sample_size*sizeof(PointW3D));
-    CHECKALLOC(*data);
-}
-
-void random_sample(PointW3D **data, int array_length, int sample_size)
-{
-    if ((RAND_MAX - array_length)<100) printf("The array length %i is too close to the maximum random int %i. The shuffling might bee poor \n", array_length, RAND_MAX);
-    
-    srand(time(NULL)); // use current time as seed for random generator
-    int j;
-    PointW3D temp_point;
-    for (int i = 0; i < array_length; i++)
-    {
-        j = i + rand() / (RAND_MAX / (array_length - i)+1);
-        temp_point = (*data)[j];
-        (*data)[j] = (*data)[i];
-        (*data)[i] = temp_point;
-    }
-
-    *data = (PointW3D*)realloc(*data, sample_size*sizeof(PointW3D));
-    CHECKALLOC(*data);
-}
-
 //==================== Files reading ================================
 void open_files(char *name_file, PointW3D **data, int *pts)
 {
@@ -225,9 +173,9 @@ void read_random_files(char ***rand_files, char ***histo_names, int **rnp, Point
     //Instead of rand name should be an array with the name of each rand array or something like that.
     if (rand_dir)
     {
-        char *directory_path = (char*)malloc((9+strlen(rand_name))*sizeof(char));
-        CHECKALLOC(directory_path);
         char data_path[] = DATADIR;
+        char *directory_path = (char*)calloc((strlen(data_path)+strlen(rand_name))+1,sizeof(char));
+        CHECKALLOC(directory_path);
         strcpy(directory_path, data_path);
         strcat(directory_path, rand_name); //Set up the full path
         DIR *folder = opendir(directory_path);
@@ -453,7 +401,7 @@ void save_histogram1D(char *name, int bns, double *histo, int nhistos)
 
     CHECKOPENFILE(file);
     
-    for (int i = 0; i < bns; i++) fprintf(file,"%.4f",histo[nhistos*bns + i]);
+    for (int i = 0; i < bns; i++) fprintf(file,"%.4f ",histo[nhistos*bns + i]);
     //file2 << setprecision(12) << histo[nhistos*bns + i] << endl;
 
     fclose(file);

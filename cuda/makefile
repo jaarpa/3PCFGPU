@@ -5,7 +5,7 @@
 #Compiler 
 COMP=nvcc
 #Compiler flags
-FLGS=-G -arch=sm_61
+FLGS=-g -G -arch=sm_61
 
 #Directories
 SRCDIR=src
@@ -40,7 +40,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cu
 $(TESTSDIR)/bin/%: $(TESTSDIR)/%.cu
 	$(COMP) $(FLGS) $< $(OBJS) -o $@ -lcriterion
 
-test: OBJS=obj/create_grid.o obj/pcf2ani.o
+test: OBJS=obj/create_grid.o
 test: $(OBJS) $(TESTBINS)
 	for test in $(TESTBINS) ; do ./$$test ;  done
 

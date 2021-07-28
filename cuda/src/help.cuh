@@ -1,5 +1,5 @@
-#ifndef PCF_HELP
-#define PCF_HELP
+#ifndef PCF_HELP_CUH
+#define PCF_HELP_CUH
 
 #ifdef __cplusplus
 extern "C" {

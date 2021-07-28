@@ -9,7 +9,7 @@
             "type": "cuda-gdb",
             "request": "launch",
             "program": "${workspaceFolder}/cuda/bin/PCF",
-            "args": "2ani -f data_500.dat -r rand0_500.dat -b 50 -d 150 -bpc",
+            "args": "2ani -f data_500.dat -r rand0_500.dat -d 150 -b 50 -P",
         },
         {
             "name": "Python: Current File",

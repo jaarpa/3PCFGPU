@@ -1,11 +1,11 @@
 #ifndef CREATE_GRID
 #define CREATE_GRID
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
 
 typedef struct
 {

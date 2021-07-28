@@ -7,7 +7,6 @@
 #include <stdlib.h>
 //PCF libraries
 #include "../src/create_grid.cuh"
-#include "../src/pcf2ani.cuh"
 
 int sample_size=320, bins=0, partitions=35, n_randfiles = 1;
 int bpc = 0, analytic=0, rand_dir = 0, rand_required=0, pip_calculation=0; //Used as bools
@@ -199,48 +198,6 @@ Test(pcf_prep_dirtests, read_pip_file)
     free(pipsD);
 }
 
-Test(pcf_prep_dirtests, random_sample_wpips, .disabled=true)
-{   
-    int np, n_pips;
-    int i, j, k, shufledinordered=0;
-    int32_t *pips_ordered=NULL,  *pips_shuffled=NULL;
-    PointW3D *data_ordered=NULL, *data_shuffled=NULL;
-    open_files(data_name, &data_ordered, &np);
-    open_files(data_name, &data_shuffled, &np);
-    open_pip_files(&pips_shuffled, data_name, np, &n_pips);
-    open_pip_files(&pips_ordered, data_name, np, &n_pips);
-    cr_expect(data_ordered[10].x==data_shuffled[10].x, "The data in position %i has different values before the shuffle\n",10);
-    random_sample_wpips(&data_shuffled, &pips_shuffled, np, n_pips, sample_size);
-    cr_expect(data_ordered[10].x!=data_shuffled[10].x, "The data in position %i has the same value after the shuffle\n",10);
-
-    for (i = 0; i<sample_size; i++)
-    {
-        for (j = 0; j<np; j++)
-        {
-            if (cmpflt(data_shuffled[i].x,data_ordered[j].x) && cmpflt(data_shuffled[i].y,data_ordered[j].y) && cmpflt(data_shuffled[i].z,data_ordered[j].z))
-            {
-                shufledinordered=1;
-                break;
-            }
-        }
-        cr_assert(shufledinordered, "The data in the new pos %i was not found in the original points\n",i);
-        cr_assert_float_eq(data_shuffled[i].x, data_ordered[j].x, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", data_shuffled[i].x, data_ordered[j].x);
-        cr_assert_float_eq(data_shuffled[i].y, data_ordered[j].y, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", data_shuffled[i].y, data_ordered[j].y);
-        cr_assert_float_eq(data_shuffled[i].z, data_ordered[j].z, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", data_shuffled[i].z, data_ordered[j].z);
-        cr_assert_float_eq(data_shuffled[i].w, data_ordered[j].w, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", data_shuffled[i].w, data_ordered[j].w);
-        for (k = 0; k<n_pips; k++)
-        {
-            cr_assert(pips_shuffled[i*n_pips + k] == pips_ordered[j*n_pips+k], "PIPs do not match with their points after shuffle\n");
-        }
-        shufledinordered = 0;
-    }
-
-    free(pips_ordered);
-    free(pips_shuffled);
-    free(data_ordered);
-    free(data_shuffled);
-}
-
 Test(pcf_prep_dirtests, make_nodes)
 {
     int np, nonzero_Dnodes;
@@ -298,7 +255,6 @@ Test(pcf_prep_dirtests, make_nodes)
     free(dataD);
     free(hnodeD_s);
 }
-
 
 Test(pcf_prep_dirtests, make_nodes_wpips)
 {
