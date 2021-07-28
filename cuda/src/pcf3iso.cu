@@ -269,7 +269,7 @@ void pcf_3iso_wpips(
     /* =====================   Var declaration ===============================*/
     /* =======================================================================*/
 
-    const int PREFIX_LENGTH = 8;
+    const int PREFIX_LENGTH = 13;
     float time_spent, d_max_node;
 
     double *DDD, *RRR, *DRR, *DDR;
@@ -302,10 +302,10 @@ void pcf_3iso_wpips(
     char *nameRRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
     char *nameDDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
     char *nameDRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    strcpy(nameDDD,"DDDiso_");
-    strcpy(nameRRR,"DRRiso_");
-    strcpy(nameDDR,"DDRiso_");
-    strcpy(nameDRR,"RRRiso_");
+    strcpy(nameDDD,"DDDiso_pips_");
+    strcpy(nameRRR,"DRRiso_pips_");
+    strcpy(nameDDR,"DDRiso_pips_");
+    strcpy(nameDRR,"RRRiso_pips_");
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
