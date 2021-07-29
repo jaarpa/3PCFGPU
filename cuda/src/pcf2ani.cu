@@ -63,22 +63,22 @@ __global__ void XY2ani(
 );
 
 __global__ void XX2ani_wpips(
-    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips,
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int pips_width,
     int nonzero_nodes, int bins, float dmax, float d_max_node
 );
 __global__ void XY2ani_wpips(
-    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips,
+    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int pips_width,
     int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, 
     int nonzero_Rnodes, int bins, float dmax, float d_max_node
 );
 
 void pcf_2ani(
-    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD,
-    int nonzero_Dnodes, cudaStream_t streamDD,
-    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR,
-    int *nonzero_Rnodes, cudaStream_t *streamRR,
+    DNode *d_nodeD, PointW3D *d_dataD, int32_t *d_pipsD,
+    int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
+    DNode **d_nodeR, PointW3D **d_dataR, int32_t **d_pipsR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
     char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
-    int n_pips
+    int pips_width
 )
 {
 
@@ -105,7 +105,7 @@ void pcf_2ani(
     //Prefix that will be used to save the histograms
     char *nameDD = NULL, *nameRR = NULL, *nameDR = NULL;
     int PREFIX_LENGTH;
-    if (dpipsD == NULL)
+    if (d_pipsD == NULL)
     {
         PREFIX_LENGTH = 7;
         nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
@@ -182,9 +182,9 @@ void pcf_2ani(
     //Launch the kernels
     time_spent = 0; //Restarts timmer
     CUCHECK(cudaEventRecord(start_timmer));
-    if (dpipsD == NULL)
+    if (d_pipsD == NULL)
     {
-        XX2ani<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node);
+        XX2ani<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, nonzero_Dnodes, bins, dmax, d_max_node);
         CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
         for (int i=0; i<n_randfiles; i++)
         {
@@ -192,16 +192,19 @@ void pcf_2ani(
             blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
             gridR.x = blocks_R;
             gridR.y = blocks_R;
-            XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
             CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
             gridDR.y = blocks_R;
-            XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, dnodeD, nonzero_Dnodes, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            
+            cudaStreamWaitEvent(streamDR[i], DDcopy_done);
+            cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
+            XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, nonzero_Dnodes, d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
             CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
         }
     }
     else
     {
-        XX2ani_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, bins, dmax, d_max_node);
+        XX2ani_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, d_pipsD, pips_width, nonzero_Dnodes, bins, dmax, d_max_node);
         CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
         for (int i=0; i<n_randfiles; i++)
         {
@@ -209,10 +212,13 @@ void pcf_2ani(
             blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
             gridR.x = blocks_R;
             gridR.y = blocks_R;
-            XX2ani_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], dnodeR[i], dpipsR[i], n_pips, nonzero_Rnodes[i], bins, dmax, d_max_node);
+            XX2ani_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], d_pipsR[i], pips_width, nonzero_Rnodes[i], bins, dmax, d_max_node);
             CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
             gridDR.y = blocks_R;
-            XY2ani_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, d_dataR[i], dnodeR[i], dpipsR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+
+            cudaStreamWaitEvent(streamDR[i], DDcopy_done);
+            cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
+            XY2ani_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, d_pipsD, pips_width, nonzero_Dnodes, d_dataR[i], d_nodeR[i], d_pipsR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
             CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
         }
     }
@@ -222,17 +228,17 @@ void pcf_2ani(
 
     nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
     strcpy(&nameDD[PREFIX_LENGTH-1],histo_names[0]);
-    save_histogram2D(nameDD, bins, DD, 0);
+    save_histogram2D(nameDD, bins, DD);
 
     for (int i=0; i<n_randfiles; i++)
     {
         nameRR = (char*)realloc(nameRR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameRR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram2D(nameRR, bins, RR[i], 0);
+        save_histogram2D(nameRR, bins, RR[i]);
 
         nameDR = (char*)realloc(nameDR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameDR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram2D(nameDR, bins, DR[i], 0);
+        save_histogram2D(nameDR, bins, DR[i]);
     }
 
     CUCHECK(cudaEventRecord(stop_timmer));
@@ -401,7 +407,7 @@ __global__ void XY2ani(
 
 
 __global__ void XX2ani_wpips(
-    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips,
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int pips_width,
     int nonzero_nodes, int bins, float dmax, float d_max_node
 )
 {
@@ -448,7 +454,7 @@ __global__ void XX2ani_wpips(
                         if (bnort>(bins-1)) continue;
                         bin = bnz + bnort;
 
-                        v = get_weight(pipsD, i, pipsD, j, n_pips);
+                        v = get_weight(pipsD, i, pipsD, j, pips_width);
 
                         atomicAdd(&XX[bin],v);
                     }
@@ -459,7 +465,7 @@ __global__ void XX2ani_wpips(
 }
 
 __global__ void XY2ani_wpips(
-    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips,
+    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int pips_width,
     int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, 
     int nonzero_Rnodes, int bins, float dmax, float d_max_node
 )
@@ -507,7 +513,7 @@ __global__ void XY2ani_wpips(
                         if (bnort>(bins-1)) continue;
                         bin = bnz + bnort;
 
-                        v = get_weight(pipsD, i, pipsR, j, n_pips);
+                        v = get_weight(pipsD, i, pipsR, j, pips_width);
 
                         atomicAdd(&XY[bin],v);
                     }

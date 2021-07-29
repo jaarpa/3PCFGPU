@@ -26,12 +26,12 @@ dmax: (float)
 
 */
 void pcf_2ani(
-    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD,
-    int nonzero_Dnodes, cudaStream_t streamDD,
-    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR,
-    int *nonzero_Rnodes, cudaStream_t *streamRR,
+    DNode *d_nodeD, PointW3D *d_dataD, int32_t *d_pipsD,
+    int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
+    DNode **d_nodeR, PointW3D **d_dataR, int32_t **d_pipsR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
     char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
-    int n_pips
+    int pips_width
 );
 
 #ifdef __cplusplus

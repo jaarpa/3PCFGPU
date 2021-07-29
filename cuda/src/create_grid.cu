@@ -136,14 +136,18 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
 
     rewind(file);
     cudaMallocHost(pips, np * (*n_pips) * sizeof(int32_t));
-
     CHECKALLOC(*pips);
 
     for (int i = 0; i < np; i++)
     {
         if (getline(&line, &len, file) == -1)
         {
-            fprintf(stderr, "Number of pips entries and number of coordinated points do not match %s has %i while the coordinates file has %i. \n ", full_path, i, np);
+            fprintf(
+                stderr,
+                "Number of pips entries and number of coordinated points do not "
+                "match %s has %i while the coordinates file has %i. \n ",
+                full_path, i, np
+            );
             exit(1);
         }
         number = strtok(line, " ");
@@ -350,7 +354,7 @@ void save_histogram1D(char *name, int bns, double *histo, int nhistos)
     full_path = NULL;
 }
 
-void save_histogram2D(char *name, int bns, double *histo, int nhistos)
+void save_histogram2D(char *name, int bns, double *histo)
 {
     /* This function saves a 2 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -374,9 +378,8 @@ void save_histogram2D(char *name, int bns, double *histo, int nhistos)
 
     for (int i = 0; i < bns; i++){
         for (int j = 0; j < bns; j++){
-            idx = nhistos*bns*bns + i*bns + j;
+            idx = i*bns + j;
             fprintf(file,"%.4f ",histo[idx]);
-            //file << setprecision(12) << histo[idx] << ' ';
         }
         fprintf(file,"\n");
     }
