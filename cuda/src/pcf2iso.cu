@@ -20,7 +20,10 @@ bn: (int) NUmber of bins in the XY histogram.
 dmax: (float) The maximum distance of interest between points.
 d_max_node: (float) The maximum internodal distance.
 */
-__global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
+__global__ void XX2iso(
+    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, 
+    float dmax, float d_max_node
+);
 
 /*
 Kernel function to calculate the mixed histograms for the 2 point isotropic correlation function. 
@@ -38,78 +41,118 @@ bn: (int) NUmber of bins in the XY histogram.
 dmax: (float) The maximum distance of interest between points.
 d_max_node: (float) The maximum internodal distance.
 */
-__global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
+__global__ void XY2iso(
+    double *XY, PointW3D *elementsD, DNode *nodeD, 
+    int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, 
+    int bn, float dmax, float d_max_node
+);
 
-__global__ void XX2iso_wpips(double *XX, PointW3D *elements, int32_t *pipsD, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, int pipis_width, int node_offset, int bn_offset);
-__global__ void XY2iso_wpips(double *XY, PointW3D *elementsD, int32_t *pipsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR, int32_t *pipsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int pipis_width, int node_offset, int bn_offset);
+__global__ void XX2iso_wpips(
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD,
+    int nonzero_nodes, int bn, float dmax, float d_max_node, int pipis_width
+);
+
+__global__ void XY2iso_wpips(
+    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int pipis_width, 
+    int nonzero_Dnodes, PointW3D *elementsR, DNode *nodeR, int32_t *pipsR,
+    int nonzero_Rnodes, int bn, float dmax, float d_max_node
+);
 
 void pcf_2iso(
-    DNode *dnodeD, PointW3D *dataD, int nonzero_Dnodes,
-    DNode *dnodeR, PointW3D *dataR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes,
-    char **histo_names, int n_randfiles, int bins, float size_node, float dmax
+    DNode *d_nodeD, PointW3D *d_dataD, int32_t *d_pipsD,
+    int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
+    DNode **d_nodeR, PointW3D **d_dataR, int32_t **d_pipsR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
+    char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
+    int pips_width
 )
 {
+
     /* =======================================================================*/
     /* ======================  Var declaration ===============================*/
     /* =======================================================================*/
 
-    const int PREFIX_LENGTH = 7;
     float d_max_node, time_spent;
-    double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
+    double *DD=NULL, **RR=NULL, **DR=NULL, *d_DD=NULL, **d_RR=NULL, **d_DR=NULL;
     int  blocks_D, blocks_R, threads_perblock_dim = 32;
 
-    cudaEvent_t start_timmer, stop_timmer; // GPU timmer
+    // GPU timmer
+    cudaEvent_t start_timmer, stop_timmer;
     CUCHECK(cudaEventCreate(&start_timmer));
     CUCHECK(cudaEventCreate(&stop_timmer));
 
-    cudaStream_t streamDD, *streamRR, *streamDR;
-    streamRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-    CHECKALLOC(streamRR);
+    //This may come from parameters
+    cudaStream_t *streamDR;
     streamDR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
     CHECKALLOC(streamDR);
-    CUCHECK(cudaStreamCreate(&streamDD));
-    for (int i = 0; i < n_randfiles; i++){
+    for (int i = 0; i < n_randfiles; i++)
         CUCHECK(cudaStreamCreate(&streamDR[i]));
-        CUCHECK(cudaStreamCreate(&streamRR[i]));
-    }
 
-    char *nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    char *nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    char *nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    strcpy(nameDD,"DDiso_");
-    strcpy(nameRR,"RRiso_");
-    strcpy(nameDR,"DRiso_");
+    //Prefix that will be used to save the histograms
+    char *nameDD = NULL, *nameRR = NULL, *nameDR = NULL;
+    int PREFIX_LENGTH;
+    if (d_pipsD == NULL)
+    {
+        PREFIX_LENGTH = 7;
+        nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        strcpy(nameDD,"DDiso_");
+        strcpy(nameRR,"RRiso_");
+        strcpy(nameDR,"DRiso_");
+    }
+    else
+    {
+        PREFIX_LENGTH = 12;
+        nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        strcpy(nameDD,"DDiso_pips_");
+        strcpy(nameRR,"RRiso_pips_");
+        strcpy(nameDR,"DRiso_pips_");
+    }
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
 
     d_max_node = dmax + size_node*sqrt(3.0);
-    d_max_node*=d_max_node;
+    d_max_node *= d_max_node;
 
     // Allocate memory for the histogram as double
-    DD = (double*)malloc(bins*sizeof(double));
+    DD = (double*)malloc(bins*bins*sizeof(double));
+    RR = (double**)malloc(n_randfiles*sizeof(double*));
+    DR = (double**)malloc(n_randfiles*sizeof(double*));
     CHECKALLOC(DD);
-    RR = (double*)malloc(n_randfiles*bins*sizeof(double));
     CHECKALLOC(RR);
-    DR = (double*)malloc(n_randfiles*bins*sizeof(double));
     CHECKALLOC(DR);
+    for (int i = 0; i < n_randfiles; i++)
+    {
+        RR[i] = (double*)malloc(bins*bins*sizeof(double));
+        CHECKALLOC(RR[i]);
+        DR[i] = (double*)malloc(bins*bins*sizeof(double));
+        CHECKALLOC(DR[i]);
+    }
 
-    CUCHECK(cudaMalloc(&d_DD, bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_RR, n_randfiles*bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_DR, n_randfiles*bins*sizeof(double)));
+    d_RR = (double**)malloc(n_randfiles*sizeof(double*));
+    d_DR = (double**)malloc(n_randfiles*sizeof(double*));
+    CHECKALLOC(d_DR);
+    CHECKALLOC(d_RR);
 
-    //Restarts the main histograms in device to zero
-    CUCHECK(cudaMemsetAsync(d_DD, 0, bins*sizeof(double), streamDD));
-    CUCHECK(cudaMemsetAsync(d_RR, 0, n_randfiles*bins*sizeof(double), streamRR[0]));
-    CUCHECK(cudaMemsetAsync(d_DR, 0, n_randfiles*bins*sizeof(double), streamDR[0]));
-    CUCHECK(cudaStreamSynchronize(streamRR[0]));
-    CUCHECK(cudaStreamSynchronize(streamDR[0]));
+    CUCHECK(cudaMalloc(&d_DD, bins*bins*sizeof(double)));
+    CUCHECK(cudaMemsetAsync(d_DD, 0, bins*bins*sizeof(double), streamDD));
+    for (int i = 0; i < n_randfiles; i++)
+    {
+        CUCHECK(cudaMalloc(&d_RR[i], bins*bins*sizeof(double)));
+        CUCHECK(cudaMalloc(&d_DR[i], bins*bins*sizeof(double)));
+        //Restarts the main histograms in device to zero
+        CUCHECK(cudaMemsetAsync(d_RR[i], 0, bins*bins*sizeof(double), streamRR[i]));
+        CUCHECK(cudaMemsetAsync(d_DR[i], 0, bins*bins*sizeof(double), streamDR[i]));
+    }
 
     /* =======================================================================*/
     /* ====================== Starts kernel Launches  ========================*/
     /* =======================================================================*/
-
 
     //Compute the dimensions of the GPU grid
     //One thread for each node
@@ -123,38 +166,65 @@ void pcf_2iso(
     dim3 gridDR(blocks_D,2,1);
 
     //Launch the kernels
-    time_spent=0; //Restarts timmer
+    time_spent = 0; //Restarts timmer
     CUCHECK(cudaEventRecord(start_timmer));
-    XX2iso<<<gridD,threads_perblock,0,streamDD>>>(d_DD, dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, 0, 0);
-    for (int i=0; i<n_randfiles; i++){
-        //Calculates grid dim for each file
-        blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-        gridR.x = blocks_R;
-        gridR.y = blocks_R;
-        XX2iso<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, dataR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
-        gridDR.y = blocks_R;
-        XY2iso<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, dataD, dnodeD, nonzero_Dnodes, dataR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
+    if (d_pipsD == NULL)
+    {
+        XX2iso<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, nonzero_Dnodes, bins, dmax, d_max_node);
+        CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
+        for (int i=0; i<n_randfiles; i++)
+        {
+            //Calculates grid dim for each file
+            blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
+            gridR.x = blocks_R;
+            gridR.y = blocks_R;
+            XX2iso<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
+            gridDR.y = blocks_R;
+            
+            cudaStreamWaitEvent(streamDR[i], DDcopy_done);
+            cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
+            XY2iso<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, nonzero_Dnodes, d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
+        }
+    }
+    else
+    {
+        XX2iso_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, d_pipsD, pips_width, nonzero_Dnodes, bins, dmax, d_max_node);
+        CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
+        for (int i=0; i<n_randfiles; i++)
+        {
+            //Calculates grid dim for each file
+            blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
+            gridR.x = blocks_R;
+            gridR.y = blocks_R;
+            XX2iso_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], d_pipsR[i], pips_width, nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
+            gridDR.y = blocks_R;
+
+            cudaStreamWaitEvent(streamDR[i], DDcopy_done);
+            cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
+            XY2iso_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, d_pipsD, pips_width, nonzero_Dnodes, d_dataR[i], d_nodeR[i], d_pipsR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
+        }
     }
 
     //Waits for all the kernels to complete
     CUCHECK(cudaDeviceSynchronize());
 
-    //Save the results
-    CUCHECK(cudaMemcpy(DD, d_DD, bins*sizeof(double), cudaMemcpyDeviceToHost));
     nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
     strcpy(&nameDD[PREFIX_LENGTH-1],histo_names[0]);
-    save_histogram1D(nameDD, bins, DD, 0);
-    CUCHECK(cudaMemcpy(RR, d_RR, n_randfiles*bins*sizeof(double), cudaMemcpyDeviceToHost));
-    for (int i=0; i<n_randfiles; i++){
+    save_histogram1D(nameDD, bins, DD);
+
+    for (int i=0; i<n_randfiles; i++)
+    {
         nameRR = (char*)realloc(nameRR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameRR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram1D(nameRR, bins, RR, i);
-    }
-    CUCHECK(cudaMemcpy(DR, d_DR, n_randfiles*bins*sizeof(double), cudaMemcpyDeviceToHost));
-    for (int i=0; i<n_randfiles; i++){
+        save_histogram1D(nameRR, bins, RR[i]);
+
         nameDR = (char*)realloc(nameDR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameDR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram1D(nameDR, bins, DR, i);
+        save_histogram1D(nameDR, bins, DR[i]);
     }
 
     CUCHECK(cudaEventRecord(stop_timmer));
@@ -169,187 +239,56 @@ void pcf_2iso(
 
     //Free the memory
     CUCHECK(cudaStreamDestroy(streamDD));
-    for (int i = 0; i < n_randfiles; i++){
+    for (int i = 0; i < n_randfiles; i++)
+    {
         CUCHECK(cudaStreamDestroy(streamDR[i]));
         CUCHECK(cudaStreamDestroy(streamRR[i]));
+        
+        free(RR[i]);
+        RR[i] = NULL;
+        free(DR[i]);
+        DR[i] = NULL;
+        CUCHECK(cudaFree(d_RR[i]));
+        d_RR[i] = NULL;
+        CUCHECK(cudaFree(d_DR[i]));
+        d_DR[i] = NULL;
     }
     free(streamDR);
+    streamDR = NULL;
     free(streamRR);
+    streamRR = NULL;
+    free(RR);
+    RR = NULL;
+    free(DR);
+    DR = NULL;
+    free(d_RR);
+    d_RR = NULL;
+    free(d_DR);
+    d_DR = NULL;
 
     CUCHECK(cudaEventDestroy(start_timmer));
     CUCHECK(cudaEventDestroy(stop_timmer));
 
     free(DD);
-    free(RR);
-    free(DR);
-    
+    DD = NULL;
     CUCHECK(cudaFree(d_DD));
-    CUCHECK(cudaFree(d_RR));
-    CUCHECK(cudaFree(d_DR));
-
-}
-
-void pcf_2iso_wpips(
-    DNode *dnodeD, PointW3D *dataD, int32_t *dpipsD, int nonzero_Dnodes,
-    DNode *dnodeR, PointW3D *dataR, int32_t *dpipsR, int *nonzero_Rnodes,
-    int *acum_nonzero_Rnodes, int n_pips,
-    char **histo_names, int n_randfiles, int bins, float size_node, float dmax
-)
-{
-    /* =======================================================================*/
-    /* ======================  Var declaration ===============================*/
-    /* =======================================================================*/
-
-    const int PREFIX_LENGTH = 7;
-    float d_max_node, time_spent;
-    double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
-    int  blocks_D, blocks_R, threads_perblock_dim = 32;
-
-    cudaEvent_t start_timmer, stop_timmer; // GPU timmer
-    CUCHECK(cudaEventCreate(&start_timmer));
-    CUCHECK(cudaEventCreate(&stop_timmer));
-
-    cudaStream_t streamDD, *streamRR, *streamDR;
-    streamRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-    CHECKALLOC(streamRR);
-    streamDR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-    CHECKALLOC(streamDR);
-    CUCHECK(cudaStreamCreate(&streamDD));
-    for (int i = 0; i < n_randfiles; i++){
-        CUCHECK(cudaStreamCreate(&streamDR[i]));
-        CUCHECK(cudaStreamCreate(&streamRR[i]));
-    }
-
-    char *nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    CHECKALLOC(nameDD);
-    char *nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    CHECKALLOC(nameRR);
-    char *nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    CHECKALLOC(nameDR);
-    strcpy(nameDD,"DDiso_");
-    strcpy(nameRR,"RRiso_");
-    strcpy(nameDR,"DRiso_");
-
-    /* =======================================================================*/
-    /* =======================  Memory allocation ============================*/
-    /* =======================================================================*/
-
-    d_max_node = dmax + size_node*sqrt(3.0);
-    d_max_node*=d_max_node;
-
-    // Allocate memory for the histogram as double
-    DD = (double*)malloc(bins*sizeof(double));
-    CHECKALLOC(DD);
-    RR = (double*)malloc(n_randfiles*bins*sizeof(double));
-    CHECKALLOC(RR);
-    DR = (double*)malloc(n_randfiles*bins*sizeof(double));
-    CHECKALLOC(DR);
-
-    CUCHECK(cudaMalloc(&d_DD, bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_RR, n_randfiles*bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_DR, n_randfiles*bins*sizeof(double)));
-
-    //Restarts the main histograms in device to zero
-    CUCHECK(cudaMemsetAsync(d_DD, 0, bins*sizeof(double), streamDD));
-    CUCHECK(cudaMemsetAsync(d_RR, 0, n_randfiles*bins*sizeof(double), streamRR[0]));
-    CUCHECK(cudaMemsetAsync(d_DR, 0, n_randfiles*bins*sizeof(double), streamDR[0]));
-    CUCHECK(cudaStreamSynchronize(streamRR[0]));
-    CUCHECK(cudaStreamSynchronize(streamDR[0]));
-
-    /* =======================================================================*/
-    /* ====================== Starts kernel Launches  ========================*/
-    /* =======================================================================*/
-
-
-    //Compute the dimensions of the GPU grid
-    //One thread for each node
-    
-    blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
-    dim3 threads_perblock(threads_perblock_dim,threads_perblock_dim,1);
-    dim3 gridD(blocks_D,blocks_D,1);
-    
-    //Dummy declaration
-    dim3 gridR(2,2,1);
-    dim3 gridDR(blocks_D,2,1);
-
-    //Launch the kernels
-    time_spent=0; //Restarts timmer
-    CUCHECK(cudaEventRecord(start_timmer));
-    XX2iso_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, dataD, dpipsD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, n_pips, 0, 0);
-    for (int i=0; i<n_randfiles; i++){
-        //Calculates grid dim for each file
-        blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-        gridR.x = blocks_R;
-        gridR.y = blocks_R;
-        XX2iso_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, dataR, dpipsR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, n_pips, acum_nonzero_Rnodes[i], i);
-        gridDR.y = blocks_R;
-        XY2iso_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, dataD, dpipsD, dnodeD, nonzero_Dnodes, dataR, dpipsR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, n_pips, acum_nonzero_Rnodes[i], i);
-    }
-
-    //Waits for all the kernels to complete
-    CUCHECK(cudaDeviceSynchronize());
-
-    //Save the results
-    CUCHECK(cudaMemcpy(DD, d_DD, bins*sizeof(double), cudaMemcpyDeviceToHost));
-    nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
-    strcpy(&nameDD[PREFIX_LENGTH-1],histo_names[0]);
-    save_histogram1D(nameDD, bins, DD, 0);
-    CUCHECK(cudaMemcpy(RR, d_RR, n_randfiles*bins*sizeof(double), cudaMemcpyDeviceToHost));
-    for (int i=0; i<n_randfiles; i++){
-        nameRR = (char*)realloc(nameRR,PREFIX_LENGTH + strlen(histo_names[i+1]));
-        strcpy(&nameRR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram1D(nameRR, bins, RR, i);
-    }
-    CUCHECK(cudaMemcpy(DR, d_DR, n_randfiles*bins*sizeof(double), cudaMemcpyDeviceToHost));
-    for (int i=0; i<n_randfiles; i++){
-        nameDR = (char*)realloc(nameDR,PREFIX_LENGTH + strlen(histo_names[i+1]));
-        strcpy(&nameDR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram1D(nameDR, bins, DR, i);
-    }
-
-    CUCHECK(cudaEventRecord(stop_timmer));
-    CUCHECK(cudaEventSynchronize(stop_timmer));
-    CUCHECK(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
-
-    printf("Spent %f miliseconds to compute and save all the histograms. \n", time_spent);
-    
-    /* =======================================================================*/
-    /* ==========================  Free memory ===============================*/
-    /* =======================================================================*/
-
-    //Free the memory
-    CUCHECK(cudaStreamDestroy(streamDD));
-    for (int i = 0; i < n_randfiles; i++){
-        CUCHECK(cudaStreamDestroy(streamDR[i]));
-        CUCHECK(cudaStreamDestroy(streamRR[i]));
-    }
-    free(streamDR);
-    free(streamRR);
-
-    CUCHECK(cudaEventDestroy(start_timmer));
-    CUCHECK(cudaEventDestroy(stop_timmer));
-
-    free(DD);
-    free(RR);
-    free(DR);
-    
-    CUCHECK(cudaFree(d_DD));
-    CUCHECK(cudaFree(d_RR));
-    CUCHECK(cudaFree(d_DR));
+    d_DD = NULL;
 }
 
 //====================================================================
 //============ Kernels Section ======================================= 
 //====================================================================
-
-__global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset)
+__global__ void XX2iso(
+    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, 
+    float dmax, float d_max_node
+)
 {
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
 
-    int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
+    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx1<nonzero_nodes && idx2<nonzero_nodes){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
@@ -375,7 +314,6 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
                     if (d<dd_max && d>0){
                         bin = (int)(sqrt(d)*ds);
                         if (bin>(bn-1)) continue;
-                        bin += bn_offset*bn;
                         v = elements[i].w*elements[j].w;
                         atomicAdd(&XX[bin],v);
                     }
@@ -385,12 +323,16 @@ __global__ void XX2iso(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
     }
 }
 
-__global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset){
-
+__global__ void XY2iso(
+    double *XY, PointW3D *elementsD, DNode *nodeD, 
+    int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, 
+    int bn, float dmax, float d_max_node
+)
+{
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset)){
+    if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
@@ -417,7 +359,6 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
                         bin = (int)(sqrt(d)*ds);
 
                         if (bin>(bn-1)) continue;
-                        bin += bn_offset*bn;
 
                         v = elementsD[i].w*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
@@ -428,15 +369,17 @@ __global__ void XY2iso(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
     }
 }
 
-
-__global__ void XX2iso_wpips(double *XX, PointW3D *elements, int32_t *pipsD, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, int pipis_width, int node_offset, int bn_offset)
+__global__ void XX2iso_wpips(
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD,
+    int nonzero_nodes, int bn, float dmax, float d_max_node, int pipis_width
+)
 {
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
 
-    int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
+    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx1<nonzero_nodes && idx2<nonzero_nodes){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
@@ -462,7 +405,6 @@ __global__ void XX2iso_wpips(double *XX, PointW3D *elements, int32_t *pipsD, DNo
                     if (d<dd_max && d>0){
                         bin = (int)(sqrt(d)*ds);
                         if (bin>(bn-1)) continue;
-                        bin += bn_offset*bn;
                         v = get_weight(pipsD, i, pipsD, j, pipis_width);
                         atomicAdd(&XX[bin],v);
                     }
@@ -472,12 +414,16 @@ __global__ void XX2iso_wpips(double *XX, PointW3D *elements, int32_t *pipsD, DNo
     }
 }
 
-__global__ void XY2iso_wpips(double *XY, PointW3D *elementsD, int32_t *pipsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR, int32_t *pipsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int pipis_width, int node_offset, int bn_offset)
+__global__ void XY2iso_wpips(
+    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int pipis_width, 
+    int nonzero_Dnodes, PointW3D *elementsR, DNode *nodeR, int32_t *pipsR,
+    int nonzero_Rnodes, int bn, float dmax, float d_max_node
+)
 {
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset)){
+    if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
@@ -504,7 +450,6 @@ __global__ void XY2iso_wpips(double *XY, PointW3D *elementsD, int32_t *pipsD, DN
                         bin = (int)(sqrt(d)*ds);
 
                         if (bin>(bn-1)) continue;
-                        bin += bn_offset*bn;
 
                         v = get_weight(pipsD, i, pipsD, j, pipis_width);
                         atomicAdd(&XY[bin],v);

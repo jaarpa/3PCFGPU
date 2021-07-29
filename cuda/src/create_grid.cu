@@ -326,7 +326,7 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
 }
 
 //================== Saving the histograms ===========================
-void save_histogram1D(char *name, int bns, double *histo, int nhistos)
+void save_histogram1D(char *name, int bns, double *histo)
 {
     /* This function saves a 1 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -346,8 +346,8 @@ void save_histogram1D(char *name, int bns, double *histo, int nhistos)
 
     CHECKOPENFILE(file);
     
-    for (int i = 0; i < bns; i++) fprintf(file,"%.4f ",histo[nhistos*bns + i]);
-    //file2 << setprecision(12) << histo[nhistos*bns + i] << endl;
+    for (int i = 0; i < bns; i++)
+        fprintf(file,"%.4f ", histo[i]);
 
     fclose(file);
     free(full_path);

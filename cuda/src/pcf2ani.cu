@@ -405,7 +405,6 @@ __global__ void XY2ani(
     }
 }
 
-
 __global__ void XX2ani_wpips(
     double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int pips_width,
     int nonzero_nodes, int bins, float dmax, float d_max_node
