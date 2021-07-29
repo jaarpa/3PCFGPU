@@ -6,3 +6,5 @@
 *.o
 3PCF.code-workspace
 .vscode/
+cuda/bin/
+cuda/obj/
