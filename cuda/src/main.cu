@@ -1,19 +1,3 @@
-/** CUDA check macro */
-#define CUCHECK(call){\
-    cudaError_t res = (call);\
-    if(res != cudaSuccess) {\
-        const char* err_str = cudaGetErrorString(res);\
-        fprintf(stderr, "%s (%d): %s in %s \n", __FILE__, __LINE__, err_str, #call);\
-        exit(-1);\
-    }\
-}\
-
-/* Complains if it cannot allocate the array */
-#define CHECKALLOC(p)  if(p == NULL) {\
-    fprintf(stderr, "%s (line %d): Error - unable to allocate required memory \n", __FILE__, __LINE__);\
-    exit(1);\
-}\
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -21,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "cucheck_macros.cuh"
 #include "help.cuh"
 #include "create_grid.cuh"
 #include "pcf2ani.cuh"
@@ -47,6 +32,16 @@ int main(int argc, char **argv)
     or -n is not specified the sample size is set to the number of rows of the file with less rows.
     */
 
+    /* ================ Check for compute capability >= 6.x ==================*/
+    int devId, major;
+    CUCHECK(cudaGetDevice(&devId));
+    for(int i = 0; i < 25; ++i) {
+        CUCHECK(cudaDeviceGetAttribute(&major,
+                                        cudaDevAttrComputeCapabilityMajor,
+                                        devId));
+    }
+    printf("%i\n", major);
+ 
     /* ===================  Read command line args ===========================*/
     if (argc <= 6 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)
     {
@@ -307,11 +302,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < n_randfiles; i++)
             nonzero_Rnodes[i] = create_nodes(&nodeR2_2D[i], &dataR[i], &pipsR[i], pips_width, partitions, size_node, np);
-    }
-    
-    //Flatten the R Nodes
-    if (rand_required)
-    {
+
+       //Flatten the R Nodes
         flattened_dataR = (PointW3D*)malloc(n_randfiles*np*sizeof(PointW3D));
         CHECKALLOC(flattened_dataR);
         if (pip_calculation)

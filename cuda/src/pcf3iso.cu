@@ -1,46 +1,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+#include "cucheck_macros.cuh"
 #include "pcf3iso.cuh"
 #include "device_functions.cuh"
-
-/** CUDA check macro */
-#define CUCHECK(call){\
-    cudaError_t res = (call);\
-    if(res != cudaSuccess) {\
-        const char* err_str = cudaGetErrorString(res);\
-        fprintf(stderr, "%s (%d): %s in %s \n", __FILE__, __LINE__, err_str, #call);\
-        exit(-1);\
-    }\
-}\
-
-#if !defined(__CUDA_ARCH__) || defined(DOUBLE_ATOMIC_ADD_ARCHLT600) || __CUDA_ARCH__ >= 600
-#else
-    #define DOUBLE_ATOMIC_ADD_ARCHLT600
-    __device__ double atomicAdd(double* address, double val)
-    {
-        unsigned long long int* address_as_ull =
-                                  (unsigned long long int*)address;
-        unsigned long long int old = *address_as_ull, assumed;
-    
-        do {
-            assumed = old;
-            old = atomicCAS(address_as_ull, assumed,
-                            __double_as_longlong(val +
-                                   __longlong_as_double(assumed)));
-    
-        // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
-        } while (assumed != old);
-    
-        return __longlong_as_double(old);
-    }
-#endif
-
-/* Complains if it cannot allocate the array */
-#define CHECKALLOC(p)  if(p == NULL) {\
-    fprintf(stderr, "%s (line %d): Error - unable to allocate required memory \n", __FILE__, __LINE__);\
-    exit(1);\
-}\
 
 /*
 Kernel function to calculate the pure histograms for the 3 point isotropic correlation function. 
@@ -611,7 +575,7 @@ __global__ void XXX3iso_wpips(double *XXX, PointW3D *elements, int32_t *pipsD, D
                     int end3 = nodeD[idx3].end;
                     int bnx, bny, bnz, bin;
                     float dd_max=dmax*dmax;
-                    float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
+                    float x1,y1,z1,x2,y2,z2,x3,y3,z3;
                     double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
                     for (int i=nodeD[idx1].start; i<end1; i++){
@@ -682,7 +646,7 @@ __global__ void XXY3iso_wpips(double *XXY, PointW3D *elementsX, int32_t *pipsX, 
                     int end3 = nodeY[idx3].end;
                     int bnx, bny, bnz, bin;
                     float dd_max=dmax*dmax;
-                    float x1,y1,z1,w1,x2,y2,z2,w2,x3,y3,z3;
+                    float x1,y1,z1,x2,y2,z2,x3,y3,z3;
                     double d12, d23, d31, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
 
                     for (int i=nodeX[idx1].start; i<end1; i++){

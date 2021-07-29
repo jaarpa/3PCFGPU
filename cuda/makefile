@@ -5,7 +5,7 @@
 #Compiler 
 COMP=nvcc
 #Compiler flags
-FLGS=-g -G -arch=sm_61
+FLGS=-g -G  -arch=sm_60
 
 #Directories
 SRCDIR=src
@@ -26,7 +26,7 @@ BIN=$(BINDIR)/PCF
 
 all: $(BIN)
 
-release: FLGS=-O2 -arch=sm_61
+release: FLGS=-O2 -arch=sm_60
 release: $(SRCS)
 	$(COMP) $(FLGS) $(SRCS) -o $(BIN)
 

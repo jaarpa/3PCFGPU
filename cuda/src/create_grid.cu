@@ -4,19 +4,9 @@
 #include <stdint.h>
 #include <dirent.h>
 #include <time.h>
+
+#include "cucheck_macros.cuh"
 #include "create_grid.cuh"
-
-/* Complains if it cannot open a file */
-#define CHECKOPENFILE(p)  if(p == NULL) {\
-    fprintf(stderr, "%s (line %d): Error - unable to open the file \n", __FILE__, __LINE__);\
-    exit(1);\
-    }\
-
-/* Complains if it cannot allocate the array */
-#define CHECKALLOC(p)  if(p == NULL) {\
-    fprintf(stderr, "%s (line %d): Error - unable to allocate required memory \n", __FILE__, __LINE__);\
-    exit(1);\
-}\
 
 #define DATADIR "/home/jaarpa/3PCFGPU/data/"
 #define RESULTDIR "/home/jaarpa/3PCFGPU/results/"
