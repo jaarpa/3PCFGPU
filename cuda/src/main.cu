@@ -318,9 +318,9 @@ int main(int argc, char **argv)
     CUCHECK(cudaMalloc(&d_dataD,  np*sizeof(PointW3D)));
     if (pipsD != NULL)
     {
-        CUCHECK(cudaMalloc(&d_pipsD,  np*sizeof(int32_t)));
+        CUCHECK(cudaMalloc(&d_pipsD,  np*pips_width*sizeof(int32_t)));
         //This potentially could become async
-        CUCHECK(cudaMemcpyAsync(d_pipsD, pipsD, np*sizeof(int32_t), cudaMemcpyHostToDevice, streamDD));
+        CUCHECK(cudaMemcpyAsync(d_pipsD, pipsD, np*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice, streamDD));
     }
     CUCHECK(cudaMemcpyAsync(d_nodeD, h_nodeD, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
     CUCHECK(cudaMemcpyAsync(d_dataD, dataD, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD));
@@ -351,9 +351,9 @@ int main(int argc, char **argv)
             CUCHECK(cudaMalloc(&d_dataR[i],  rnp[i]*sizeof(PointW3D)));
             if (pipsR != NULL)
             {
-                CUCHECK(cudaMalloc(&d_pipsR[i],  rnp[i]*sizeof(int32_t)));
+                CUCHECK(cudaMalloc(&d_pipsR[i],  rnp[i]*pips_width*sizeof(int32_t)));
                 //This potentially could become async
-                CUCHECK(cudaMemcpyAsync(d_pipsR[i], pipsR[i], rnp[i]*sizeof(int32_t), cudaMemcpyHostToDevice, streamRR[i]));
+                CUCHECK(cudaMemcpyAsync(d_pipsR[i], pipsR[i], rnp[i]*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice, streamRR[i]));
             }
             CUCHECK(cudaMemcpyAsync(d_nodeR[i], h_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode), cudaMemcpyHostToDevice, streamRR[i]));
             CUCHECK(cudaMemcpyAsync(d_dataR[i], dataR[i], rnp[i]*sizeof(PointW3D), cudaMemcpyHostToDevice, streamRR[i]));
