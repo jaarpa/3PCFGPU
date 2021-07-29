@@ -66,18 +66,18 @@ void pcf_3iso(
     CUCHECK(cudaEventCreate(&start_timmer));
     CUCHECK(cudaEventCreate(&stop_timmer));
 
-    cudaStream_t streamDDD, *streamRRR, *streamDDR, *streamDRR;
+    cudaStream_t streamDDD, *streamRRR, *streamDDR, *streamRRD;
     streamRRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
     CHECKALLOC(streamRRR);
     streamDDR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
     CHECKALLOC(streamDDR);
-    streamDRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-    CHECKALLOC(streamDRR);
+    streamRRD = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
+    CHECKALLOC(streamRRD);
     CUCHECK(cudaStreamCreate(&streamDDD));
     for (int i = 0; i < n_randfiles; i++){
         CUCHECK(cudaStreamCreate(&streamRRR[i]));
         CUCHECK(cudaStreamCreate(&streamDDR[i]));
-        CUCHECK(cudaStreamCreate(&streamDRR[i]));
+        CUCHECK(cudaStreamCreate(&streamRRD[i]));
     }
 
     // Name of the files where the results are saved
@@ -115,10 +115,10 @@ void pcf_3iso(
     //Restarts the main histograms in host to zero
     CUCHECK(cudaMemsetAsync(d_DDD, 0, bins*bins*bins*sizeof(double), streamDDD));
     CUCHECK(cudaMemsetAsync(d_RRR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamRRR[0]));
-    CUCHECK(cudaMemsetAsync(d_DRR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamDRR[0]));
+    CUCHECK(cudaMemsetAsync(d_DRR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamRRD[0]));
     CUCHECK(cudaMemsetAsync(d_DDR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamDDR[0]));
     CUCHECK(cudaStreamSynchronize(streamRRR[0]));
-    CUCHECK(cudaStreamSynchronize(streamDRR[0]));
+    CUCHECK(cudaStreamSynchronize(streamRRD[0]));
     CUCHECK(cudaStreamSynchronize(streamDDR[0]));
 
     /* =======================================================================*/
@@ -153,7 +153,7 @@ void pcf_3iso(
         XXY3iso<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, dataD, dnodeD, nonzero_Dnodes, dataR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, acum_nonzero_Rnodes[i], i, 1);
         gridDRR.x = blocks_R;
         gridDRR.y = blocks_R;
-        XXY3iso<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, dataR, dnodeR, nonzero_Rnodes[i], dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, acum_nonzero_Rnodes[i], i, 0);
+        XXY3iso<<<gridDRR,threads_perblock,0,streamRRD[i]>>>(d_DRR, dataR, dnodeR, nonzero_Rnodes[i], dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, acum_nonzero_Rnodes[i], i, 0);
     }
 
     //Waits for all the kernels to complete
@@ -199,11 +199,11 @@ void pcf_3iso(
     CUCHECK(cudaStreamDestroy(streamDDD));
     for (int i = 0; i < n_randfiles; i++){
         CUCHECK(cudaStreamDestroy(streamDDR[i]));
-        CUCHECK(cudaStreamDestroy(streamDRR[i]));
+        CUCHECK(cudaStreamDestroy(streamRRD[i]));
         CUCHECK(cudaStreamDestroy(streamRRR[i]));
     }
     free(streamDDR);
-    free(streamDRR);
+    free(streamRRD);
     free(streamRRR);
     
     CUCHECK(cudaEventDestroy(start_timmer));
@@ -247,18 +247,18 @@ void pcf_3iso_wpips(
     CUCHECK(cudaEventCreate(&start_timmer));
     CUCHECK(cudaEventCreate(&stop_timmer));
 
-    cudaStream_t streamDDD, *streamRRR, *streamDDR, *streamDRR;
+    cudaStream_t streamDDD, *streamRRR, *streamDDR, *streamRRD;
     streamRRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
     CHECKALLOC(streamRRR);
     streamDDR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
     CHECKALLOC(streamDDR);
-    streamDRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-    CHECKALLOC(streamDRR);
+    streamRRD = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
+    CHECKALLOC(streamRRD);
     CUCHECK(cudaStreamCreate(&streamDDD));
     for (int i = 0; i < n_randfiles; i++){
         CUCHECK(cudaStreamCreate(&streamRRR[i]));
         CUCHECK(cudaStreamCreate(&streamDDR[i]));
-        CUCHECK(cudaStreamCreate(&streamDRR[i]));
+        CUCHECK(cudaStreamCreate(&streamRRD[i]));
     }
 
     // Name of the files where the results are saved
@@ -296,10 +296,10 @@ void pcf_3iso_wpips(
     //Restarts the main histograms in host to zero
     CUCHECK(cudaMemsetAsync(d_DDD, 0, bins*bins*bins*sizeof(double), streamDDD));
     CUCHECK(cudaMemsetAsync(d_RRR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamRRR[0]));
-    CUCHECK(cudaMemsetAsync(d_DRR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamDRR[0]));
+    CUCHECK(cudaMemsetAsync(d_DRR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamRRD[0]));
     CUCHECK(cudaMemsetAsync(d_DDR, 0, n_randfiles*bins*bins*bins*sizeof(double), streamDDR[0]));
     CUCHECK(cudaStreamSynchronize(streamRRR[0]));
-    CUCHECK(cudaStreamSynchronize(streamDRR[0]));
+    CUCHECK(cudaStreamSynchronize(streamRRD[0]));
     CUCHECK(cudaStreamSynchronize(streamDDR[0]));
 
     /* =======================================================================*/
@@ -334,7 +334,7 @@ void pcf_3iso_wpips(
         XXY3iso_wpips<<<gridDDR,threads_perblock,0,streamDDR[i]>>>(d_DDR, dataD, pipsD, dnodeD, nonzero_Dnodes, dataR, pipsR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, pips_width, acum_nonzero_Rnodes[i], i, true);
         gridDRR.x = blocks_R;
         gridDRR.y = blocks_R;
-        XXY3iso_wpips<<<gridDRR,threads_perblock,0,streamDRR[i]>>>(d_DRR, dataR, pipsR, dnodeR, nonzero_Rnodes[i], dataD, pipsD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, pips_width, acum_nonzero_Rnodes[i], i, false);
+        XXY3iso_wpips<<<gridDRR,threads_perblock,0,streamRRD[i]>>>(d_DRR, dataR, pipsR, dnodeR, nonzero_Rnodes[i], dataD, pipsD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, pips_width, acum_nonzero_Rnodes[i], i, false);
     }
 
     //Waits for all the kernels to complete
@@ -380,11 +380,11 @@ void pcf_3iso_wpips(
     CUCHECK(cudaStreamDestroy(streamDDD));
     for (int i = 0; i < n_randfiles; i++){
         CUCHECK(cudaStreamDestroy(streamDDR[i]));
-        CUCHECK(cudaStreamDestroy(streamDRR[i]));
+        CUCHECK(cudaStreamDestroy(streamRRD[i]));
         CUCHECK(cudaStreamDestroy(streamRRR[i]));
     }
     free(streamDDR);
-    free(streamDRR);
+    free(streamRRD);
     free(streamRRR);
     
     CUCHECK(cudaEventDestroy(start_timmer));

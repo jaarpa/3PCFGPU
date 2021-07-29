@@ -35,14 +35,14 @@ int main(int argc, char **argv)
     /* ================ Check for compute capability >= 6.x ==================*/
     int devId, major;
     CUCHECK(cudaGetDevice(&devId));
-    for(int i = 0; i < 25; ++i) {
-        CUCHECK(cudaDeviceGetAttribute(&major,
-                                        cudaDevAttrComputeCapabilityMajor,
-                                        devId));
+    CUCHECK(cudaDeviceGetAttribute(&major,
+                                    cudaDevAttrComputeCapabilityMajor,
+                                    devId));
+    if (major < 6)
+    {
+        fprintf(stderr, "Compute major capability > 6 is required. Yours %i\n", major);
+        exit(1);
     }
-    #if defined(__CUDA_ARCH__)
-    printf("%i\n", __CUDA_ARCH__);
-    #endif
 
     /* ===================  Read command line args ===========================*/
     if (argc <= 6 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)
@@ -190,6 +190,10 @@ int main(int argc, char **argv)
     /* =======================================================================*/
 
     clock_t stop_timmer_host, start_timmer_host;
+    
+    // In 3 PCF DD is used for DDD, RR for RRR
+    // New streams are created for mixed histograms within functions
+    cudaStream_t streamDD, *streamRR;
     start_timmer_host = clock(); //To check time setting up data
     
     float size_node = 0, htime = 0, size_box = 0;
@@ -290,6 +294,13 @@ int main(int argc, char **argv)
     size_node = size_box/(float)(partitions);
 
     /* ================ Make the nodes and copy to device ===================*/
+
+    // Create the streams for async copy
+    streamRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
+    CHECKALLOC(streamRR);
+    CUCHECK(cudaStreamCreate(&streamDD));
+    for (int i = 0; i < n_randfiles; i++)
+        CUCHECK(cudaStreamCreate(&streamRR[i]));
     
     //Data nodes
     nonzero_Dnodes = create_nodes(&h_nodeD, &dataD, &pipsD, pips_width, partitions, size_node, np);
@@ -297,15 +308,14 @@ int main(int argc, char **argv)
     //Copy the data nodes to the device asynchronously
     cudaMalloc(&dnodeD, nonzero_Dnodes*sizeof(DNode));
     cudaMalloc(&d_dataD,  np*sizeof(PointW3D));
-    //This potentially could become async
-    cudaMemcpy(dnodeD, h_nodeD, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_dataD, dataD, np*sizeof(PointW3D), cudaMemcpyHostToDevice);
     if (pipsD != NULL)
     {
         cudaMalloc(&d_pipsD,  np*sizeof(int32_t));
         //This potentially could become async
-        cudaMemcpy(d_pipsD, pipsD, np*sizeof(int32_t), cudaMemcpyHostToDevice);
+        cudaMemcpyAsync(d_pipsD, pipsD, np*sizeof(int32_t), cudaMemcpyHostToDevice, streamDD);
     }
+    cudaMemcpyAsync(dnodeD, h_nodeD, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD);
+    cudaMemcpyAsync(d_dataD, dataD, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD);
     
     //Random nodes grid
     if (rand_required)
@@ -330,15 +340,14 @@ int main(int argc, char **argv)
             nonzero_Rnodes[i] = create_nodes(&h_nodeR[i], &dataR[i], &pipsR[i], pips_width, partitions, size_node, rnp[i]);
             cudaMalloc(&dnodeR[i], nonzero_Rnodes[i]*sizeof(DNode));
             cudaMalloc(&d_dataR[i],  rnp[i]*sizeof(PointW3D));
-            //This potentially could become async
-            cudaMemcpy(dnodeR[i], h_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode), cudaMemcpyHostToDevice);
-            cudaMemcpy(d_dataR[i], dataR[i], rnp[i]*sizeof(PointW3D), cudaMemcpyHostToDevice);
             if (pipsR != NULL)
             {
                 cudaMalloc(&d_pipsR[i],  rnp[i]*sizeof(int32_t));
                 //This potentially could become async
-                cudaMemcpy(d_pipsR[i], pipsR[i], rnp[i]*sizeof(int32_t), cudaMemcpyHostToDevice);
+                cudaMemcpyAsync(d_pipsR[i], pipsR[i], rnp[i]*sizeof(int32_t), cudaMemcpyHostToDevice, streamRR[i]);
             }
+            cudaMemcpyAsync(dnodeR[i], h_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode), cudaMemcpyHostToDevice, streamRR[i]);
+            cudaMemcpyAsync(d_dataR[i], dataR[i], rnp[i]*sizeof(PointW3D), cudaMemcpyHostToDevice, streamRR[i]);
         }
     }
 
@@ -392,8 +401,8 @@ int main(int argc, char **argv)
         */
 
         pcf_2ani(
-            dnodeD, d_dataD, d_pipsD, nonzero_Dnodes, 
-            dnodeR, d_dataR, d_pipsR, nonzero_Rnodes, 
+            dnodeD, d_dataD, d_pipsD, nonzero_Dnodes, streamDD,
+            dnodeR, d_dataR, d_pipsR, nonzero_Rnodes, streamRR,
             histo_names, n_randfiles, bins, size_node, dmax,
             pips_width
         );

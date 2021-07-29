@@ -25,7 +25,7 @@ d_max_node:    (float) The maximum internodal distance.
 */
 __global__ void XX2ani(
     double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes,
-    int bins, float dmax, float d_max_node, int bn_offset
+    int bins, float dmax, float d_max_node
 );
 
 /*
@@ -59,22 +59,24 @@ size_node:      (float) Size of the nodes.
 __global__ void XY2ani(
     double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes,
     PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes,
-    int bins, float dmax, float d_max_node, int bn_offset
+    int bins, float dmax, float d_max_node
 );
 
 __global__ void XX2ani_wpips(
     double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips,
-    int nonzero_nodes, int bins, float dmax, float d_max_node, int bn_offset
+    int nonzero_nodes, int bins, float dmax, float d_max_node
 );
 __global__ void XY2ani_wpips(
     double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips,
     int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, 
-    int nonzero_Rnodes, int bins, float dmax, float d_max_node, int bn_offset
+    int nonzero_Rnodes, int bins, float dmax, float d_max_node
 );
 
 void pcf_2ani(
-    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD, int nonzero_Dnodes,
-    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR, int *nonzero_Rnodes,
+    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD,
+    int nonzero_Dnodes, cudaStream_t streamDD,
+    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR,
     char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
     int n_pips
 )
@@ -85,7 +87,7 @@ void pcf_2ani(
     /* =======================================================================*/
 
     float d_max_node, time_spent;
-    double *DD=NULL, *RR=NULL, *DR=NULL, *d_DD=NULL, *d_RR=NULL, *d_DR=NULL;
+    double *DD=NULL, **RR=NULL, **DR=NULL, *d_DD=NULL, **d_RR=NULL, **d_DR=NULL;
     int  blocks_D, blocks_R, threads_perblock_dim = 32;
 
     // GPU timmer
@@ -94,18 +96,13 @@ void pcf_2ani(
     CUCHECK(cudaEventCreate(&stop_timmer));
 
     //This may come from parameters
-    cudaStream_t streamDD, *streamRR, *streamDR;
-    streamRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-    CHECKALLOC(streamRR);
+    cudaStream_t *streamDR;
     streamDR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
     CHECKALLOC(streamDR);
-    CUCHECK(cudaStreamCreate(&streamDD));
     for (int i = 0; i < n_randfiles; i++)
-    {
         CUCHECK(cudaStreamCreate(&streamDR[i]));
-        CUCHECK(cudaStreamCreate(&streamRR[i]));
-    }
 
+    //Prefix that will be used to save the histograms
     char *nameDD = NULL, *nameRR = NULL, *nameDR = NULL;
     int PREFIX_LENGTH;
     if (dpipsD == NULL)
@@ -138,27 +135,38 @@ void pcf_2ani(
 
     // Allocate memory for the histogram as double
     DD = (double*)malloc(bins*bins*sizeof(double));
+    RR = (double**)malloc(n_randfiles*sizeof(double*));
+    DR = (double**)malloc(n_randfiles*sizeof(double*));
     CHECKALLOC(DD);
-    RR = (double*)malloc(n_randfiles*bins*bins*sizeof(double));
     CHECKALLOC(RR);
-    DR = (double*)malloc(n_randfiles*bins*bins*sizeof(double));
     CHECKALLOC(DR);
+    for (int i = 0; i < n_randfiles; i++)
+    {
+        RR[i] = (double*)malloc(bins*bins*sizeof(double));
+        CHECKALLOC(RR[i]);
+        DR[i] = (double*)malloc(bins*bins*sizeof(double));
+        CHECKALLOC(DR[i]);
+    }
+
+    d_RR = (double**)malloc(n_randfiles*sizeof(double*));
+    d_DR = (double**)malloc(n_randfiles*sizeof(double*));
+    CHECKALLOC(d_DR);
+    CHECKALLOC(d_RR);
 
     CUCHECK(cudaMalloc(&d_DD, bins*bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_RR, n_randfiles*bins*bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_DR, n_randfiles*bins*bins*sizeof(double)));
-
-    //Restarts the main histograms in device to zero
     CUCHECK(cudaMemsetAsync(d_DD, 0, bins*bins*sizeof(double), streamDD));
-    CUCHECK(cudaMemsetAsync(d_RR, 0, n_randfiles*bins*bins*sizeof(double), streamRR[0]));
-    CUCHECK(cudaMemsetAsync(d_DR, 0, n_randfiles*bins*bins*sizeof(double), streamDR[0]));
-    CUCHECK(cudaStreamSynchronize(streamRR[0]));
-    CUCHECK(cudaStreamSynchronize(streamDR[0]));
+    for (int i = 0; i < n_randfiles; i++)
+    {
+        CUCHECK(cudaMalloc(&d_RR[i], bins*bins*sizeof(double)));
+        CUCHECK(cudaMalloc(&d_DR[i], bins*bins*sizeof(double)));
+        //Restarts the main histograms in device to zero
+        CUCHECK(cudaMemsetAsync(d_RR[i], 0, bins*bins*sizeof(double), streamRR[i]));
+        CUCHECK(cudaMemsetAsync(d_DR[i], 0, bins*bins*sizeof(double), streamDR[i]));
+    }
 
     /* =======================================================================*/
     /* ====================== Starts kernel Launches  ========================*/
     /* =======================================================================*/
-
 
     //Compute the dimensions of the GPU grid
     //One thread for each node
@@ -176,56 +184,55 @@ void pcf_2ani(
     CUCHECK(cudaEventRecord(start_timmer));
     if (dpipsD == NULL)
     {
-        XX2ani<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, 0);
+        XX2ani<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node);
+        CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
         for (int i=0; i<n_randfiles; i++)
         {
             //Calculates grid dim for each file
             blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
             gridR.x = blocks_R;
             gridR.y = blocks_R;
-            XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+            XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
             gridDR.y = blocks_R;
-            XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_dataD, dnodeD, nonzero_Dnodes, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+            XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, dnodeD, nonzero_Dnodes, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
         }
     }
     else
     {
-        XX2ani_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, bins, dmax, d_max_node, 0);
+        XX2ani_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, bins, dmax, d_max_node);
+        CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
         for (int i=0; i<n_randfiles; i++)
         {
             //Calculates grid dim for each file
             blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
             gridR.x = blocks_R;
             gridR.y = blocks_R;
-            XX2ani_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_dataR[i], dnodeR[i], dpipsR[i], n_pips, nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+            XX2ani_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], dnodeR[i], dpipsR[i], n_pips, nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
             gridDR.y = blocks_R;
-            XY2ani_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, d_dataR[i], dnodeR[i], dpipsR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+            XY2ani_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, d_dataR[i], dnodeR[i], dpipsR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+            CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
         }
     }
 
-
     //Waits for all the kernels to complete
     CUCHECK(cudaDeviceSynchronize());
-
-    CUCHECK(cudaMemcpy(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
 
     nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
     strcpy(&nameDD[PREFIX_LENGTH-1],histo_names[0]);
     save_histogram2D(nameDD, bins, DD, 0);
 
-    CUCHECK(cudaMemcpy(RR, d_RR, n_randfiles*bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
     for (int i=0; i<n_randfiles; i++)
     {
         nameRR = (char*)realloc(nameRR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameRR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram2D(nameRR, bins, RR, i);
-    }
-    CUCHECK(cudaMemcpy(DR, d_DR, n_randfiles*bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
-    for (int i=0; i<n_randfiles; i++)
-    {
+        save_histogram2D(nameRR, bins, RR[i], 0);
+
         nameDR = (char*)realloc(nameDR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameDR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram2D(nameDR, bins, DR, i);
+        save_histogram2D(nameDR, bins, DR[i], 0);
     }
 
     CUCHECK(cudaEventRecord(stop_timmer));
@@ -244,34 +251,42 @@ void pcf_2ani(
     {
         CUCHECK(cudaStreamDestroy(streamDR[i]));
         CUCHECK(cudaStreamDestroy(streamRR[i]));
+        
+        free(RR[i]);
+        RR[i] = NULL;
+        free(DR[i]);
+        DR[i] = NULL;
+        CUCHECK(cudaFree(d_RR[i]));
+        d_RR[i] = NULL;
+        CUCHECK(cudaFree(d_DR[i]));
+        d_DR[i] = NULL;
     }
     free(streamDR);
     streamDR = NULL;
     free(streamRR);
     streamRR = NULL;
+    free(RR);
+    RR = NULL;
+    free(DR);
+    DR = NULL;
+    free(d_RR);
+    d_RR = NULL;
+    free(d_DR);
+    d_DR = NULL;
 
     CUCHECK(cudaEventDestroy(start_timmer));
     CUCHECK(cudaEventDestroy(stop_timmer));
 
     free(DD);
     DD = NULL;
-    free(RR);
-    RR = NULL;
-    free(DR);
-    DR = NULL;
-    
     CUCHECK(cudaFree(d_DD));
     d_DD = NULL;
-    CUCHECK(cudaFree(d_RR));
-    d_RR = NULL;
-    CUCHECK(cudaFree(d_DR));
-    d_DR = NULL;
 
 }
 
 __global__ void XX2ani(
     double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes,
-    int bins, float dmax, float d_max_node, int bn_offset
+    int bins, float dmax, float d_max_node
 )
 {
 
@@ -316,7 +331,6 @@ __global__ void XX2ani(
                         bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bins-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn_offset*bins*bins;
                         v = w1*elements[j].w;
 
                         atomicAdd(&XX[bin],v);
@@ -330,7 +344,7 @@ __global__ void XX2ani(
 __global__ void XY2ani(
     double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes,
     PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes,
-    int bins, float dmax, float d_max_node, int bn_offset
+    int bins, float dmax, float d_max_node
 )
 {
 
@@ -375,7 +389,6 @@ __global__ void XY2ani(
                         bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bins-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn_offset*bins*bins;
 
                         v = w1*elementsD[j].w;
                         atomicAdd(&XY[bin],v);
@@ -389,7 +402,7 @@ __global__ void XY2ani(
 
 __global__ void XX2ani_wpips(
     double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips,
-    int nonzero_nodes, int bins, float dmax, float d_max_node, int bn_offset
+    int nonzero_nodes, int bins, float dmax, float d_max_node
 )
 {
 
@@ -434,7 +447,6 @@ __global__ void XX2ani_wpips(
                         bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bins-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn_offset*bins*bins;
 
                         v = get_weight(pipsD, i, pipsD, j, n_pips);
 
@@ -449,7 +461,7 @@ __global__ void XX2ani_wpips(
 __global__ void XY2ani_wpips(
     double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips,
     int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, 
-    int nonzero_Rnodes, int bins, float dmax, float d_max_node, int bn_offset
+    int nonzero_Rnodes, int bins, float dmax, float d_max_node
 )
 {
 
@@ -494,7 +506,6 @@ __global__ void XY2ani_wpips(
                         bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bins-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn_offset*bins*bins;
 
                         v = get_weight(pipsD, i, pipsR, j, n_pips);
 

@@ -26,8 +26,10 @@ dmax: (float)
 
 */
 void pcf_2ani(
-    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD, int nonzero_Dnodes,
-    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR, int *nonzero_Rnodes,
+    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD,
+    int nonzero_Dnodes, cudaStream_t streamDD,
+    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR,
     char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
     int n_pips
 );
