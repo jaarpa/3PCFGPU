@@ -8,46 +8,75 @@
 #include "pcf2ani.cuh"
 
 /*
-Kernel function to calculate the pure histograms for the 2 point anisotropic correlation function. 
-This version does not take into account boundary priodic conditions. It stores the counts in the XX histogram.
+Kernel function to calculate the pure histograms for the 2 point anisotropic 
+correlation function. This version does NOT take into account boundary priodic 
+conditions. It stores the counts in the XX histogram.
 
 args:
-XX: (double*) The histogram where the distances are counted.
-elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
-bins: (int) NUmber of bins in the XY histogram.
-dmax: (float) The maximum distance of interest between points.
-d_max_node: (float) The maximum internodal distance.
+XX:            (double*) The histogram where the distances are counted.
+elements:      (PointW3D*) Array of the points ordered coherently with the nodes.
+nodeD:         (DNode) Array of DNodes each of which define a node and the 
+               elements of element that correspond to that node.
+nonzero_nodes: (int) Number of nonzero nodes where the points have been 
+               classificated.
+bins:          (int) NUmber of bins in the XY histogram.
+dmax:          (float) The maximum distance of interest between points.
+d_max_node:    (float) The maximum internodal distance.
 */
-__global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bins, float dmax, float d_max_node, int bn_offset);
-__global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bins, float dmax, float d_max_node, int bn_offset);
+__global__ void XX2ani(
+    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes,
+    int bins, float dmax, float d_max_node, int bn_offset
+);
 
 /*
-Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function. 
-This version does not take into account boundary periodic conditions. It stores the counts in the XY histogram.
+Kernel function to calculate the mixed histograms for the 2 point anisotropic 
+correlation function. This version does not take into account boundary periodic 
+conditions. It stores the counts in the XY histogram.
 
 args:
-XY: (double*) The histogram where the distances are counted.
-elementsD: (PointW3D*) Array of the points ordered coherently with the nodes. For the data points.
-nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the data points
-nonzero_Dnodes: (int) Number of nonzero nodes where the points have been classificated. For the data points
-elementsR: (PointW3D*) Array of the points ordered coherently with the nodes. For the random points.
-nodeR: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the random points
-nonzero_Rnodes: (int) Number of nonzero nodes where the points have been classificated. For the random points
-bins: (int) NUmber of bins in the XY histogram.
-dmax: (float) The maximum distance of interest between points.
-d_max_node: (float) The maximum internodal distance.
-size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
-size_node: (float) Size of the nodes.
+XY:             (double*) The histogram where the distances are counted.
+elementsD:      (PointW3D*) Array of the points ordered coherently with the 
+                nodes. For the data points.
+nodeD:          (DNode) Array of DNodes each of which define a node and the 
+                elements of element that correspond to that node. For the data 
+                points
+nonzero_Dnodes: (int) Number of nonzero nodes where the points have been 
+                classificated. For the data points
+elementsR:      (PointW3D*) Array of the points ordered coherently with the
+                nodes. For the random points.
+nodeR:          (DNode) Array of DNodes each of which define a node and the 
+                elements of element that correspond to that node. For the 
+                random points
+nonzero_Rnodes: (int) Number of nonzero nodes where the points have been 
+                classificated. For the random points
+bins:           (int) NUmber of bins in the XY histogram.
+dmax:           (float) The maximum distance of interest between points.
+d_max_node:     (float) The maximum internodal distance.
+size_box:       (float) The size of the box where the points were contained. 
+                It is used for the boundary periodic conditions
+size_node:      (float) Size of the nodes.
 */
-__global__ void XX2ani_wpips(double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_nodes, int bins, float dmax, float d_max_node, int node_offset, int bn_offset);
-__global__ void XY2ani_wpips(double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, int nonzero_Rnodes, int bins, float dmax, float d_max_node, int node_offset, int bn_offset);
+__global__ void XY2ani(
+    double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes,
+    PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes,
+    int bins, float dmax, float d_max_node, int bn_offset
+);
+
+__global__ void XX2ani_wpips(
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips,
+    int nonzero_nodes, int bins, float dmax, float d_max_node, int bn_offset
+);
+__global__ void XY2ani_wpips(
+    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips,
+    int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, 
+    int nonzero_Rnodes, int bins, float dmax, float d_max_node, int bn_offset
+);
 
 void pcf_2ani(
-    DNode *dnodeD, PointW3D *d_dataD, int nonzero_Dnodes,
-    DNode **dnodeR, PointW3D **d_dataR, int *nonzero_Rnodes,
-    char **histo_names, int n_randfiles, int bins, float size_node, float dmax
+    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD, int nonzero_Dnodes,
+    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR, int *nonzero_Rnodes,
+    char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
+    int n_pips
 )
 {
 
@@ -56,7 +85,7 @@ void pcf_2ani(
     /* =======================================================================*/
 
     float d_max_node, time_spent;
-    double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
+    double *DD=NULL, *RR=NULL, *DR=NULL, *d_DD=NULL, *d_RR=NULL, *d_DR=NULL;
     int  blocks_D, blocks_R, threads_perblock_dim = 32;
 
     // GPU timmer
@@ -77,18 +106,35 @@ void pcf_2ani(
         CUCHECK(cudaStreamCreate(&streamRR[i]));
     }
 
-    const int PREFIX_LENGTH = 7;
-    char *nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char)), *nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char)), *nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-    strcpy(nameDD,"DDani_");
-    strcpy(nameRR,"RRani_");
-    strcpy(nameDR,"DRani_");
+    char *nameDD = NULL, *nameRR = NULL, *nameDR = NULL;
+    int PREFIX_LENGTH;
+    if (dpipsD == NULL)
+    {
+        PREFIX_LENGTH = 7;
+        nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        strcpy(nameDD,"DDani_");
+        strcpy(nameRR,"RRani_");
+        strcpy(nameDR,"DRani_");
+    }
+    else
+    {
+        PREFIX_LENGTH = 12;
+        nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+        strcpy(nameDD,"DDani_pips_");
+        strcpy(nameRR,"RRani_pips_");
+        strcpy(nameDR,"DRani_pips_");
+    }
 
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
 
     d_max_node = dmax + size_node*sqrt(3.0);
-    d_max_node*=d_max_node;
+    d_max_node *= d_max_node;
 
     // Allocate memory for the histogram as double
     DD = (double*)malloc(bins*bins*sizeof(double));
@@ -126,19 +172,37 @@ void pcf_2ani(
     dim3 gridDR(blocks_D,2,1);
 
     //Launch the kernels
-    time_spent=0; //Restarts timmer
+    time_spent = 0; //Restarts timmer
     CUCHECK(cudaEventRecord(start_timmer));
-    XX2ani<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, 0);
-    for (int i=0; i<n_randfiles; i++)
+    if (dpipsD == NULL)
     {
-        //Calculates grid dim for each file
-        blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-        gridR.x = blocks_R;
-        gridR.y = blocks_R;
-        XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
-        gridDR.y = blocks_R;
-        XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_dataD, dnodeD, nonzero_Dnodes, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+        XX2ani<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, 0);
+        for (int i=0; i<n_randfiles; i++)
+        {
+            //Calculates grid dim for each file
+            blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
+            gridR.x = blocks_R;
+            gridR.y = blocks_R;
+            XX2ani<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+            gridDR.y = blocks_R;
+            XY2ani<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_dataD, dnodeD, nonzero_Dnodes, d_dataR[i], dnodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+        }
     }
+    else
+    {
+        XX2ani_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, bins, dmax, d_max_node, 0);
+        for (int i=0; i<n_randfiles; i++)
+        {
+            //Calculates grid dim for each file
+            blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
+            gridR.x = blocks_R;
+            gridR.y = blocks_R;
+            XX2ani_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_dataR[i], dnodeR[i], dpipsR[i], n_pips, nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+            gridDR.y = blocks_R;
+            XY2ani_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, d_dataR[i], dnodeR[i], dpipsR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, i);
+        }
+    }
+
 
     //Waits for all the kernels to complete
     CUCHECK(cudaDeviceSynchronize());
@@ -182,174 +246,33 @@ void pcf_2ani(
         CUCHECK(cudaStreamDestroy(streamRR[i]));
     }
     free(streamDR);
+    streamDR = NULL;
     free(streamRR);
+    streamRR = NULL;
 
     CUCHECK(cudaEventDestroy(start_timmer));
     CUCHECK(cudaEventDestroy(stop_timmer));
 
     free(DD);
+    DD = NULL;
     free(RR);
+    RR = NULL;
     free(DR);
+    DR = NULL;
     
     CUCHECK(cudaFree(d_DD));
+    d_DD = NULL;
     CUCHECK(cudaFree(d_RR));
+    d_RR = NULL;
     CUCHECK(cudaFree(d_DR));
+    d_DR = NULL;
 
 }
 
-// void pcf_2ani_wpips(char **histo_names, DNode *dnodeD, PointW3D *dataD, int32_t *dpipsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *dataR, int32_t *dpipsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_pips, int n_randfiles, int bins, float size_node, float dmax)
-// {
-
-//     /* =======================================================================*/
-//     /* ======================  Var declaration ===============================*/
-//     /* =======================================================================*/
-//     const int PREFIX_LENGTH = 12;
-//     float d_max_node, time_spent;
-//     double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
-//     int  blocks_D, blocks_R, threads_perblock_dim = 32;
-
-//     cudaEvent_t start_timmer, stop_timmer; // GPU timmer
-//     CUCHECK(cudaEventCreate(&start_timmer));
-//     CUCHECK(cudaEventCreate(&stop_timmer));
-
-//     cudaStream_t streamDD, *streamRR, *streamDR;
-//     streamRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-//     CHECKALLOC(streamRR);
-//     streamDR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-//     CHECKALLOC(streamDR);
-//     CUCHECK(cudaStreamCreate(&streamDD));
-//     for (int i = 0; i < n_randfiles; i++)
-//     {
-//         CUCHECK(cudaStreamCreate(&streamDR[i]));
-//         CUCHECK(cudaStreamCreate(&streamRR[i]));
-//     }
-
-//     char *nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-//     char *nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-//     char *nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
-//     strcpy(nameDD,"DDani_pips_");
-//     strcpy(nameRR,"RRani_pips_");
-//     strcpy(nameDR,"DRani_pips_");
-
-//     /* =======================================================================*/
-//     /* =======================  Memory allocation ============================*/
-//     /* =======================================================================*/
-
-//     d_max_node = dmax + size_node*sqrt(3.0);
-//     d_max_node*=d_max_node;
-
-//     // Allocate memory for the histogram as double
-//     DD = (double*)malloc(bins*bins*sizeof(double));
-//     CHECKALLOC(DD);
-//     RR = (double*)malloc(n_randfiles*bins*bins*sizeof(double));
-//     CHECKALLOC(RR);
-//     DR = (double*)malloc(n_randfiles*bins*bins*sizeof(double));
-//     CHECKALLOC(DR);
-
-//     CUCHECK(cudaMalloc(&d_DD, bins*bins*sizeof(double)));
-//     CUCHECK(cudaMalloc(&d_RR, n_randfiles*bins*bins*sizeof(double)));
-//     CUCHECK(cudaMalloc(&d_DR, n_randfiles*bins*bins*sizeof(double)));
-
-//     //Restarts the main histograms in device to zero
-//     CUCHECK(cudaMemsetAsync(d_DD, 0, bins*bins*sizeof(double), streamDD));
-//     CUCHECK(cudaMemsetAsync(d_RR, 0, n_randfiles*bins*bins*sizeof(double), streamRR[0]));
-//     CUCHECK(cudaMemsetAsync(d_DR, 0, n_randfiles*bins*bins*sizeof(double), streamDR[0]));
-//     CUCHECK(cudaStreamSynchronize(streamRR[0]));
-//     CUCHECK(cudaStreamSynchronize(streamDR[0]));
-
-//     /* =======================================================================*/
-//     /* ====================== Starts kernel Launches  ========================*/
-//     /* =======================================================================*/
-
-
-//     //Compute the dimensions of the GPU grid
-//     //One thread for each node
-    
-//     blocks_D = (int)(ceil((float)((float)(nonzero_Dnodes)/(float)(threads_perblock_dim))));
-//     dim3 threads_perblock(threads_perblock_dim,threads_perblock_dim,1);
-//     dim3 gridD(blocks_D,blocks_D,1);
-    
-//     //Dummy declaration
-//     dim3 gridR(2,2,1);
-//     dim3 gridDR(blocks_D,2,1);
-
-//     //Launch the kernels
-//     time_spent=0; //Restarts timmer
-//     CUCHECK(cudaEventRecord(start_timmer));
-//     XX2ani_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, bins, dmax, d_max_node, 0, 0);
-//     for (int i=0; i<n_randfiles; i++)
-//     {
-//         //Calculates grid dim for each file
-//         blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-//         gridR.x = blocks_R;
-//         gridR.y = blocks_R;
-//         XX2ani_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, dataR, dnodeR, dpipsR, n_pips, nonzero_Rnodes[i], bins, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
-//         gridDR.y = blocks_R;
-//         XY2ani_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, dataD, dnodeD, dpipsD, n_pips, nonzero_Dnodes, dataR, dnodeR, dpipsR, nonzero_Rnodes[i], bins, dmax, d_max_node, acum_nonzero_Rnodes[i], i);
-//     }
-
-//     //Waits for all the kernels to complete
-//     CUCHECK(cudaDeviceSynchronize());
-
-//     CUCHECK(cudaMemcpy(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
-//     nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
-//     strcpy(&nameDD[PREFIX_LENGTH-1],histo_names[0]);
-//     save_histogram2D(nameDD, bins, DD, 0);
-
-//     CUCHECK(cudaMemcpy(RR, d_RR, n_randfiles*bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
-//     for (int i=0; i<n_randfiles; i++)
-//     {
-//         nameRR = (char*)realloc(nameRR,PREFIX_LENGTH + strlen(histo_names[i+1]));
-//         strcpy(&nameRR[PREFIX_LENGTH-1],histo_names[i+1]);
-//         save_histogram2D(nameRR, bins, RR, i);
-//     }
-//     CUCHECK(cudaMemcpy(DR, d_DR, n_randfiles*bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
-//     for (int i=0; i<n_randfiles; i++)
-//     {
-//         nameDR = (char*)realloc(nameDR,PREFIX_LENGTH + strlen(histo_names[i+1]));
-//         strcpy(&nameDR[PREFIX_LENGTH-1],histo_names[i+1]);
-//         save_histogram2D(nameDR, bins, DR, i);
-//     }
-
-//     CUCHECK(cudaEventRecord(stop_timmer));
-//     CUCHECK(cudaEventSynchronize(stop_timmer));
-//     CUCHECK(cudaEventElapsedTime(&time_spent, start_timmer, stop_timmer));
-
-//     printf("Spent %f miliseconds to compute and save all the histograms. \n", time_spent);
-    
-//     /* =======================================================================*/
-//     /* ==========================  Free memory ===============================*/
-//     /* =======================================================================*/
-
-//     //Free the memory
-//     CUCHECK(cudaStreamDestroy(streamDD));
-//     for (int i = 0; i < n_randfiles; i++)
-//     {
-//         CUCHECK(cudaStreamDestroy(streamDR[i]));
-//         CUCHECK(cudaStreamDestroy(streamRR[i]));
-//     }
-//     free(streamDR);
-//     free(streamRR);
-
-//     CUCHECK(cudaEventDestroy(start_timmer));
-//     CUCHECK(cudaEventDestroy(stop_timmer));
-
-//     free(DD);
-//     free(RR);    
-//     free(DR);    
-    
-//     CUCHECK(cudaFree(d_DD));
-//     CUCHECK(cudaFree(d_RR));
-//     CUCHECK(cudaFree(d_DR));
-
-// }
-
-
-//====================================================================
-//============ Kernels Section ======================================= 
-//====================================================================
-
-__global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bins, float dmax, float d_max_node, int bn_offset)
+__global__ void XX2ani(
+    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes,
+    int bins, float dmax, float d_max_node, int bn_offset
+)
 {
 
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
@@ -404,7 +327,11 @@ __global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero
     }
 }
 
-__global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bins, float dmax, float d_max_node, int bn_offset)
+__global__ void XY2ani(
+    double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes,
+    PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes,
+    int bins, float dmax, float d_max_node, int bn_offset
+)
 {
 
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
@@ -460,12 +387,15 @@ __global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzer
 }
 
 
-__global__ void XX2ani_wpips(double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_nodes, int bins, float dmax, float d_max_node, int node_offset, int bn_offset)
+__global__ void XX2ani_wpips(
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips,
+    int nonzero_nodes, int bins, float dmax, float d_max_node, int bn_offset
+)
 {
 
-    int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset))
+    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx1<nonzero_nodes && idx2<nonzero_nodes)
     {
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
@@ -516,12 +446,16 @@ __global__ void XX2ani_wpips(double *XX, PointW3D *elements, DNode *nodeD, int32
     }
 }
 
-__global__ void XY2ani_wpips(double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, int nonzero_Rnodes, int bins, float dmax, float d_max_node, int node_offset, int bn_offset)
+__global__ void XY2ani_wpips(
+    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips,
+    int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, 
+    int nonzero_Rnodes, int bins, float dmax, float d_max_node, int bn_offset
+)
 {
 
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset))
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes))
     {
         
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;

@@ -26,13 +26,11 @@ dmax: (float)
 
 */
 void pcf_2ani(
-    DNode *dnodeD, PointW3D *d_dataD, int nonzero_Dnodes,
-    DNode **dnodeR, PointW3D **d_dataR, int *nonzero_Rnodes,
-    char **histo_names, int n_randfiles, int bn, float size_node, float dmax
+    DNode *dnodeD, PointW3D *d_dataD, int32_t *dpipsD, int nonzero_Dnodes,
+    DNode **dnodeR, PointW3D **d_dataR, int32_t **dpipsR, int *nonzero_Rnodes,
+    char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
+    int n_pips
 );
-
-void pcf_2ani_wpips(char **histo_names, DNode *dnodeD, PointW3D *dataD, int32_t *dpipsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *dataR, int32_t *dpipsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_pips, int n_randfiles, int bn, float size_node, float dmax);
-
 
 #ifdef __cplusplus
 }

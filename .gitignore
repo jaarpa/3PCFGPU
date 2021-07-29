@@ -8,3 +8,4 @@
 .vscode/
 cuda/bin/
 cuda/obj/
+cuda/tests/bin/

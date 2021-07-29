@@ -390,10 +390,12 @@ int main(int argc, char **argv)
             );
         else
         */
+
         pcf_2ani(
-            dnodeD, d_dataD, nonzero_Dnodes, 
-            dnodeR, d_dataR, nonzero_Rnodes, 
-            histo_names, n_randfiles, bins, size_node, dmax
+            dnodeD, d_dataD, d_pipsD, nonzero_Dnodes, 
+            dnodeR, d_dataR, d_pipsR, nonzero_Rnodes, 
+            histo_names, n_randfiles, bins, size_node, dmax,
+            pips_width
         );
     }
     /*
@@ -438,13 +440,15 @@ int main(int argc, char **argv)
     free(data_name);
     cudaFreeHost(dataD);
     cudaFreeHost(h_nodeD);
-    if (pip_calculation)
-        cudaFreeHost(pipsD);
 
     CUCHECK(cudaFree(dnodeD));
     CUCHECK(cudaFree(d_dataD));
+
     if (pip_calculation)
+    {
+        cudaFreeHost(pipsD);
         CUCHECK(cudaFree(d_pipsD));
+    }
 
     free(rand_name);
     if (rand_required)
