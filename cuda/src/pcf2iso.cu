@@ -177,8 +177,8 @@ void pcf_2iso(
         CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
         gridDR.y = blocks_R;
         
-        cudaStreamWaitEvent(streamDR[i], DDcopy_done);
-        cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
+        cudaStreamWaitEvent(streamDR[i], DDcopy_done, 0);
+        cudaStreamWaitEvent(streamDR[i], RRcopy_done[i], 0);
         XY2iso<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, nonzero_Dnodes, d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
         CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
     }
