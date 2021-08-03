@@ -20,17 +20,15 @@ arg[3]: integer of the number of points in the files.
 arg[4]: integer. Number of bins where the distances are classified
 arg[5]: float. Maximum distance of interest. It has to have the same units as the points in the files.
 */
-void pcf_3iso(
-        DNode *dnodeD, PointW3D *dataD, int nonzero_Dnodes,
-        DNode *dnodeR, PointW3D *dataR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes,
-        char **histo_names, int n_randfiles, int bins, float size_node, float dmax
-    );
 
-void pcf_3iso_wpips(
-        DNode *dnodeD, PointW3D *dataD, int32_t *pipsD, int nonzero_Dnodes,
-        DNode *dnodeR, PointW3D *dataR, int32_t *pipsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes,
-        char **histo_names, int n_randfiles, int bins, float size_node, float dmax, int pips_width
-    );
+void pcf_3iso(
+    DNode *d_nodeD, PointW3D *d_dataD, int32_t *d_pipsD,
+    int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
+    DNode **d_nodeR, PointW3D **d_dataR, int32_t **d_pipsR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
+    char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
+    int pips_width
+);
 
 #ifdef __cplusplus
 }

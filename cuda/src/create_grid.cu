@@ -60,7 +60,10 @@ void open_files(PointW3D **data, int *pts, char *name_file)
         (*data + j)->z = atof(number);
 
         number = strtok(NULL, " ");
-        (*data + j)->w = atof(number);
+        if (number == NULL)
+            (*data + j)->w = 1;
+        else
+            (*data + j)->w = atof(number);
 
         j++;
     }
