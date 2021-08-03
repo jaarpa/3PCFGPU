@@ -25,48 +25,14 @@ bn: (int)
 dmax: (float)
 
 */
-void pcf_2ani(char **histo_names, DNode *dnodeD, PointW3D *d_ordered_pointsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *d_ordered_pointsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, int bn, float size_node, float dmax);
-void pcf_2ani_wpips(char **histo_names, DNode *dnodeD, PointW3D *dataD, int32_t *dpipsD, int nonzero_Dnodes, DNode *dnodeR, PointW3D *dataR, int32_t *dpipsR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_pips, int n_randfiles, int bn, float size_node, float dmax);
-
-//====================================================================
-//============ Kernels Section ======================================= 
-//====================================================================
-/*
-Kernel function to calculate the pure histograms for the 2 point anisotropic correlation function. 
-This version does not take into account boundary priodic conditions. It stores the counts in the XX histogram.
-
-args:
-XX: (double*) The histogram where the distances are counted.
-elements: (PointW3D*) Array of the points ordered coherently with the nodes.
-nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
-nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
-bn: (int) NUmber of bins in the XY histogram.
-dmax: (float) The maximum distance of interest between points.
-d_max_node: (float) The maximum internodal distance.
-*/
-__global__ void XX2ani(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, int node_offset=0, int bn_offset=0);
-__global__ void XX2ani_wpips(double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_nodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
-
-/*
-Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function. 
-This version does not take into account boundary periodic conditions. It stores the counts in the XY histogram.
-
-args:
-XY: (double*) The histogram where the distances are counted.
-elementsD: (PointW3D*) Array of the points ordered coherently with the nodes. For the data points.
-nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the data points
-nonzero_Dnodes: (int) Number of nonzero nodes where the points have been classificated. For the data points
-elementsR: (PointW3D*) Array of the points ordered coherently with the nodes. For the random points.
-nodeR: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the random points
-nonzero_Rnodes: (int) Number of nonzero nodes where the points have been classificated. For the random points
-bn: (int) NUmber of bins in the XY histogram.
-dmax: (float) The maximum distance of interest between points.
-d_max_node: (float) The maximum internodal distance.
-size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
-size_node: (float) Size of the nodes.
-*/
-__global__ void XY2ani(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
-__global__ void XY2ani_wpips(double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int n_pips, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int32_t *pipsR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, int node_offset, int bn_offset);
+void pcf_2ani(
+    DNode *d_nodeD, PointW3D *d_dataD, int32_t *d_pipsD,
+    int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
+    DNode **d_nodeR, PointW3D **d_dataR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
+    char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
+    int pips_width
+);
 
 #ifdef __cplusplus
 }

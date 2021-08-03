@@ -91,8 +91,8 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
 //int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, int np);
 
 //================== Saving the histograms ===========================
-void save_histogram1D(char *name, int bns, double *histo, int nhistos);
-void save_histogram2D(char *name, int bns, double *histo, int nhistos);
+void save_histogram1D(char *name, int bns, double *histo);
+void save_histogram2D(char *name, int bns, double *histo);
 void save_histogram3D(char *name, int bns, double *histo, int nhistos);
 void save_histogram5D(char *name, int bns, double *histo, int nhistos);
 #ifdef __cplusplus

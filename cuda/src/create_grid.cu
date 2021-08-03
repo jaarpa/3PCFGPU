@@ -60,7 +60,10 @@ void open_files(PointW3D **data, int *pts, char *name_file)
         (*data + j)->z = atof(number);
 
         number = strtok(NULL, " ");
-        (*data + j)->w = atof(number);
+        if (number == NULL)
+            (*data + j)->w = 1;
+        else
+            (*data + j)->w = atof(number);
 
         j++;
     }
@@ -69,6 +72,7 @@ void open_files(PointW3D **data, int *pts, char *name_file)
     fclose(file); //Close the file
 
     free(full_path);
+    full_path = NULL;
 }
 
 void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
@@ -94,10 +98,12 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
     {
         char *temp = strdup(full_path);
         free(full_path);
+        full_path = NULL;
         full_path = (char *)calloc(last_point+4, sizeof(char));
         CHECKALLOC(full_path);
         for (int i = 0; i <= length; i++) full_path[i] = temp[i];
         free(temp);
+        temp = NULL;
 
     }
     full_path[last_point] = '.';
@@ -133,14 +139,18 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
 
     rewind(file);
     cudaMallocHost(pips, np * (*n_pips) * sizeof(int32_t));
-
     CHECKALLOC(*pips);
 
     for (int i = 0; i < np; i++)
     {
         if (getline(&line, &len, file) == -1)
         {
-            fprintf(stderr, "Number of pips entries and number of coordinated points do not match %s has %i while the coordinates file has %i. \n ", full_path, i, np);
+            fprintf(
+                stderr,
+                "Number of pips entries and number of coordinated points do not "
+                "match %s has %i while the coordinates file has %i. \n ",
+                full_path, i, np
+            );
             exit(1);
         }
         number = strtok(line, " ");
@@ -155,6 +165,7 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
     fclose(file); //Close the file
 
     free(full_path);
+    full_path = NULL;
 }
 
 void read_random_files(char ***rand_files, char ***histo_names, int **rnp, PointW3D ***dataR, int *n_randfiles, char *rand_name, int rand_dir)
@@ -215,6 +226,7 @@ void read_random_files(char ***rand_files, char ***histo_names, int **rnp, Point
             exit(1);
         }
         free(directory_path);
+        directory_path = NULL;
     }
     else
     {
@@ -239,6 +251,7 @@ void read_random_files(char ***rand_files, char ***histo_names, int **rnp, Point
 int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np)
 {
     int row, col, mom, idx, non_zero_idx, len, non_zero_nodes;
+    float pips_weight;
     Node *hnode = (Node *)calloc(partitions*partitions*partitions, sizeof(Node));
 
     // First allocate memory as an empty node:
@@ -265,13 +278,11 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
         len = ++hnode[idx].len;
         hnode[idx].elements = (PointW3D *)realloc(hnode[idx].elements, len*sizeof(PointW3D));
         hnode[idx].elements[len-1] = (*dat)[i];
-        if (pips != NULL)
-        {
-            hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
-            for (int j = 0; j < pips_width; j++)
-                hnode[idx].pips[(len - 1)*pips_width + j] = (*pips)[i * pips_width + j];
-        }
-        
+        if (pips == NULL)
+            continue;
+        hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
+        for (int j = 0; j < pips_width; j++)
+            hnode[idx].pips[(len - 1)*pips_width + j] = (*pips)[i * pips_width + j];
     }
 
     //Counts non zero nodes
@@ -293,75 +304,16 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
         for (int n_pto = 0; n_pto < hnode[idx].len; n_pto++)
         {
             (*dat)[len + n_pto] = hnode[idx].elements[n_pto];
-            if (pips != NULL)
-                for (int n_pip = 0; n_pip < pips_width; n_pip++)
-                    (*pips)[(len + n_pto)*pips_width + n_pip] = hnode[idx].pips[n_pto*pips_width + n_pip];
-        }
-        len += hnode[idx].len;
-        (*nod)[non_zero_idx].end = len;
-        non_zero_idx++;
-    }
-
-    for (idx = 0; idx < partitions*partitions*partitions; idx++)
-    {
-        free(hnode[idx].elements);
-        free(hnode[idx].pips);
-    }
-    free(hnode);
-
-    return non_zero_nodes;    
-
-}
-
-/*
-int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, int np)
-{
-    int row, col, mom, idx, non_zero_idx, len, non_zero_nodes;
-    Node *hnode = (Node *)calloc(partitions*partitions*partitions, sizeof(Node));
-
-    // First allocate memory as an empty node:
-    for (row=0; row<partitions; row++){
-        for (col=0; col<partitions; col++){
-            for (mom=0; mom<partitions; mom++){
-                idx = row*partitions*partitions + col*partitions + mom;
-                hnode[idx].nodepos.z = ((float)(mom)*(size_node));
-                hnode[idx].nodepos.y = ((float)(col)*(size_node));
-                hnode[idx].nodepos.x = ((float)(row)*(size_node));
-                hnode[idx].len = 0;
-                hnode[idx].elements = (PointW3D *)calloc(0,sizeof(PointW3D));
-                hnode[idx].pips = (int32_t *)calloc(0,sizeof(int32_t));
+            if (pips == NULL)
+                continue;
+            pips_weight = 0;
+            for (int n_pip = 0; n_pip < pips_width; n_pip++)
+            {
+                (*pips)[(len + n_pto)*pips_width + n_pip] = hnode[idx].pips[n_pto*pips_width + n_pip];
+                pips_weight += __builtin_popcount(hnode[idx].pips[n_pto*pips_width + n_pip]);
             }
+            (*dat)[len + n_pto].w = pips_weight / (32*pips_width);
         }
-    }
-
-    // Classificate the ith elment of the data into a node and add that point to the node with the add function:
-    for (int i=0; i<np; i++){
-        row = (int)((*dat)[i].x/size_node);
-        col = (int)((*dat)[i].y/size_node);
-        mom = (int)((*dat)[i].z/size_node);
-        idx = row*partitions*partitions + col*partitions + mom;
-        len = ++hnode[idx].len;
-        hnode[idx].elements = (PointW3D*)realloc(hnode[idx].elements, len*sizeof(PointW3D));
-        hnode[idx].elements[len-1] = (*dat)[i];
-    }
-
-    //Counts non zero nodes
-    non_zero_nodes = 0;
-    for (idx = 0; idx<partitions*partitions*partitions; idx++) 
-        if (hnode[idx].len > 0)
-            non_zero_nodes++;
-
-    *nod = (DNode *)malloc(non_zero_nodes*sizeof(DNode));
-    idx = -1, non_zero_idx = 0, len = 0; //len is no the accumulated length of all the previous idx nodes
-    while (len < np)
-    {
-        idx++;
-        if (hnode[idx].len <= 0) continue;
-        (*nod)[non_zero_idx].nodepos = hnode[idx].nodepos;
-        (*nod)[non_zero_idx].len = hnode[idx].len;
-        (*nod)[non_zero_idx].start = len;
-        for (int n_pto = 0; n_pto < hnode[idx].len; n_pto++)
-            (*dat)[len + n_pto] = hnode[idx].elements[n_pto];
         len += hnode[idx].len;
         (*nod)[non_zero_idx].end = len;
         non_zero_idx++;
@@ -370,16 +322,19 @@ int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, i
     for (idx = 0; idx < partitions*partitions*partitions; idx++)
     {
         free(hnode[idx].elements);
+        hnode[idx].elements = NULL;
         free(hnode[idx].pips);
+        hnode[idx].pips = NULL;
     }
     free(hnode);
+    hnode = NULL;
 
     return non_zero_nodes;    
 
 }
-*/
+
 //================== Saving the histograms ===========================
-void save_histogram1D(char *name, int bns, double *histo, int nhistos)
+void save_histogram1D(char *name, int bns, double *histo)
 {
     /* This function saves a 1 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -399,14 +354,15 @@ void save_histogram1D(char *name, int bns, double *histo, int nhistos)
 
     CHECKOPENFILE(file);
     
-    for (int i = 0; i < bns; i++) fprintf(file,"%.4f ",histo[nhistos*bns + i]);
-    //file2 << setprecision(12) << histo[nhistos*bns + i] << endl;
+    for (int i = 0; i < bns; i++)
+        fprintf(file,"%.4f ", histo[i]);
 
     fclose(file);
     free(full_path);
+    full_path = NULL;
 }
 
-void save_histogram2D(char *name, int bns, double *histo, int nhistos)
+void save_histogram2D(char *name, int bns, double *histo)
 {
     /* This function saves a 2 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -430,14 +386,14 @@ void save_histogram2D(char *name, int bns, double *histo, int nhistos)
 
     for (int i = 0; i < bns; i++){
         for (int j = 0; j < bns; j++){
-            idx = nhistos*bns*bns + i*bns + j;
+            idx = i*bns + j;
             fprintf(file,"%.4f ",histo[idx]);
-            //file << setprecision(12) << histo[idx] << ' ';
         }
         fprintf(file,"\n");
     }
     fclose(file);
     free(full_path);
+    full_path = NULL;
 }
 
 void save_histogram3D(char *name, int bns, double *histo, int nhistos)
@@ -475,6 +431,7 @@ void save_histogram3D(char *name, int bns, double *histo, int nhistos)
     }
     fclose(file);
     free(full_path);
+    full_path = NULL;
 }
 
 void save_histogram5D(char *name, int bns, double *histo, int nhistos)
@@ -522,4 +479,5 @@ void save_histogram5D(char *name, int bns, double *histo, int nhistos)
     }
     fclose(file);
     free(full_path);
+    full_path = NULL;
 }

@@ -7,8 +7,13 @@ extern "C" {
 
 #include <stdint.h>
 
-__device__ double get_weight(int32_t *a, int ai, int32_t *b, int bi, int l);
-__device__ double get_3d_weight(int32_t *a, int ai, int32_t *b, int bi, int32_t *c, int ci, int l);
+__device__ double get_weight(
+    int32_t *pipsA, int A_i, int32_t *pipsB, int B_i, int pips_width
+);
+__device__ double get_3d_weight(
+    int32_t *pipsA, int A_i, int32_t *pipsB, int B_i,
+    int32_t *pipsC, int C_i, int pips_width
+);
 
 #ifdef __cplusplus
 }

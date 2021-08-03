@@ -344,3 +344,31 @@ Test(pcf_prep_dirtests, make_nodes_wpips)
     cudaFreeHost(pipsD);
     cudaFreeHost(hnodeD_s);
 }
+
+Test(pcf_prep_dirtests, read_data_files_noweight)
+{
+    PointW3D *dataD=NULL;
+    int np;
+    char data_noweights[] = "elg_patch.dat";
+    open_files(&dataD, &np, data_noweights);
+    cr_assert(dataD!=NULL, "data_name should not be null\n");
+    cr_assert(np==277935, "Should have readed 32768 points readed %i \n", np);
+    //First point
+    cr_assert_float_eq(dataD[0].x, 1.587360534667969e+02, 0.000001, "Wrong first x got %f should be %f\n", dataD[0].x, 1.587360534667969e+02);
+    cr_assert_float_eq(dataD[0].y, 4.002540588378906e+01, 0.000001, "Wrong first y got %f should be %f\n", dataD[0].y, 4.002540588378906e+01);
+    cr_assert_float_eq(dataD[0].z, 1.021618962287903e+00, 0.000001, "Wrong first z got %f should be %f\n", dataD[0].z, 1.021618962287903e+00);
+    cr_assert_float_eq(dataD[0].w, 1, 0.000001, "Wrong first w got %f should be 1\n", dataD[0].w);
+    //Middle point
+    cr_assert_float_eq(dataD[166773].x, 1.557895050048828e+02, 0.000001, "Wrong first x got %f should be %f\n", dataD[412].x, 1.557895050048828e+02);
+    cr_assert_float_eq(dataD[166773].y, 5.067946624755859e+01, 0.000001, "Wrong first y got %f should be %f\n", dataD[412].y, 5.067946624755859e+01);
+    cr_assert_float_eq(dataD[166773].z, 8.622014522552490e-01, 0.000001, "Wrong first z got %f should be %f\n", dataD[412].z, 8.622014522552490e-01);
+    cr_assert_float_eq(dataD[166773].w, 1, 0.000001, "Wrong first w got %f should be 1\n", dataD[412].w);
+    //Last point
+    cr_assert_float_eq(dataD[np-1].x, 1.512907104492188e+02, 0.000001, "Wrong first x got %f should be %f\n", dataD[np-1].x, 1.512907104492188e+02);
+    cr_assert_float_eq(dataD[np-1].y, 5.999594116210938e+01, 0.000001, "Wrong first y got %f should be %f\n", dataD[np-1].y, 5.999594116210938e+01);
+    cr_assert_float_eq(dataD[np-1].z, 1.040344238281250e+00, 0.000001, "Wrong first z got %f should be %f\n", dataD[np-1].z, 1.040344238281250e+00);
+    cr_assert_float_eq(dataD[np-1].w, 1, 0.000001, "Wrong first w got %f should be 1\n", dataD[np-1].w);
+    cudaFreeHost(dataD);
+
+}
+
