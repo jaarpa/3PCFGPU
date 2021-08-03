@@ -211,13 +211,9 @@ int main(int argc, char **argv)
     //Declare variables for random.
     char **rand_files = NULL;
     PointW3D **dataR = NULL, **d_dataR=NULL;
-    //PointW3D *flattened_dataR = NULL, *d_dataR = NULL;
-    int32_t **pipsR = NULL, **d_pipsR=NULL;
-    //int32_t *flattened_pipsR = NULL, *d_pipsR = NULL;
     DNode **h_nodeR = NULL, **d_nodeR = NULL;
-    //DNode *h_nodeR = NULL, *d_nodeR = NULL;
     int *rnp = NULL, *nonzero_Rnodes = NULL;
-    int pips_widthR = 0, n_randfiles = 1;
+    int n_randfiles = 1;
 
     /* =======================================================================*/
     /* ================== Assign and prepare variables =======================*/
@@ -239,27 +235,6 @@ int main(int argc, char **argv)
             rand_name, rand_dir
         );
         histo_names[0] = strdup(data_name);
-
-        if (pip_calculation)
-        {
-            pipsR = (int32_t**)malloc(n_randfiles*sizeof(int32_t *));
-            CHECKALLOC(pipsR);
-            for (int i = 0; i < n_randfiles; i++)
-            {
-                //rnp to check that pip file has at least rnp points
-                open_pip_files(&pipsR[i], &pips_widthR, rand_files[i], rnp[i]); 
-                if (pips_width != pips_widthR) 
-                {
-                    fprintf(stderr, 
-                        "PIP files have different number of columns. "
-                        "%s has %i while %s has %i\n",
-                        rand_files[i], pips_widthR, rand_files[i-1],
-                        pips_width
-                    );
-                    exit(1);
-                }
-            }
-        }
     }
 
     /* ========================= Set the size box ============================*/
@@ -268,7 +243,7 @@ int main(int argc, char **argv)
     {
         for (int i = 0; i < n_randfiles; i++)
         {
-            for (int j = 0; j < np; j++)
+            for (int j = 0; j < rnp[i]; j++)
             {
                 if (dataR[i][j].x > size_box) size_box = (int)(dataR[i][j].x)+1;
                 if (dataR[i][j].y > size_box) size_box = (int)(dataR[i][j].y)+1;
@@ -340,24 +315,13 @@ int main(int argc, char **argv)
         CHECKALLOC(d_nodeR);
         d_dataR = (PointW3D**)malloc(n_randfiles*sizeof(PointW3D*));
         CHECKALLOC(d_dataR);
-        if (pipsR != NULL)
-        {
-            d_pipsR = (int32_t**)malloc(n_randfiles*sizeof(int32_t*));
-            CHECKALLOC(d_pipsR);
-        }
-        
 
         for (int i = 0; i < n_randfiles; i++)
         {
-            nonzero_Rnodes[i] = create_nodes(&h_nodeR[i], &dataR[i], &pipsR[i], pips_width, partitions, size_node, rnp[i]);
+            nonzero_Rnodes[i] = create_nodes(&h_nodeR[i], &dataR[i], NULL, pips_width, partitions, size_node, rnp[i]);
             CUCHECK(cudaMalloc(&d_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode)));
             CUCHECK(cudaMalloc(&d_dataR[i],  rnp[i]*sizeof(PointW3D)));
-            if (pipsR != NULL)
-            {
-                CUCHECK(cudaMalloc(&d_pipsR[i],  rnp[i]*pips_width*sizeof(int32_t)));
-                //This potentially could become async
-                CUCHECK(cudaMemcpyAsync(d_pipsR[i], pipsR[i], rnp[i]*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice, streamRR[i]));
-            }
+
             CUCHECK(cudaMemcpyAsync(d_nodeR[i], h_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode), cudaMemcpyHostToDevice, streamRR[i]));
             CUCHECK(cudaMemcpyAsync(d_dataR[i], dataR[i], rnp[i]*sizeof(PointW3D), cudaMemcpyHostToDevice, streamRR[i]));
 
@@ -404,7 +368,7 @@ int main(int argc, char **argv)
         {
             pcf_2ani(
                 d_nodeD, d_dataD, d_pipsD, nonzero_Dnodes, streamDD, DDcopy_done,
-                d_nodeR, d_dataR, d_pipsR, nonzero_Rnodes, streamRR, RRcopy_done,
+                d_nodeR, d_dataR, nonzero_Rnodes, streamRR, RRcopy_done,
                 histo_names, n_randfiles, bins, size_node, dmax,
                 pips_width
             );
@@ -424,7 +388,7 @@ int main(int argc, char **argv)
         {
             pcf_2iso(
                 d_nodeD, d_dataD, d_pipsD, nonzero_Dnodes, streamDD, DDcopy_done,
-                d_nodeR, d_dataR, d_pipsR, nonzero_Rnodes, streamRR, RRcopy_done,
+                d_nodeR, d_dataR, nonzero_Rnodes, streamRR, RRcopy_done,
                 histo_names, n_randfiles, bins, size_node, dmax,
                 pips_width
             );
@@ -486,23 +450,16 @@ int main(int argc, char **argv)
             free(rand_files[i]);
             CUCHECK(cudaFreeHost(dataR[i]));
             CUCHECK(cudaFreeHost(h_nodeR[i]));
-            if (pip_calculation) 
-                CUCHECK(cudaFreeHost(pipsR[i]));
             CUCHECK(cudaFree(d_nodeR[i]));
             CUCHECK(cudaFree(d_dataR[i]));
-            if (pip_calculation)
-                CUCHECK(cudaFree(d_pipsR[i]));
         }
         free(rand_files);
         free(dataR);
         free(rnp);
         free(h_nodeR);
-        if (pip_calculation)
-            free(pipsR);
 
         free(d_nodeR);
         free(d_dataR);
-        free(d_pipsR);
         free(nonzero_Rnodes);
         for (int i = 0; i < n_randfiles + 1; i++)
             free(histo_names[i]);

@@ -52,16 +52,10 @@ __global__ void XX2iso_wpips(
     int nonzero_nodes, int bn, float dmax, float d_max_node, int pipis_width
 );
 
-__global__ void XY2iso_wpips(
-    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int pipis_width, 
-    int nonzero_Dnodes, PointW3D *elementsR, DNode *nodeR, int32_t *pipsR,
-    int nonzero_Rnodes, int bn, float dmax, float d_max_node
-);
-
 void pcf_2iso(
     DNode *d_nodeD, PointW3D *d_dataD, int32_t *d_pipsD,
     int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
-    DNode **d_nodeR, PointW3D **d_dataR, int32_t **d_pipsR,
+    DNode **d_nodeR, PointW3D **d_dataR,
     int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
     char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
     int pips_width
@@ -169,45 +163,26 @@ void pcf_2iso(
     time_spent = 0; //Restarts timmer
     CUCHECK(cudaEventRecord(start_timmer));
     if (d_pipsD == NULL)
-    {
         XX2iso<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, nonzero_Dnodes, bins, dmax, d_max_node);
-        CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
-        for (int i=0; i<n_randfiles; i++)
-        {
-            //Calculates grid dim for each file
-            blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-            gridR.x = blocks_R;
-            gridR.y = blocks_R;
-            XX2iso<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
-            CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
-            gridDR.y = blocks_R;
-            
-            cudaStreamWaitEvent(streamDR[i], DDcopy_done);
-            cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
-            XY2iso<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, nonzero_Dnodes, d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
-            CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
-        }
-    }
     else
-    {
         XX2iso_wpips<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, d_pipsD, pips_width, nonzero_Dnodes, bins, dmax, d_max_node);
-        CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
-        for (int i=0; i<n_randfiles; i++)
-        {
-            //Calculates grid dim for each file
-            blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-            gridR.x = blocks_R;
-            gridR.y = blocks_R;
-            XX2iso_wpips<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], d_pipsR[i], pips_width, nonzero_Rnodes[i], bins, dmax, d_max_node);
-            CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
-            gridDR.y = blocks_R;
-
-            cudaStreamWaitEvent(streamDR[i], DDcopy_done);
-            cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
-            XY2iso_wpips<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, d_pipsD, pips_width, nonzero_Dnodes, d_dataR[i], d_nodeR[i], d_pipsR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
-            CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
-        }
+    CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
+    for (int i=0; i<n_randfiles; i++)
+    {
+        //Calculates grid dim for each file
+        blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
+        gridR.x = blocks_R;
+        gridR.y = blocks_R;
+        XX2iso<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+        CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
+        gridDR.y = blocks_R;
+        
+        cudaStreamWaitEvent(streamDR[i], DDcopy_done);
+        cudaStreamWaitEvent(streamDR[i], RRcopy_done[i]);
+        XY2iso<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, nonzero_Dnodes, d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node);
+        CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
     }
+
 
     //Waits for all the kernels to complete
     CUCHECK(cudaDeviceSynchronize());
@@ -407,52 +382,6 @@ __global__ void XX2iso_wpips(
                         if (bin>(bn-1)) continue;
                         v = get_weight(pipsD, i, pipsD, j, pipis_width);
                         atomicAdd(&XX[bin],v);
-                    }
-                }
-            }
-        }
-    }
-}
-
-__global__ void XY2iso_wpips(
-    double *XY, PointW3D *elementsD, DNode *nodeD, int32_t *pipsD, int pipis_width, 
-    int nonzero_Dnodes, PointW3D *elementsR, DNode *nodeR, int32_t *pipsR,
-    int nonzero_Rnodes, int bn, float dmax, float d_max_node
-)
-{
-    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
-        
-        float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
-        float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
-        float dd_nod12 = (nx2-nx1)*(nx2-nx1) + (ny2-ny1)*(ny2-ny1) + (nz2-nz1)*(nz2-nz1);
-
-        if (dd_nod12 <= d_max_node){
-
-            float x1,y1,z1,x2,y2,z2;
-            float dd_max=dmax*dmax;
-            double d, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
-            int bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
-            double v;
-
-            for (int i=nodeD[idx1].start; i<end1; ++i){
-                x1 = elementsD[i].x;
-                y1 = elementsD[i].y;
-                z1 = elementsD[i].z;
-                for (int j=nodeR[idx2].start; j<end2; ++j){
-                    x2 = elementsR[j].x;
-                    y2 = elementsR[j].y;
-                    z2 = elementsR[j].z;
-                    d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
-                    if (d<dd_max){
-                        bin = (int)(sqrt(d)*ds);
-
-                        if (bin>(bn-1)) continue;
-
-                        v = get_weight(pipsD, i, pipsD, j, pipis_width);
-                        atomicAdd(&XY[bin],v);
                     }
                 }
             }
