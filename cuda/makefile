@@ -27,8 +27,7 @@ BIN=$(BINDIR)/PCF
 all: $(BIN)
 
 release: FLGS=-O2 -arch=sm_60
-release: $(SRCS)
-	$(COMP) $(FLGS) $(SRCS) -o $(BIN)
+release: $(BIN)
 
 $(BIN): $(OBJS)
 	$(COMP) $(FLGS) $(OBJS) -o $@
