@@ -5,7 +5,7 @@
 #Compiler 
 COMP=nvcc
 #Compiler flags
-FLGS=-g -G  -arch=sm_60
+FLGS=-g -G  -gencode arch=compute_60,code=sm_60 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75
 
 #Directories
 SRCDIR=src
@@ -26,7 +26,7 @@ BIN=$(BINDIR)/PCF
 
 all: $(BIN)
 
-release: FLGS=-O2 -arch=sm_60
+release: FLGS=-O2 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75
 release: $(BIN)
 
 $(BIN): $(OBJS)

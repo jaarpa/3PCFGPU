@@ -39,7 +39,7 @@ void open_files(PointW3D **data, int *pts, char *name_file)
     rewind(file);
 
     //Allocate memory for data
-    cudaMallocHost(data, (*pts)*sizeof(PointW3D));
+    CUCHECK(cudaMallocHost(data, (*pts)*sizeof(PointW3D)));
     CHECKALLOC(*data);
 
     //Read line by line again
@@ -138,7 +138,7 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
     }
 
     rewind(file);
-    cudaMallocHost(pips, np * (*n_pips) * sizeof(int32_t));
+    CUCHECK(cudaMallocHost(pips, np * (*n_pips) * sizeof(int32_t)));
     CHECKALLOC(*pips);
 
     for (int i = 0; i < np; i++)
@@ -293,7 +293,7 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
         if (hnode[idx].len > 0)
             non_zero_nodes++;
 
-    cudaMallocHost(nod, non_zero_nodes*sizeof(DNode));
+    CUCHECK(cudaMallocHost(nod, non_zero_nodes*sizeof(DNode)));
     CHECKALLOC(nod);
     idx = -1, non_zero_idx = 0, len = 0; //len is now the accumulated length of all the previous idx nodes
     while (len < np)
