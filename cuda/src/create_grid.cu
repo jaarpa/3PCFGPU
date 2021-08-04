@@ -280,6 +280,8 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
         hnode[idx].elements[len-1] = (*dat)[i];
         if (pips == NULL)
             continue;
+        if (*pips == NULL)
+            continue;
         hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
         for (int j = 0; j < pips_width; j++)
             hnode[idx].pips[(len - 1)*pips_width + j] = (*pips)[i * pips_width + j];
@@ -306,13 +308,15 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
             (*dat)[len + n_pto] = hnode[idx].elements[n_pto];
             if (pips == NULL)
                 continue;
+            if (*pips == NULL)
+                continue;
             pips_weight = 0;
             for (int n_pip = 0; n_pip < pips_width; n_pip++)
             {
                 (*pips)[(len + n_pto)*pips_width + n_pip] = hnode[idx].pips[n_pto*pips_width + n_pip];
                 pips_weight += __builtin_popcount(hnode[idx].pips[n_pto*pips_width + n_pip]);
             }
-            (*dat)[len + n_pto].w = pips_weight / (32*pips_width);
+            (*dat)[len + n_pto].w = pips_weight / (float)(32*pips_width);
         }
         len += hnode[idx].len;
         (*nod)[non_zero_idx].end = len;

@@ -259,10 +259,10 @@ Test(pcf_prep_dirtests, make_nodes)
 
 Test(pcf_prep_dirtests, make_nodes_wpips)
 {
-    int np, nonzero_Dnodes, n_pips;
+    int np, nonzero_Dnodes, n_pips, pips_sum;
     int i, j, k, shufledinordered=0;
     int32_t *pipsD=NULL, *pips_ordered=NULL;
-    float size_box=0, size_node=0;
+    float size_box=0, size_node=0, pips_individual_weight=0;
     PointW3D *dataD, *data_ordered;
     DNode *hnodeD_s = NULL;
     open_files(&dataD, &np, data_name);
@@ -331,11 +331,14 @@ Test(pcf_prep_dirtests, make_nodes_wpips)
         cr_assert_float_eq(dataD[i].x, data_ordered[j].x, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", dataD[i].x, data_ordered[j].x);
         cr_assert_float_eq(dataD[i].y, data_ordered[j].y, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", dataD[i].y, data_ordered[j].y);
         cr_assert_float_eq(dataD[i].z, data_ordered[j].z, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", dataD[i].z, data_ordered[j].z);
-        cr_assert_float_eq(dataD[i].w, data_ordered[j].w, 0.0001, "The point %i in shufled and %i in ordered should have matched\n", dataD[i].w, data_ordered[j].w);
+        pips_sum = 0;
         for (k = 0; k<n_pips; k++)
         {
-            cr_assert(pipsD[i*n_pips + k] == pips_ordered[j*n_pips+k], "PIPs do not match with their points after shuffle\n");
+            cr_assert(pipsD[i*n_pips + k] == pips_ordered[j*n_pips + k], "PIPs do not match with their points after shuffle\n");
+            pips_sum += __builtin_popcount(pips_ordered[j*n_pips + k]);
         }
+        pips_individual_weight = pips_sum / (float)(32*n_pips);
+        cr_assert_float_eq(dataD[i].w, pips_individual_weight, 0.0001, "The weights of data %i which is  %i in shuffled and %i in ordered should have matched\n", i, dataD[i].w, pips_individual_weight);
         shufledinordered = 0;
     }
 
@@ -352,7 +355,7 @@ Test(pcf_prep_dirtests, read_data_files_noweight)
     char data_noweights[] = "elg_patch.dat";
     open_files(&dataD, &np, data_noweights);
     cr_assert(dataD!=NULL, "data_name should not be null\n");
-    cr_assert(np==277935, "Should have readed 32768 points readed %i \n", np);
+    cr_assert(np==277935, "Should have readed 277935 points readed %i \n", np);
     //First point
     cr_assert_float_eq(dataD[0].x, 1.587360534667969e+02, 0.000001, "Wrong first x got %f should be %f\n", dataD[0].x, 1.587360534667969e+02);
     cr_assert_float_eq(dataD[0].y, 4.002540588378906e+01, 0.000001, "Wrong first y got %f should be %f\n", dataD[0].y, 4.002540588378906e+01);

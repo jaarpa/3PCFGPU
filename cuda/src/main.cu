@@ -282,14 +282,14 @@ int main(int argc, char **argv)
     for (int i = 0; i < n_randfiles; i++)
         CUCHECK(cudaStreamCreate(&streamRR[i]));
     
-    //Data nodes
-    nonzero_Dnodes = create_nodes(&h_nodeD, &dataD, &pipsD, pips_width, partitions, size_node, np);
-    
     //To watch if the copies are done before attempting to read
     CUCHECK(cudaEventCreate(&DDcopy_done));
     RRcopy_done = (cudaEvent_t*)malloc(n_randfiles*sizeof(cudaEvent_t));
     for (int i = 0; i < n_randfiles; i++)
         CUCHECK(cudaEventCreate(&RRcopy_done[i]));
+    
+    //Data nodes
+    nonzero_Dnodes = create_nodes(&h_nodeD, &dataD, &pipsD, pips_width, partitions, size_node, np);
 
     //Copy the data nodes to the device asynchronously
     CUCHECK(cudaMalloc(&d_nodeD, nonzero_Dnodes*sizeof(DNode)));
