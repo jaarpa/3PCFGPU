@@ -263,8 +263,8 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
                 hnode[idx].nodepos.y = ((float)(col)*(size_node));
                 hnode[idx].nodepos.x = ((float)(row)*(size_node));
                 hnode[idx].len = 0;
-                hnode[idx].elements = (PointW3D *)calloc(0,sizeof(PointW3D));
-                hnode[idx].pips = (int32_t *)calloc(0,sizeof(int32_t));
+                hnode[idx].elements = NULL;
+                hnode[idx].pips = NULL;
             }
         }
     }
@@ -276,13 +276,19 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
         mom = (int)((*dat)[i].z/size_node);
         idx = row*partitions*partitions + col*partitions + mom;
         len = ++hnode[idx].len;
-        hnode[idx].elements = (PointW3D *)realloc(hnode[idx].elements, len*sizeof(PointW3D));
+        if (hnode[idx].elements == NULL )
+            hnode[idx].elements = (PointW3D *)malloc(len*sizeof(PointW3D));
+        else
+            hnode[idx].elements = (PointW3D *)realloc(hnode[idx].elements, len*sizeof(PointW3D));
         hnode[idx].elements[len-1] = (*dat)[i];
         if (pips == NULL)
             continue;
         if (*pips == NULL)
             continue;
-        hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
+        if (hnode[idx].pips == NULL )
+            hnode[idx].pips = (int32_t *)malloc(len*pips_width*sizeof(int32_t));
+        else
+            hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
         for (int j = 0; j < pips_width; j++)
             hnode[idx].pips[(len - 1)*pips_width + j] = (*pips)[i * pips_width + j];
     }
@@ -325,6 +331,8 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
 
     for (idx = 0; idx < partitions*partitions*partitions; idx++)
     {
+        if (hnode[idx].elements == NULL)
+            continue;
         free(hnode[idx].elements);
         hnode[idx].elements = NULL;
         free(hnode[idx].pips);
