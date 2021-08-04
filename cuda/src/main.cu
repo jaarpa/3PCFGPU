@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "cucheck_macros.cuh"
 #include "help.cuh"
@@ -245,17 +246,17 @@ int main(int argc, char **argv)
         {
             for (int j = 0; j < rnp[i]; j++)
             {
-                if (dataR[i][j].x > size_box) size_box = (int)(dataR[i][j].x)+1;
-                if (dataR[i][j].y > size_box) size_box = (int)(dataR[i][j].y)+1;
-                if (dataR[i][j].z > size_box) size_box = (int)(dataR[i][j].z)+1;
+                if (dataR[i][j].x > size_box) size_box = (int)ceilf(dataR[i][j].x + 1);
+                if (dataR[i][j].y > size_box) size_box = (int)ceilf(dataR[i][j].y + 1);
+                if (dataR[i][j].z > size_box) size_box = (int)ceilf(dataR[i][j].z + 1);
             }
         }
     }
     for (int i = 0; i < np; i++)
     {
-        if (dataD[i].x > size_box) size_box = (int)(dataD[i].x)+1;
-        if (dataD[i].y > size_box) size_box = (int)(dataD[i].y)+1;
-        if (dataD[i].z > size_box) size_box = (int)(dataD[i].z)+1;
+        if (dataD[i].x > size_box) size_box = (int)ceilf(dataD[i].x + 1);
+        if (dataD[i].y > size_box) size_box = (int)ceilf(dataD[i].y + 1);
+        if (dataD[i].z > size_box) size_box = (int)ceilf(dataD[i].z + 1);
     }
     if (size_box_provided < size_box)
         printf(

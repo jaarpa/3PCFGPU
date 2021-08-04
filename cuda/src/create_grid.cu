@@ -8,8 +8,13 @@
 #include "cucheck_macros.cuh"
 #include "create_grid.cuh"
 
+#ifdef __CUDACC_DEBUG__
+#define DATADIR "/home/jaarpa/3PCFGPU/data/"
+#define RESULTDIR "/home/jaarpa/3PCFGPU/results/"
+#else
 #define DATADIR "../data/"
 #define RESULTDIR "../results/"
+#endif
 
 //==================== Files reading ================================
 void open_files(PointW3D **data, int *pts, char *name_file)
@@ -263,8 +268,8 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
                 hnode[idx].nodepos.y = ((float)(col)*(size_node));
                 hnode[idx].nodepos.x = ((float)(row)*(size_node));
                 hnode[idx].len = 0;
-                hnode[idx].elements = (PointW3D *)malloc(0*sizeof(PointW3D));
-                hnode[idx].pips = (int32_t *)malloc(0*pips_width*sizeof(int32_t));
+                hnode[idx].elements = NULL;//(PointW3D *)malloc(0*sizeof(PointW3D));
+                hnode[idx].pips = NULL; //(int32_t *)malloc(0*pips_width*sizeof(int32_t));
             }
         }
     }
@@ -276,13 +281,19 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
         mom = (int)((*dat)[i].z/size_node);
         idx = row*partitions*partitions + col*partitions + mom;
         len = ++hnode[idx].len;
-        hnode[idx].elements = (PointW3D *)realloc(hnode[idx].elements, len*sizeof(PointW3D));
+        if (hnode[idx].elements == NULL)
+                hnode[idx].elements = (PointW3D *)malloc(len*sizeof(PointW3D));
+        else
+            hnode[idx].elements = (PointW3D *)realloc(hnode[idx].elements, len*sizeof(PointW3D));
         hnode[idx].elements[len-1] = (*dat)[i];
         if (pips == NULL)
             continue;
         if (*pips == NULL)
             continue;
-        hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
+        if (hnode[idx].pips == NULL)
+            hnode[idx].pips = (int32_t *)malloc(len*pips_width*sizeof(int32_t));
+        else
+            hnode[idx].pips = (int32_t *)realloc(hnode[idx].pips, len*pips_width*sizeof(int32_t));
         for (int j = 0; j < pips_width; j++)
             hnode[idx].pips[(len - 1)*pips_width + j] = (*pips)[i * pips_width + j];
     }
@@ -326,9 +337,9 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
     for (idx = 0; idx < partitions*partitions*partitions; idx++)
     {
         free(hnode[idx].elements);
-        hnode[idx].elements = NULL;
+        // hnode[idx].elements = NULL;
         free(hnode[idx].pips);
-        hnode[idx].pips = NULL;
+        // hnode[idx].pips = NULL;
     }
     free(hnode);
     hnode = NULL;
