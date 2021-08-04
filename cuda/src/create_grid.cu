@@ -8,8 +8,8 @@
 #include "cucheck_macros.cuh"
 #include "create_grid.cuh"
 
-#define DATADIR "/home/jaarpa/3PCFGPU/data/"
-#define RESULTDIR "/home/jaarpa/3PCFGPU/results/"
+#define DATADIR "../data/"
+#define RESULTDIR "../results/"
 
 //==================== Files reading ================================
 void open_files(PointW3D **data, int *pts, char *name_file)
