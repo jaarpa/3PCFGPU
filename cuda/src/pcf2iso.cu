@@ -16,12 +16,12 @@ XX: (double*) The histogram where the distances are counted.
 elements: (PointW3D*) Array of the points ordered coherently with the nodes.
 nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
 nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
-bn: (int) NUmber of bins in the XY histogram.
+bins: (int) NUmber of bins in the XY histogram.
 dmax: (float) The maximum distance of interest between points.
 d_max_node: (float) The maximum internodal distance.
 */
 __global__ void XX2iso(
-    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, 
+    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bins, 
     float dmax, float d_max_node
 );
 
@@ -37,19 +37,19 @@ nonzero_Dnodes: (int) Number of nonzero nodes where the points have been classif
 elementsR: (PointW3D*) Array of the points ordered coherently with the nodes. For the random points.
 nodeR: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the random points
 nonzero_Rnodes: (int) Number of nonzero nodes where the points have been classificated. For the random points
-bn: (int) NUmber of bins in the XY histogram.
+bins: (int) NUmber of bins in the XY histogram.
 dmax: (float) The maximum distance of interest between points.
 d_max_node: (float) The maximum internodal distance.
 */
 __global__ void XY2iso(
     double *XY, PointW3D *elementsD, DNode *nodeD, 
     int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, 
-    int bn, float dmax, float d_max_node
+    int bins, float dmax, float d_max_node
 );
 
 __global__ void XX2iso_wpips(
-    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD,
-    int nonzero_nodes, int bn, float dmax, float d_max_node, int pipis_width
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int pips_width,
+    int nonzero_nodes, int bins, float dmax, float d_max_node
 );
 
 void pcf_2iso(
@@ -254,7 +254,7 @@ void pcf_2iso(
 //============ Kernels Section ======================================= 
 //====================================================================
 __global__ void XX2iso(
-    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, 
+    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bins, 
     float dmax, float d_max_node
 )
 {
@@ -273,7 +273,7 @@ __global__ void XX2iso(
 
             float x1,y1,z1,x2,y2,z2;
             float dd_max=dmax*dmax;
-            double d, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
+            double d, ds = floor(((double)(bins)/dmax)*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
             double v;
 
@@ -288,7 +288,7 @@ __global__ void XX2iso(
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max && d>0){
                         bin = (int)(sqrt(d)*ds);
-                        if (bin>(bn-1)) continue;
+                        if (bin>(bins-1)) continue;
                         v = elements[i].w*elements[j].w;
                         atomicAdd(&XX[bin],v);
                     }
@@ -301,7 +301,7 @@ __global__ void XX2iso(
 __global__ void XY2iso(
     double *XY, PointW3D *elementsD, DNode *nodeD, 
     int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, 
-    int bn, float dmax, float d_max_node
+    int bins, float dmax, float d_max_node
 )
 {
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
@@ -317,7 +317,7 @@ __global__ void XY2iso(
 
             float x1,y1,z1,x2,y2,z2;
             float dd_max=dmax*dmax;
-            double d, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
+            double d, ds = floor(((double)(bins)/dmax)*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
             double v;
 
@@ -333,7 +333,7 @@ __global__ void XY2iso(
                     if (d<dd_max){
                         bin = (int)(sqrt(d)*ds);
 
-                        if (bin>(bn-1)) continue;
+                        if (bin>(bins-1)) continue;
 
                         v = elementsD[i].w*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
@@ -345,8 +345,8 @@ __global__ void XY2iso(
 }
 
 __global__ void XX2iso_wpips(
-    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD,
-    int nonzero_nodes, int bn, float dmax, float d_max_node, int pipis_width
+    double *XX, PointW3D *elements, DNode *nodeD, int32_t *pipsD, int pips_width,
+    int nonzero_nodes, int bins, float dmax, float d_max_node
 )
 {
 
@@ -364,7 +364,7 @@ __global__ void XX2iso_wpips(
 
             float x1,y1,z1,x2,y2,z2;
             float dd_max=dmax*dmax;
-            double d, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
+            double d, ds = floor(((double)(bins)/dmax)*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
             double v;
 
@@ -379,8 +379,8 @@ __global__ void XX2iso_wpips(
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max && d>0){
                         bin = (int)(sqrt(d)*ds);
-                        if (bin>(bn-1)) continue;
-                        v = get_weight(pipsD, i, pipsD, j, pipis_width);
+                        if (bin>(bins-1)) continue;
+                        v = get_weight(pipsD, i, pipsD, j, pips_width);
                         atomicAdd(&XX[bin],v);
                     }
                 }
