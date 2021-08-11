@@ -27,7 +27,6 @@ __global__ void XX2ani_BPC(
         double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, 
         float dmax, float d_max_node, float size_box, float size_node
     );
-    
 /*
 Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function with 
 boundary periodic conditions. It stores the counts in the XY histogram.
@@ -67,7 +66,7 @@ void pcf_2aniBPC(
 
     float d_max_node, time_spent;
     double *DD=NULL, **RR=NULL, **DR=NULL, *d_DD=NULL, **d_RR=NULL, **d_DR=NULL;
-    int  blocks_D, blocks_R, threads_perblock_dim = 32;
+    int  blocks_D, blocks_R, threads_perblock_dim = 16;
 
     // GPU timmer
     cudaEvent_t start_timmer, stop_timmer;
@@ -149,7 +148,6 @@ void pcf_2aniBPC(
     CUCHECK(cudaEventRecord(start_timmer));
     XX2ani_BPC<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, nonzero_Dnodes, bins, dmax, d_max_node, size_box, size_node);
     CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
-    /*
     for (int i=0; i<n_randfiles; i++)
     {
         //Calculates grid dim for each file
@@ -165,10 +163,8 @@ void pcf_2aniBPC(
         XY2ani_BPC<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, nonzero_Dnodes, d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, size_box, size_node);
         CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
     }
-    */
 
     //Waits for all the kernels to complete
-    CUCHECK( cudaPeekAtLastError() );
     CUCHECK(cudaDeviceSynchronize());
 
     nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
@@ -240,7 +236,7 @@ __global__ void XX2ani_BPC(
 )
 {
 
-    //Distributes all the indexes equitatively into the n_kernelc_calls.
+    //Distributes all the indexes equitatively into the number kernel calls.
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -254,8 +250,11 @@ __global__ void XX2ani_BPC(
         
         float x1, y1, z1, w1, x2, y2, z2;
         float dx, dy, dz;
-        int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
-        double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
+        int start1=nodeD[idx1].start, start2=nodeD[idx2].start;
+        int end1=nodeD[idx1].end, end2=nodeD[idx2].end;
+        int bnz, bnort, bin;
+        double dd_z, dd_ort, v;
+        double ds = floor(((double)(bn)/dmax)*1000000)/1000000;
         
         //Front vars
         float f_dmax = dmax+size_node;
@@ -265,15 +264,17 @@ __global__ void XX2ani_BPC(
         int boundz = ((nz1<=f_dmax)&&(nz2>=_f_dmax))||((nz2<=f_dmax)&&(nz1>=_f_dmax));
         float f_dxn12, f_dyn12, f_dzn12;
               
-        //Regular histogram calculation
-        if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
+        if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node)
+        {
             
-            for (int i=nodeD[idx1].start; i<end1; ++i){
+            for (int i=start1; i<end1; ++i)
+            {
                 x1 = elements[i].x;
                 y1 = elements[i].y;
                 z1 = elements[i].z;
                 w1 = elements[i].w;
-                for (int j=nodeD[idx2].start; j<end2; ++j){
+                for (int j=start2; j<end2; ++j)
+                {
                     x2 = elements[j].x;
                     y2 = elements[j].y;
                     z2 = elements[j].z;
@@ -293,6 +294,7 @@ __global__ void XX2ani_BPC(
                 }
             }
         }
+
         //Z front proyection
         if (boundz)
         {
@@ -301,16 +303,15 @@ __global__ void XX2ani_BPC(
             dd_nod12_z = f_dzn12*f_dzn12;
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node)
             {
-                for (int i=nodeD[idx1].start; i<end1; ++i)
+                for (int i=start1; i<end1; ++i)
                 {
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j)
+                    for (int j=start2; j<end2; ++j)
                     {
                         x2 = elements[j].x;
-        /*
                         y2 = elements[j].y;
                         z2 = elements[j].z;
                         dz = size_box-fabsf(z2-z1);
@@ -327,13 +328,11 @@ __global__ void XX2ani_BPC(
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
-    */
                     }
                 }
             }
         }
 
-    /*
         //Y front proyection
         if (boundy){
             f_dyn12 = size_box-dyn12;
@@ -341,12 +340,12 @@ __global__ void XX2ani_BPC(
             dd_nod12_z = dzn12*dzn12;
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
 
-                for (int i=nodeD[idx1].start; i<end1; ++i){
+                for (int i=start1; i<end1; ++i){
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                    for (int j=start2; j<end2; ++j){
                         x2 = elements[j].x;
                         y2 = elements[j].y;
                         z2 = elements[j].z;
@@ -376,12 +375,12 @@ __global__ void XX2ani_BPC(
             dd_nod12_z = dzn12*dzn12;
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
 
-                for (int i=nodeD[idx1].start; i<end1; ++i){
+                for (int i=start1; i<end1; ++i){
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                    for (int j=start2; j<end2; ++j){
                         x2 = elements[j].x;
                         y2 = elements[j].y;
                         z2 = elements[j].z;
@@ -412,12 +411,12 @@ __global__ void XX2ani_BPC(
             dd_nod12_z = dzn12*dzn12;
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
 
-                for (int i=nodeD[idx1].start; i<end1; ++i){
+                for (int i=start1; i<end1; ++i){
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                    for (int j=start2; j<end2; ++j){
                         x2 = elements[j].x;
                         y2 = elements[j].y;
                         z2 = elements[j].z;
@@ -449,12 +448,12 @@ __global__ void XX2ani_BPC(
             dd_nod12_z = f_dzn12*f_dzn12;
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
 
-                for (int i=nodeD[idx1].start; i<end1; ++i){
+                for (int i=start1; i<end1; ++i){
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                    for (int j=start2; j<end2; ++j){
                         x2 = elements[j].x;
                         y2 = elements[j].y;
                         z2 = elements[j].z;
@@ -486,12 +485,12 @@ __global__ void XX2ani_BPC(
             dd_nod12_z = f_dzn12*f_dzn12;
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
 
-                for (int i=nodeD[idx1].start; i<end1; ++i){
+                for (int i=start1; i<end1; ++i){
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                    for (int j=start2; j<end2; ++j){
                         x2 = elements[j].x;
                         y2 = elements[j].y;
                         z2 = elements[j].z;
@@ -524,12 +523,12 @@ __global__ void XX2ani_BPC(
             dd_nod12_z = f_dzn12*f_dzn12;
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
 
-                for (int i=nodeD[idx1].start; i<end1; ++i){
+                for (int i=start1; i<end1; ++i){
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                    for (int j=start2; j<end2; ++j){
                         x2 = elements[j].x;
                         y2 = elements[j].y;
                         z2 = elements[j].z;
@@ -553,7 +552,6 @@ __global__ void XX2ani_BPC(
                 }
             }
         }
-    */
     }
 }
 
