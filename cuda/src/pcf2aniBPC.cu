@@ -1,24 +1,72 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <cuda.h>
 
 #include "cucheck_macros.cuh"
 #include "create_grid.cuh"
 #include "pcf2aniBPC.cuh"
 
-void pcf_2aniBPC(
-    char **histo_names, DNode *dnodeD, PointW3D *d_dataD, int nonzero_Dnodes, 
-    DNode *dnodeR, PointW3D *d_dataR, int *nonzero_Rnodes, int *acum_nonzero_Rnodes, int n_randfiles, 
-    int bins, float size_node, float size_box, float dmax)
-    {
+
+/*
+Kernel function to calculate the pure histograms for the 2 point anisotropic correlation function WITH 
+boundary periodic conditions. It stores the counts in the XX histogram.
+
+args:
+XX: (double*) The histogram where the distances are counted.
+elements: (PointW3D*) Array of the points ordered coherently with the nodes.
+nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node.
+nonzero_nodes: (int) Number of nonzero nodes where the points have been classificated.
+bn: (int) NUmber of bins in the XY histogram.
+dmax: (float) The maximum distance of interest between points.
+d_max_node: (float) The maximum internodal distance.
+size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
+size_node: (float) Size of the nodes.
+*/
+__global__ void XX2ani_BPC(
+        double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, 
+        float dmax, float d_max_node, float size_box, float size_node
+    );
     
-    const int PREFIX_LENGTH = 11;
+/*
+Kernel function to calculate the mixed histograms for the 2 point anisotropic correlation function with 
+boundary periodic conditions. It stores the counts in the XY histogram.
+
+args:
+XY: (double*) The histogram where the distances are counted.
+elementsD: (PointW3D*) Array of the points ordered coherently with the nodes. For the data points.
+nodeD: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the data points
+nonzero_Dnodes: (int) Number of nonzero nodes where the points have been classificated. For the data points
+elementsR: (PointW3D*) Array of the points ordered coherently with the nodes. For the random points.
+nodeR: (DNode) Array of DNodes each of which define a node and the elements of element that correspond to that node. For the random points
+nonzero_Rnodes: (int) Number of nonzero nodes where the points have been classificated. For the random points
+bn: (int) NUmber of bins in the XY histogram.
+dmax: (float) The maximum distance of interest between points.
+d_max_node: (float) The maximum internodal distance.
+size_box: (float) The size of the box where the points were contained. It is used for the boundary periodic conditions
+size_node: (float) Size of the nodes.
+*/
+__global__ void XY2ani_BPC(
+    double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, 
+    PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, 
+    float dmax, float d_max_node, float size_box, float size_node
+);
+
+void pcf_2aniBPC(
+    DNode *d_nodeD, PointW3D *d_dataD,
+    int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
+    DNode **d_nodeR, PointW3D **d_dataR,
+    int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
+    char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
+    float size_box
+)
+{
     /* =======================================================================*/
     /* ======================  Var declaration ===============================*/
     /* =======================================================================*/
 
     float d_max_node, time_spent;
-    double *DD, *RR, *DR, *d_DD, *d_RR, *d_DR;
+    double *DD=NULL, **RR=NULL, **DR=NULL, *d_DD=NULL, **d_RR=NULL, **d_DR=NULL;
     int  blocks_D, blocks_R, threads_perblock_dim = 32;
 
     // GPU timmer
@@ -26,19 +74,20 @@ void pcf_2aniBPC(
     CUCHECK(cudaEventCreate(&start_timmer));
     CUCHECK(cudaEventCreate(&stop_timmer));
 
-    cudaStream_t streamDD, *streamRR, *streamDR;
-    streamRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
-    CHECKALLOC(streamRR);
+    //This may come from parameters
+    cudaStream_t *streamDR;
     streamDR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
     CHECKALLOC(streamDR);
-    CUCHECK(cudaStreamCreate(&streamDD));
     for (int i = 0; i < n_randfiles; i++)
-    {
         CUCHECK(cudaStreamCreate(&streamDR[i]));
-        CUCHECK(cudaStreamCreate(&streamRR[i]));
-    }
 
-    char *nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char)), *nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char)), *nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+    //Prefix that will be used to save the histograms
+    char *nameDD = NULL, *nameRR = NULL, *nameDR = NULL;
+    int PREFIX_LENGTH = 11;
+
+    nameDD = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+    nameRR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
+    nameDR = (char*)malloc(PREFIX_LENGTH*sizeof(char));
     strcpy(nameDD,"DDani_BPC_");
     strcpy(nameRR,"RRani_BPC_");
     strcpy(nameDR,"DRani_BPC_");
@@ -46,33 +95,43 @@ void pcf_2aniBPC(
     /* =======================================================================*/
     /* =======================  Memory allocation ============================*/
     /* =======================================================================*/
-
     d_max_node = dmax + size_node*sqrt(3.0);
     d_max_node *= d_max_node;
 
     // Allocate memory for the histogram as double
     DD = (double*)malloc(bins*bins*sizeof(double));
+    RR = (double**)malloc(n_randfiles*sizeof(double*));
+    DR = (double**)malloc(n_randfiles*sizeof(double*));
     CHECKALLOC(DD);
-    RR = (double*)malloc(n_randfiles*bins*bins*sizeof(double));
     CHECKALLOC(RR);
-    DR = (double*)malloc(n_randfiles*bins*bins*sizeof(double));
     CHECKALLOC(DR);
+    for (int i = 0; i < n_randfiles; i++)
+    {
+        RR[i] = (double*)malloc(bins*bins*sizeof(double));
+        CHECKALLOC(RR[i]);
+        DR[i] = (double*)malloc(bins*bins*sizeof(double));
+        CHECKALLOC(DR[i]);
+    }
+
+    d_RR = (double**)malloc(n_randfiles*sizeof(double*));
+    d_DR = (double**)malloc(n_randfiles*sizeof(double*));
+    CHECKALLOC(d_DR);
+    CHECKALLOC(d_RR);
 
     CUCHECK(cudaMalloc(&d_DD, bins*bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_RR, n_randfiles*bins*bins*sizeof(double)));
-    CUCHECK(cudaMalloc(&d_DR, n_randfiles*bins*bins*sizeof(double)));
-
-    //Restarts the main histograms in device to zero
     CUCHECK(cudaMemsetAsync(d_DD, 0, bins*bins*sizeof(double), streamDD));
-    CUCHECK(cudaMemsetAsync(d_RR, 0, n_randfiles*bins*bins*sizeof(double), streamRR[0]));
-    CUCHECK(cudaMemsetAsync(d_DR, 0, n_randfiles*bins*bins*sizeof(double), streamDR[0]));
-    CUCHECK(cudaStreamSynchronize(streamRR[0]));
-    CUCHECK(cudaStreamSynchronize(streamDR[0]));
+    for (int i = 0; i < n_randfiles; i++)
+    {
+        CUCHECK(cudaMalloc(&d_RR[i], bins*bins*sizeof(double)));
+        CUCHECK(cudaMalloc(&d_DR[i], bins*bins*sizeof(double)));
+        //Restarts the main histograms in device to zero
+        CUCHECK(cudaMemsetAsync(d_RR[i], 0, bins*bins*sizeof(double), streamRR[i]));
+        CUCHECK(cudaMemsetAsync(d_DR[i], 0, bins*bins*sizeof(double), streamDR[i]));
+    }
 
     /* =======================================================================*/
     /* ====================== Starts kernel Launches  ========================*/
     /* =======================================================================*/
-
 
     //Compute the dimensions of the GPU grid
     //One thread for each node
@@ -88,40 +147,44 @@ void pcf_2aniBPC(
     //Launch the kernels
     time_spent=0; //Restarts timmer
     CUCHECK(cudaEventRecord(start_timmer));
-    XX2ani_BPC<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, size_box, size_node, 0, 0);
-    // XX2ani_BPC<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, dnodeD, nonzero_Dnodes, bins, dmax, d_max_node, size_box, size_node, 0, 0);
-    // for (int i=0; i<n_randfiles; i++)
-    // {
-    //     //Calculates grid dim for each file
-    //     blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
-    //     gridR.x = blocks_R;
-    //     gridR.y = blocks_R;
-    //     XX2ani_BPC<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR, d_dataR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i);
-    //     gridDR.y = blocks_R;
-    //     XY2ani_BPC<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR, d_dataD, dnodeD, nonzero_Dnodes, d_dataR, dnodeR, nonzero_Rnodes[i], bins, dmax, d_max_node, size_box, size_node, acum_nonzero_Rnodes[i], i);
-    // }
+    XX2ani_BPC<<<gridD,threads_perblock,0,streamDD>>>(d_DD, d_dataD, d_nodeD, nonzero_Dnodes, bins, dmax, d_max_node, size_box, size_node);
+    CUCHECK(cudaMemcpyAsync(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDD));
+    /*
+    for (int i=0; i<n_randfiles; i++)
+    {
+        //Calculates grid dim for each file
+        blocks_R = (int)(ceil((float)((float)(nonzero_Rnodes[i])/(float)(threads_perblock_dim))));
+        gridR.x = blocks_R;
+        gridR.y = blocks_R;
+        XX2ani_BPC<<<gridR,threads_perblock,0,streamRR[i]>>>(d_RR[i], d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, size_box, size_node);
+        CUCHECK(cudaMemcpyAsync(RR[i], d_RR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamRR[i]));
+        gridDR.y = blocks_R;
+
+        cudaStreamWaitEvent(streamDR[i], DDcopy_done, 0);
+        cudaStreamWaitEvent(streamDR[i], RRcopy_done[i], 0);
+        XY2ani_BPC<<<gridDR,threads_perblock,0,streamDR[i]>>>(d_DR[i], d_dataD, d_nodeD, nonzero_Dnodes, d_dataR[i], d_nodeR[i], nonzero_Rnodes[i], bins, dmax, d_max_node, size_box, size_node);
+        CUCHECK(cudaMemcpyAsync(DR[i], d_DR[i], bins*bins*sizeof(double), cudaMemcpyDeviceToHost, streamDR[i]));
+    }
+    */
 
     //Waits for all the kernels to complete
+    CUCHECK(cudaThreadSynchronize());
+    CUCHECK( cudaPeekAtLastError() );
     CUCHECK(cudaDeviceSynchronize());
-
-    CUCHECK(cudaMemcpy(DD, d_DD, bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
 
     nameDD = (char*)realloc(nameDD,PREFIX_LENGTH + strlen(histo_names[0]));
     strcpy(&nameDD[PREFIX_LENGTH-1],histo_names[0]);
-    save_histogram2D(nameDD, bins, DD, 0);
-    CUCHECK(cudaMemcpy(RR, d_RR, n_randfiles*bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
+    save_histogram2D(nameDD, bins, DD);
+
     for (int i=0; i<n_randfiles; i++)
     {
         nameRR = (char*)realloc(nameRR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameRR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram2D(nameRR, bins, RR, i);
-    }
-    CUCHECK(cudaMemcpy(DR, d_DR, n_randfiles*bins*bins*sizeof(double), cudaMemcpyDeviceToHost));
-    for (int i=0; i<n_randfiles; i++)
-    {
+        save_histogram2D(nameRR, bins, RR[i]);
+
         nameDR = (char*)realloc(nameDR,PREFIX_LENGTH + strlen(histo_names[i+1]));
         strcpy(&nameDR[PREFIX_LENGTH-1],histo_names[i+1]);
-        save_histogram2D(nameDR, bins, DR, i);
+        save_histogram2D(nameDR, bins, DR[i]);
     }
 
     CUCHECK(cudaEventRecord(stop_timmer));
@@ -140,31 +203,49 @@ void pcf_2aniBPC(
     {
         CUCHECK(cudaStreamDestroy(streamDR[i]));
         CUCHECK(cudaStreamDestroy(streamRR[i]));
+        
+        free(RR[i]);
+        RR[i] = NULL;
+        free(DR[i]);
+        DR[i] = NULL;
+        CUCHECK(cudaFree(d_RR[i]));
+        d_RR[i] = NULL;
+        CUCHECK(cudaFree(d_DR[i]));
+        d_DR[i] = NULL;
     }
     free(streamDR);
+    streamDR = NULL;
     free(streamRR);
+    streamRR = NULL;
+    free(RR);
+    RR = NULL;
+    free(DR);
+    DR = NULL;
+    free(d_RR);
+    d_RR = NULL;
+    free(d_DR);
+    d_DR = NULL;
 
     CUCHECK(cudaEventDestroy(start_timmer));
     CUCHECK(cudaEventDestroy(stop_timmer));
 
     free(DD);
-    free(RR);
-    free(DR);
-    
+    DD = NULL;
     CUCHECK(cudaFree(d_DD));
-    CUCHECK(cudaFree(d_RR));
-    CUCHECK(cudaFree(d_DR));
-
+    d_DD = NULL;
 }
 
-__global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int node_offset, int bn_offset)
+__global__ void XX2ani_BPC(
+    double *XX, PointW3D *elements, DNode *nodeD, int nonzero_nodes, int bn,
+    float dmax, float d_max_node, float size_box, float size_node
+)
 {
 
     //Distributes all the indexes equitatively into the n_kernelc_calls.
-    int idx1 = node_offset + blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
+    int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (idx1<(nonzero_nodes+node_offset) && idx2<(nonzero_nodes+node_offset)){
+    if (idx1<nonzero_nodes && idx2<nonzero_nodes){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeD[idx2].nodepos.x, ny2=nodeD[idx2].nodepos.y, nz2=nodeD[idx2].nodepos.z;
         float dd_max=dmax*dmax;
@@ -172,8 +253,8 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
         float dd_nod12_ort = dxn12*dxn12 + dyn12*dyn12;
         float dd_nod12_z = dzn12*dzn12;
         
-        float x1,y1,z1,w1,x2,y2,z2;
-        float dx,dy,dz;
+        float x1, y1, z1, w1, x2, y2, z2;
+        float dx, dy, dz;
         int bnz, bnort, bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
         double dd_z, dd_ort, v, ds = floor(((double)(bn)/dmax)*1000000)/1000000;
         
@@ -184,7 +265,7 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
         int boundy = ((ny1<=f_dmax)&&(ny2>=_f_dmax))||((ny2<=f_dmax)&&(ny1>=_f_dmax));
         int boundz = ((nz1<=f_dmax)&&(nz2>=_f_dmax))||((nz2<=f_dmax)&&(nz1>=_f_dmax));
         float f_dxn12, f_dyn12, f_dzn12;
-        
+              
         //Regular histogram calculation
         if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node){
             
@@ -206,7 +287,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                         bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn*bn*bn_offset;
                         
                         v = w1*elements[j].w;
                         atomicAdd(&XX[bin],v);
@@ -214,33 +294,24 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                 }
             }
         }
-        if (idx1 == 5 && idx2 == 3)
-        {
-            printf("Hello from kernel 1 d_max_node=%f \n",d_max_node);
-            printf("Node 0 starts from %i ends in %i with len %i\n", nodeD[0].start, nodeD[0].end, nodeD[0].len);
-            for (int i=nodeD[0].start; i<nodeD[0].end; i++)
-            printf("%f, %f, %f, %f \n", elements[i].x,elements[i].y,elements[i].z,elements[i].w);
-            // printf("dzn12 =%f, dxn12=%f, dyn12 = %f\n",dd_nod12_ort,dd_nod12_z,nodeD[idx2].nodepos.z);
-        }
         //Z front proyection
         if (boundz)
         {
             f_dzn12 = size_box-dzn12;
             dd_nod12_ort = dxn12*dxn12+dyn12*dyn12;
             dd_nod12_z = f_dzn12*f_dzn12;
-            atomicAdd(&XX[0],1);
-            // if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node)
-            //     atomicAdd(&XX[1],1);
-            /*
             if (dd_nod12_ort <= d_max_node && dd_nod12_z <= d_max_node)
             {
-                for (int i=nodeD[idx1].start; i<end1; ++i){
+                for (int i=nodeD[idx1].start; i<end1; ++i)
+                {
                     x1 = elements[i].x;
                     y1 = elements[i].y;
                     z1 = elements[i].z;
                     w1 = elements[i].w;
-                    for (int j=nodeD[idx2].start; j<end2; ++j){
+                    for (int j=nodeD[idx2].start; j<end2; ++j)
+                    {
                         x2 = elements[j].x;
+        /*
                         y2 = elements[j].y;
                         z2 = elements[j].z;
                         dz = size_box-fabsf(z2-z1);
@@ -253,18 +324,17 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
                         }
+    */
                     }
                 }
             }
-            */
         }
 
-        /*
+    /*
         //Y front proyection
         if (boundy){
             f_dyn12 = size_box-dyn12;
@@ -291,7 +361,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -327,7 +396,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -365,7 +433,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -375,7 +442,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
             }
         }
 
-                
         //XZ front proyection
         if (boundx && boundz){
             f_dxn12 = size_box-dxn12;
@@ -404,7 +470,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -442,7 +507,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -482,7 +546,6 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elements[j].w;
                             atomicAdd(&XX[bin],v);
@@ -491,17 +554,16 @@ __global__ void XX2ani_BPC(double *XX, PointW3D *elements, DNode *nodeD, int non
                 }
             }
         }
-
-        */
+    */
     }
 }
 
-__global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node, int node_offset, int bn_offset)
+__global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int nonzero_Dnodes, PointW3D *elementsR,  DNode *nodeR, int nonzero_Rnodes, int bn, float dmax, float d_max_node, float size_box, float size_node)
 {
     
     int idx1 = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx2 = node_offset + blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx1<nonzero_Dnodes && idx2<(nonzero_Rnodes+node_offset)){
+    int idx2 = blockIdx.y * blockDim.y + threadIdx.y;
+    if (idx1<nonzero_Dnodes && idx2<nonzero_Rnodes){
         float nx1=nodeD[idx1].nodepos.x, ny1=nodeD[idx1].nodepos.y, nz1=nodeD[idx1].nodepos.z;
         float nx2=nodeR[idx2].nodepos.x, ny2=nodeR[idx2].nodepos.y, nz2=nodeR[idx2].nodepos.z;
         float dxn12=fabsf(nx2-nx1), dyn12=fabsf(ny2-ny1), dzn12=fabsf(nz2-nz1);
@@ -542,7 +604,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                         bnort = (int)(sqrt(dd_ort)*ds);
                         if (bnort>(bn-1)) continue;
                         bin = bnz + bnort;
-                        bin += bn*bn*bn_offset;
 
                         v = w1*elementsR[j].w;
                         atomicAdd(&XY[bin],v);
@@ -578,7 +639,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -614,7 +674,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -650,7 +709,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -688,7 +746,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -727,7 +784,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -765,7 +821,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);
@@ -805,7 +860,6 @@ __global__ void XY2ani_BPC(double *XY, PointW3D *elementsD, DNode *nodeD, int no
                             bnort = (int)(sqrt(dd_ort)*ds);
                             if (bnort>(bn-1)) continue;
                             bin = bnz + bnort;
-                            bin += bn*bn*bn_offset;
 
                             v = w1*elementsR[j].w;
                             atomicAdd(&XY[bin],v);

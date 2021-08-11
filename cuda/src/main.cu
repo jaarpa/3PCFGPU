@@ -12,7 +12,7 @@
 //#include "pcf3iso.cuh"
 #include "pcf2ani.cuh"
 #include "pcf2iso.cuh"
-//#include "pcf2aniBPC.cuh"
+#include "pcf2aniBPC.cuh"
 //#include "pcf2isoBPC.cuh"
 //#include "pcf3isoBPC.cuh"
 //#include "pcf3ani.cuh"
@@ -258,14 +258,19 @@ int main(int argc, char **argv)
         if (dataD[i].y > size_box) size_box = dataD[i].y;
         if (dataD[i].z > size_box) size_box = dataD[i].z;
     }
-    size_box = ceilf(size_box) + 1;
+    
     if (size_box_provided < size_box)
+    {
+        size_box = ceilf(size_box) + 1;
         printf(
             "Size box set to %f according to the largest register "
             "in provided files. \n", size_box
         );
+    }
     else
+    {
         size_box = size_box_provided;
+    }
 
     /*
     Would be nice to query the device here to compute the best number of 
@@ -360,12 +365,17 @@ int main(int argc, char **argv)
     */
     if (strcmp(argv[1],"2ani")==0)
     {
-        if (bpc){}
-            // pcf_2aniBPC(
-            //     histo_names, d_nodeD, d_dataD, nonzero_Dnodes,
-            //     d_nodeR, d_dataR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, 
-            //     bins, size_node, size_box, dmax
-            // );
+        if (bpc)
+        {
+            pcf_2aniBPC(
+                d_nodeD, d_dataD,
+                nonzero_Dnodes, streamDD, DDcopy_done, 
+                d_nodeR, d_dataR,
+                nonzero_Rnodes, streamRR, RRcopy_done,
+                histo_names, n_randfiles, bins, size_node, dmax,
+                size_box
+            );
+        }
         else
         {
             pcf_2ani(

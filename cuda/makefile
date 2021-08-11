@@ -44,4 +44,4 @@ test: $(OBJS) $(TESTBINS)
 	for test in $(TESTBINS) ; do ./$$test ;  done
 
 clean:
-	rm -rf $(BINDIR)/* $(OBJDIR)/* $(TESTSDIR)/bin/*
+	rm -rf $(BINDIR)/* $(OBJDIR)/* $(TESTSDIR)/bin/* ../results/*.dat
