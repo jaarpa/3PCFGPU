@@ -168,7 +168,6 @@ void pcf_2aniBPC(
     */
 
     //Waits for all the kernels to complete
-    CUCHECK(cudaThreadSynchronize());
     CUCHECK( cudaPeekAtLastError() );
     CUCHECK(cudaDeviceSynchronize());
 
