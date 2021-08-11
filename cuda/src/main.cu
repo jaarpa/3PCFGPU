@@ -10,13 +10,13 @@
 #include "help.cuh"
 #include "create_grid.cuh"
 //#include "pcf3iso.cuh"
+//#include "pcf3ani.cuh"
 #include "pcf2ani.cuh"
 #include "pcf2iso.cuh"
+//#include "pcf3aniBPC.cuh"
+//#include "pcf3isoBPC.cuh"
 #include "pcf2aniBPC.cuh"
 //#include "pcf2isoBPC.cuh"
-//#include "pcf3isoBPC.cuh"
-//#include "pcf3ani.cuh"
-//#include "pcf3aniBPC.cuh"
 
 /*
 Main function to calculate the correlation function of 2 and 3 points either isotropic or anisotropic. This is the master

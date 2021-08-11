@@ -1,7 +1,6 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
-#include <cuda.h>
 
 #include "cucheck_macros.cuh"
 #include "create_grid.cuh"
