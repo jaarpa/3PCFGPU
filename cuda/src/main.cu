@@ -199,7 +199,7 @@ int main(int argc, char **argv)
     cudaStream_t streamDD, *streamRR;
     start_timmer_host = clock(); //To check time setting up data
     
-    float size_node = 0, htime = 0, size_box = 0, shift_toI = 0;
+    float size_node = 0, htime = 0, size_box = 0;
     float max_x = 0, max_y = 0, max_z = 0;
     float min_x = 0, min_y = 0, min_z = 0;
     int np = 0;
@@ -274,9 +274,9 @@ int main(int argc, char **argv)
     {
         
         // Get the largest coordinate and shifts it to the I quadrant
-        max_x = max_x - min_x
-        max_y = max_y - min_y
-        max_z = max_z - min_z
+        max_x = max_x - min_x;
+        max_y = max_y - min_y;
+        max_z = max_z - min_z;
         if (max_x > max_y && max_x > max_z)
             size_box = max_x;
         else if (max_y > max_z)
