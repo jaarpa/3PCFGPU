@@ -199,7 +199,9 @@ int main(int argc, char **argv)
     cudaStream_t streamDD, *streamRR;
     start_timmer_host = clock(); //To check time setting up data
     
-    float size_node = 0, htime = 0, size_box = 0;
+    float size_node = 0, htime = 0, size_box = 0, shift_toI = 0;
+    float max_x = 0, max_y = 0, max_z = 0;
+    float min_x = 0, min_y = 0, min_z = 0;
     int np = 0;
     char **histo_names = NULL;
 
@@ -246,19 +248,69 @@ int main(int argc, char **argv)
         {
             for (int j = 0; j < rnp[i]; j++)
             {
-                if (dataR[i][j].x > size_box) size_box = dataR[i][j].x;
-                if (dataR[i][j].y > size_box) size_box = dataR[i][j].y;
-                if (dataR[i][j].z > size_box) size_box = dataR[i][j].z;
+                if (dataR[i][j].x > max_x) max_x = dataR[i][j].x;
+                if (dataR[i][j].y > max_y) max_y = dataR[i][j].y;
+                if (dataR[i][j].z > max_z) max_z = dataR[i][j].z;
+
+                if (dataR[i][j].x < min_x) min_x = dataR[i][j].x;
+                if (dataR[i][j].y < min_y) min_y = dataR[i][j].y;
+                if (dataR[i][j].z < min_z) min_z = dataR[i][j].z;
             }
         }
     }
     for (int i = 0; i < np; i++)
     {
-        if (dataD[i].x > size_box) size_box = dataD[i].x;
-        if (dataD[i].y > size_box) size_box = dataD[i].y;
-        if (dataD[i].z > size_box) size_box = dataD[i].z;
+        if (dataD[i].x > max_x) max_x = dataD[i].x;
+        if (dataD[i].y > max_y) max_y = dataD[i].y;
+        if (dataD[i].z > max_z) max_z = dataD[i].z;
+
+        if (dataD[i][j].x < min_x) min_x = dataD[i][j].x;
+        if (dataD[i][j].y < min_y) min_y = dataD[i][j].y;
+        if (dataD[i][j].z < min_z) min_z = dataD[i][j].z;
+
     }
     
+    if (min_x < 0 || min_y < 0 || min_y < 0)
+    {
+        // Get the smalles coordinate
+        if (min_x < min_y && min_x < min_z)
+            shift_toI = min_x;
+        else if (min_y < min_z)
+            shift_toI = min_y;
+        else
+            shift_toI = min_z;
+        
+        // Get the largest coordinate and shifts it to the I quadrant
+        if (min_x < min_y && min_x < min_z)
+            size_box = max_x - min_x;
+        else if (min_y < min_z)
+            size_box = max_y - min_y;
+        else
+            size_box = max_z - min_z;
+        
+        // Shift every point to the I quadrant to have only positive values
+        if (rand_required)
+        {
+            for (int i = 0; i < n_randfiles; i++)
+            {
+                for (int j = 0; j < rnp[i]; j++)
+                {
+                    dataR[i][j].x = dataR[i][j].x - min_x;
+                    dataR[i][j].y = dataR[i][j].y - min_y;
+                    dataR[i][j].z = dataR[i][j].z - min_z;
+                }
+            }
+        }
+        for (int i = 0; i < np; i++)
+        {
+            dataD[i].x = dataD[i].x - min_x;
+            dataD[i].y = dataD[i].y - min_y;
+            dataD[i].z = dataD[i].z - min_z;
+        }
+
+    }
+
+
     if (size_box_provided < size_box)
     {
         size_box = ceilf(size_box) + 1;
