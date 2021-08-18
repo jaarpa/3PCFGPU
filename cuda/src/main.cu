@@ -264,9 +264,9 @@ int main(int argc, char **argv)
         if (dataD[i].y > max_y) max_y = dataD[i].y;
         if (dataD[i].z > max_z) max_z = dataD[i].z;
 
-        if (dataD[i][j].x < min_x) min_x = dataD[i][j].x;
-        if (dataD[i][j].y < min_y) min_y = dataD[i][j].y;
-        if (dataD[i][j].z < min_z) min_z = dataD[i][j].z;
+        if (dataD[i].x < min_x) min_x = dataD[i].x;
+        if (dataD[i].y < min_y) min_y = dataD[i].y;
+        if (dataD[i].z < min_z) min_z = dataD[i].z;
 
     }
     
