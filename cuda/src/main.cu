@@ -282,11 +282,11 @@ int main(int argc, char **argv)
         
         // Get the largest coordinate and shifts it to the I quadrant
         if (min_x < min_y && min_x < min_z)
-            size_box = max_x - min_x;
+            size_box = max_x - shift_toI;
         else if (min_y < min_z)
-            size_box = max_y - min_y;
+            size_box = max_y - shift_toI;
         else
-            size_box = max_z - min_z;
+            size_box = max_z - shift_toI;
         
         // Shift every point to the I quadrant to have only positive values
         if (rand_required)
