@@ -16,7 +16,7 @@
 //#include "pcf3aniBPC.cuh"
 //#include "pcf3isoBPC.cuh"
 #include "pcf2aniBPC.cuh"
-//#include "pcf2isoBPC.cuh"
+#include "pcf2isoBPC.cuh"
 
 /*
 Main function to calculate the correlation function of 2 and 3 points either isotropic or anisotropic. This is the master
@@ -390,11 +390,20 @@ int main(int argc, char **argv)
     {
         if (bpc)
         {
-            // if (analytic){
+            if (analytic){
             //     pcf_2iso_BPCanalytic(data_name, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, bins, np, size_node, size_box, dmax);
-            // } else {
-            //     pcf_2iso_BPC(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
-            // }
+            }
+            else
+            {
+                pcf_2iso_BPC(
+                    d_nodeD, d_dataD,
+                    nonzero_Dnodes, streamDD, DDcopy_done, 
+                    d_nodeR, d_dataR,
+                    nonzero_Rnodes, streamRR, RRcopy_done,
+                    histo_names, n_randfiles, bins, size_node, dmax,
+                    size_box
+                );
+            }
         }
         else
         {
