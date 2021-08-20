@@ -58,7 +58,7 @@ def get_filtered_paths(histo_type, loc_dir):
 
     return pathto_files
 
-def get_histogram_sum(histogram_paths, save_as):
+def get_histogram_mean(histogram_paths, save_as):
     """
     Receives an iterable of path to files and reads them with numpy, performs
     the sum of all the histograms and saves it. Returns None if histogram_paths
@@ -71,9 +71,9 @@ def get_histogram_sum(histogram_paths, save_as):
             histo = np.loadtxt(f_name)
             continue
         histo += np.loadtxt(f_name)
-    if histogram_paths:
-        np.savetxt(save_as,histo)
-        return histo
+    histo = histo/len(histogram_paths)
+    np.savetxt(save_as,histo)
+    return histo
 
 def compute_plot(compute_type, **kwargs):
     """
@@ -87,22 +87,22 @@ def compute_plot(compute_type, **kwargs):
         loc_dir = RESULTS_DIR / kwargs["loc_dir"]
 
         # Declare and initialize the histograms with None
-        histo_dd = get_histogram_sum(get_filtered_paths("DD", loc_dir), loc_dir / "dd.dat")
-        histo_rr = get_histogram_sum(get_filtered_paths("RR", loc_dir), loc_dir / "rr.dat")
-        histo_dr = get_histogram_sum(get_filtered_paths("DR", loc_dir), loc_dir / "dr.dat")
-        histo_rd = get_histogram_sum(get_filtered_paths("RD", loc_dir), loc_dir / "rd.dat")
+        histo_dd = get_histogram_mean(get_filtered_paths("DD", loc_dir), loc_dir / "dd.dat")
+        histo_rr = get_histogram_mean(get_filtered_paths("RR", loc_dir), loc_dir / "rr.dat")
+        histo_dr = get_histogram_mean(get_filtered_paths("DR", loc_dir), loc_dir / "dr.dat")
+        histo_rd = get_histogram_mean(get_filtered_paths("RD", loc_dir), loc_dir / "rd.dat")
 
     else:
         loc_dd = RESULTS_DIR / kwargs["loc_dd"]
         histo_dd = np.loadtxt(loc_dd)
         loc_rr = RESULTS_DIR / kwargs["loc_rr"]
         histo_rr = np.loadtxt(loc_rr)
-        if kwargs["loc_dr"]:
+        if kwargs["loc_dr"] is not None:
             loc_dr = RESULTS_DIR / kwargs["loc_dr"]
-            histo_rd = np.loadtxt(loc_dr)
+            histo_dr = np.loadtxt(loc_dr)
         else:
-            histo_rd = None
-        if kwargs["loc_dr"]:
+            histo_dr = None
+        if kwargs["loc_rd"] is not None:
             loc_rd = RESULTS_DIR / kwargs["loc_rd"]
             histo_rd = np.loadtxt(loc_rd)
         else:

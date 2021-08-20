@@ -14,7 +14,7 @@ def plot_2ani(eps_ls, dmax):
     The ls estimator is a 1-D array
     """
 
-    limit = 0.02
+    limit = 0.002*eps_ls.max()
     cmap = 'RdBu'
 
     plt.figure(figsize=(6,6), dpi=100)
