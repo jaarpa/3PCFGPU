@@ -93,7 +93,6 @@ def plot_2iso(eps_ls, dmax):
     plt.figure(figsize=(14,8))
     plt.scatter(distance_r,eps_ls, s=50, c='g',label='Landley-Saley')
     plt.plot(distance_r,eps_ls,'k-')
-    plt.ylim(-0.02,0.02)
     plt.xlabel('r',fontsize=18)
     plt.ylabel('$\\epsilon(r)$',fontsize=18)
     plt.legend(shadow=True, fontsize='x-large')

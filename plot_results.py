@@ -110,7 +110,7 @@ def compute_plot(compute_type, **kwargs):
 
     # Analytic functions may not have mixed histograms (histo_rd or histo_dr)
     # then it is assumed they would have the same values as histo_rr
-    if not histo_dr:
+    if histo_dr is None:
         histo_rd = histo_rr
         histo_dr = histo_rr
 
@@ -118,10 +118,10 @@ def compute_plot(compute_type, **kwargs):
     # Plot
     if compute_type == "2iso":
         eps_ls = estim_2p_ls(histo_dd,histo_rr,histo_dr)
-        plot_2iso(eps_ls)
+        plot_2iso(eps_ls, kwargs["dmax"])
     elif compute_type == "2ani":
         eps_ls = estim_2p_ls(histo_dd,histo_rr,histo_dr)
-        plot_2ani(eps_ls)
+        plot_2ani(eps_ls, kwargs["dmax"])
     elif compute_type == "3iso":
         bins = kwargs["bins"]
         histo_dd = np.reshape(histo_dd, (bins,bins,bins))
@@ -129,7 +129,7 @@ def compute_plot(compute_type, **kwargs):
         histo_rd = np.reshape(histo_rd, (bins,bins,bins))
         histo_dr = np.reshape(histo_dr, (bins,bins,bins))
         eps_ls = estim_3p_ls(histo_dd, histo_rr, histo_rd, histo_dr)
-        plot_3iso(eps_ls)
+        plot_3iso(eps_ls, kwargs["dmax"])
     elif compute_type == "3ani":
         bins = kwargs["bins"]
         histo_dd = np.reshape(histo_dd, (bins,bins,bins,bins,bins))
@@ -137,13 +137,14 @@ def compute_plot(compute_type, **kwargs):
         histo_rd = np.reshape(histo_rd, (bins,bins,bins,bins,bins))
         histo_dr = np.reshape(histo_dr, (bins,bins,bins,bins,bins))
         eps_ls = estim_3p_ls(histo_dd, histo_rr, histo_rd, histo_dr)
-        plot_3ani(eps_ls)
+        plot_3ani(eps_ls, kwargs["dmax"])
 
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser(
         usage="""
-        %(prog)s [-h] (-d DIRECTORY | [-DD LOC_DD -RR LOC_RR -DR LOC_DR [-RD LOC_RD] ) {2iso,2ani,3iso,3ani}
+        %(prog)s [-h] (--dir DIRECTORY | [-DD LOC_DD -RR LOC_RR -DR LOC_DR [-RD LOC_RD] )
+        [-b BINS] DMAX {2iso,2ani,3iso,3ani}
         """,
         description="""
         Computes the Point Correlation Function and plots the results. You
@@ -155,8 +156,11 @@ if __name__ == "__main__":
     parser.add_argument("compute_type", choices=["2iso", "2ani", "3iso", "3ani"],
         help="The type of computation the the histograms represent."
     )
+    parser.add_argument("dmax", type=float,
+        help="Maximum distance used for compute the histograms"
+    )
     groupDD = parser.add_mutually_exclusive_group(required=True)
-    groupDD.add_argument("-d", dest="loc_dir", metavar="DIRECTORY", help="""
+    groupDD.add_argument("-dir", dest="loc_dir", metavar="DIRECTORY", help="""
         Joins all the *.dat ended files in the directory. Every files started with
         DR into one file, all the files starting with RR into another file,
         all the files started with DD into another file, and all DDR into one file
