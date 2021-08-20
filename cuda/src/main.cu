@@ -277,12 +277,6 @@ int main(int argc, char **argv)
         max_x = max_x - min_x;
         max_y = max_y - min_y;
         max_z = max_z - min_z;
-        if (max_x > max_y && max_x > max_z)
-            size_box = max_x;
-        else if (max_y > max_z)
-            size_box = max_y;
-        else
-            size_box = max_z;
         
         // Shift every point to the I quadrant to have only positive values
         if (rand_required)
@@ -306,6 +300,12 @@ int main(int argc, char **argv)
 
     }
 
+    if (max_x > max_y && max_x > max_z)
+        size_box = max_x;
+    else if (max_y > max_z)
+        size_box = max_y;
+    else
+        size_box = max_z;
 
     if (size_box_provided < size_box)
     {
