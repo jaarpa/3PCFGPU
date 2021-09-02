@@ -61,7 +61,8 @@ analytic=true: (bool)
 void pcf_2iso_BPCanalytic(
     DNode *d_nodeD, PointW3D *d_dataD,
     int nonzero_Dnodes, cudaStream_t streamDD,
-    int bins, int np, float size_node, float size_box, float dmax
+    int bins, int np, float size_node, float size_box, float dmax,
+    char *data_name
 );
 
 #ifdef __cplusplus

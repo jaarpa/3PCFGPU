@@ -16,7 +16,7 @@
 //#include "pcf3aniBPC.cuh"
 //#include "pcf3isoBPC.cuh"
 #include "pcf2aniBPC.cuh"
-//#include "pcf2isoBPC.cuh"
+#include "pcf2isoBPC.cuh"
 
 /*
 Main function to calculate the correlation function of 2 and 3 points either isotropic or anisotropic. This is the master
@@ -62,7 +62,8 @@ int main(int argc, char **argv)
 
     int bins = 0, partitions = 35;
     //Used as bools
-    int bpc = 0, analytic = 0, rand_dir = 0, rand_required = 0, pip_calculation = 0;
+    int bpc = 0, analytic = 0, rand_dir = 0, rand_required = 0;
+    int IIP = 0, pip_calculation = 0;
     float size_box_provided = 0, dmax = 0;
     char *data_name = NULL, *rand_name = NULL;
 
@@ -149,12 +150,17 @@ int main(int argc, char **argv)
                 exit(1);
             }
         }
+        else if (strcmp(argv[idpar],"-IIP") == 0)
+        {
+            pip_calculation = 1;
+            IIP = 1;
+        }
+        else if (strcmp(argv[idpar],"-PIP") == 0)
+            pip_calculation = 1;
         else if (strcmp(argv[idpar],"-bpc") == 0)
             bpc = 1;
         else if (strcmp(argv[idpar],"-a") == 0)
             analytic = 1;
-        else if (strcmp(argv[idpar],"-P") == 0)
-            pip_calculation = 1;
     }
 
     //Figure out if something very necessary is missing
@@ -345,6 +351,12 @@ int main(int argc, char **argv)
     
     //Data nodes
     nonzero_Dnodes = create_nodes(&h_nodeD, &dataD, &pipsD, pips_width, partitions, size_node, np);
+    if (IIP)
+    {
+        pip_calculation = 0;
+        CUCHECK(cudaFreeHost(pipsD));
+        pipsD = NULL;
+    }
 
     //Copy the data nodes to the device asynchronously
     CUCHECK(cudaMalloc(&d_nodeD, nonzero_Dnodes*sizeof(DNode)));
@@ -443,14 +455,14 @@ int main(int argc, char **argv)
             }
             else
             {
-                // pcf_2iso_BPC(
-                //     d_nodeD, d_dataD,
-                //     nonzero_Dnodes, streamDD, DDcopy_done, 
-                //     d_nodeR, d_dataR,
-                //     nonzero_Rnodes, streamRR, RRcopy_done,
-                //     histo_names, n_randfiles, bins, size_node, dmax,
-                //     size_box
-                // );
+                pcf_2iso_BPC(
+                    d_nodeD, d_dataD,
+                    nonzero_Dnodes, streamDD, DDcopy_done, 
+                    d_nodeR, d_dataR,
+                    nonzero_Rnodes, streamRR, RRcopy_done,
+                    histo_names, n_randfiles, bins, size_node, dmax,
+                    size_box
+                );
             }
         }
         else
