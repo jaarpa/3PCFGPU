@@ -451,7 +451,12 @@ int main(int argc, char **argv)
         if (bpc)
         {
             if (analytic){
-            //     pcf_2iso_BPCanalytic(data_name, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, bins, np, size_node, size_box, dmax);
+                pcf_2iso_BPCanalytic(
+                    d_nodeD, d_dataD,
+                    nonzero_Dnodes, streamDD,
+                    bins, np, size_node, size_box, dmax,
+                    data_name
+                );
             }
             else
             {

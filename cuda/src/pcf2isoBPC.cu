@@ -52,6 +52,12 @@ __global__ void XY2iso_BPC(
 
 /*
 Analytic computation of the RR==DR histogram
+This function calculates analytically the RR histogram. I only requires the alpha value calculated in host.
+
+args:
+RR (*double): HIstogram where the values will be stored.
+alpha (double): Parameter calculated by the host.
+bn: (int) NUmber of bins in the RR histogram.
 */
 __global__ void RR2iso_BPC_analytic(
     double *RR, double alpha, int bn
@@ -356,15 +362,6 @@ __global__ void RR2iso_BPC_analytic(
     double *RR, double alpha, int bn
 )
 {
-    /*
-    This function calculates analytically the RR histogram. I only requires the alpha value calculated in host.
-
-    args:
-    RR (*double): HIstogram where the values will be stored.
-    alpha (double): Parameter calculated by the host.
-    bn: (int) NUmber of bins in the RR histogram.
-
-    */
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     
     if (idx<bn){
