@@ -68,7 +68,8 @@ void pcf_2iso(
 
     float d_max_node, time_spent;
     double *DD=NULL, **RR=NULL, **DR=NULL, *d_DD=NULL, **d_RR=NULL, **d_DR=NULL;
-    int  blocks_D, blocks_R, threads_perblock_dim = 32;
+    int threads_perblock_dim = 32;
+    int  blocks_D, blocks_R;
 
     // GPU timmer
     cudaEvent_t start_timmer, stop_timmer;

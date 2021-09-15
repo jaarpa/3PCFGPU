@@ -407,7 +407,7 @@ void save_histogram2D(char *name, int bns, double *histo)
     full_path = NULL;
 }
 
-void save_histogram3D(char *name, int bns, double *histo, int nhistos)
+void save_histogram3D(char *name, int bns, double *histo)
 {
     /* This function saves a 3 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -432,9 +432,8 @@ void save_histogram3D(char *name, int bns, double *histo, int nhistos)
     for (int i = 0; i < bns; i++){
         for (int j = 0; j < bns; j++){
             for (int k = 0; k < bns; k++){
-                idx = nhistos*bns*bns*bns + i*bns*bns + j*bns + k;
+                idx = i*bns*bns + j*bns + k;
                 fprintf(file,"%.4f ",histo[idx]);
-                //file << setprecision(12) << histo[idx] << ' ';
             }
             fprintf(file,"\n");
         }
@@ -445,7 +444,7 @@ void save_histogram3D(char *name, int bns, double *histo, int nhistos)
     full_path = NULL;
 }
 
-void save_histogram5D(char *name, int bns, double *histo, int nhistos)
+void save_histogram5D(char *name, int bns, double *histo)
 {
     /* This function saves a 5 dimensional histogram in a file.
     Receives the name of the file, number of bins in the histogram and the histogram array
@@ -472,21 +471,16 @@ void save_histogram5D(char *name, int bns, double *histo, int nhistos)
             for (int k = 0; k < bns; k++){
                 for (int l = 0; l < bns; l++){
                     for (int m = 0; m < bns; m++){
-                        idx = nhistos*bns*bns*bns*bns*bns + i*bns*bns*bns*bns + j*bns*bns*bns + k*bns*bns + l*bns + m;
+                        idx = i*bns*bns*bns*bns + j*bns*bns*bns + k*bns*bns + l*bns + m;
                         fprintf(file,"%.4f ",histo[idx]);
-                        //file << setprecision(12) << histo[idx] << ' ';
                     }
                     fprintf(file,"\n");
-                    //file << "\n";
                 }
                 fprintf(file,"\n");
-                //file << "\n";
             }
             fprintf(file,"\n");
-            //file << "\n";
         }
         fprintf(file,"\n \n");
-        //file << "\n" << endl;
     }
     fclose(file);
     free(full_path);

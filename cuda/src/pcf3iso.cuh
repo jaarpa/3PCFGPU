@@ -24,7 +24,7 @@ arg[5]: float. Maximum distance of interest. It has to have the same units as th
 void pcf_3iso(
     DNode *d_nodeD, PointW3D *d_dataD, int32_t *d_pipsD,
     int nonzero_Dnodes, cudaStream_t streamDD, cudaEvent_t DDcopy_done, 
-    DNode **d_nodeR, PointW3D **d_dataR, int32_t **d_pipsR,
+    DNode **d_nodeR, PointW3D **d_dataR,
     int *nonzero_Rnodes, cudaStream_t *streamRR, cudaEvent_t *RRcopy_done,
     char **histo_names, int n_randfiles, int bins, float size_node, float dmax,
     int pips_width
