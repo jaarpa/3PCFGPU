@@ -274,9 +274,9 @@ __global__ void XX2iso(
 
             float x1,y1,z1,x2,y2,z2;
             float dd_max=dmax*dmax;
-            double d, ds = floor(((double)(bins)/dmax)*1000000)/1000000;
+            double d, v;
+            double ds = floor(((double)(bins)/log(dmax))*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
-            double v;
 
             for (int i=nodeD[idx1].start; i<end1; ++i){
                 x1 = elements[i].x;
@@ -291,6 +291,7 @@ __global__ void XX2iso(
                         bin = (int)(sqrt(d)*ds);
                         if (bin>(bins-1)) continue;
                         v = elements[i].w*elements[j].w;
+                        log(v);
                         atomicAdd(&XX[bin],v);
                     }
                 }
@@ -318,7 +319,7 @@ __global__ void XY2iso(
 
             float x1,y1,z1,x2,y2,z2;
             float dd_max=dmax*dmax;
-            double d, ds = floor(((double)(bins)/dmax)*1000000)/1000000;
+            double d, ds = floor(((double)(bins)/log(dmax))*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeR[idx2].end;
             double v;
 
@@ -337,6 +338,7 @@ __global__ void XY2iso(
                         if (bin>(bins-1)) continue;
 
                         v = elementsD[i].w*elementsR[j].w;
+                        log(v);
                         atomicAdd(&XY[bin],v);
                     }
                 }
@@ -365,7 +367,7 @@ __global__ void XX2iso_wpips(
 
             float x1,y1,z1,x2,y2,z2;
             float dd_max=dmax*dmax;
-            double d, ds = floor(((double)(bins)/dmax)*1000000)/1000000;
+            double d, ds = floor(((double)(bins)/log(dmax))*1000000)/1000000;
             int bin, end1=nodeD[idx1].end, end2=nodeD[idx2].end;
             double v;
 
@@ -382,6 +384,7 @@ __global__ void XX2iso_wpips(
                         bin = (int)(sqrt(d)*ds);
                         if (bin>(bins-1)) continue;
                         v = get_weight(pipsD, i, pipsD, j, pips_width);
+                        log(v);
                         atomicAdd(&XX[bin],v);
                     }
                 }
