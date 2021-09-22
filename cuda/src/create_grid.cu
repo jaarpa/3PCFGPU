@@ -323,7 +323,7 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
                 (*pips)[(len + n_pto)*pips_width + n_pip] = hnode[idx].pips[n_pto*pips_width + n_pip];
                 pips_weight += __builtin_popcount(hnode[idx].pips[n_pto*pips_width + n_pip]);
             }
-            (*dat)[len + n_pto].w = pips_weight > 0 ? pips_weight / (float)(32*pips_width) : 0;
+            (*dat)[len + n_pto].w = pips_weight > 0 ? 1 : 0;
         }
         len += hnode[idx].len;
         (*nod)[non_zero_idx].end = len;
