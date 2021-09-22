@@ -9,3 +9,5 @@
 cuda/bin/
 cuda/obj/
 cuda/tests/bin/
+data/DataXYZ/
+data/DataXYZ.zip
