@@ -288,10 +288,9 @@ __global__ void XX2iso(
                     z2 = elements[j].z;
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max && d>0){
-                        bin = (int)(sqrt(d)*ds);
+                        bin = (int)(log(sqrt(d))*ds);
                         if (bin>(bins-1)) continue;
                         v = elements[i].w*elements[j].w;
-                        log(v);
                         atomicAdd(&XX[bin],v);
                     }
                 }
@@ -333,12 +332,11 @@ __global__ void XY2iso(
                     z2 = elementsR[j].z;
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max){
-                        bin = (int)(sqrt(d)*ds);
+                        bin = (int)(log(sqrt(d))*ds);
 
                         if (bin>(bins-1)) continue;
 
                         v = elementsD[i].w*elementsR[j].w;
-                        log(v);
                         atomicAdd(&XY[bin],v);
                     }
                 }
@@ -381,10 +379,9 @@ __global__ void XX2iso_wpips(
                     z2 = elements[j].z;
                     d = (x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1);
                     if (d<dd_max && d>0){
-                        bin = (int)(sqrt(d)*ds);
+                        bin = (int)(log(sqrt(d))*ds);
                         if (bin>(bins-1)) continue;
                         v = get_weight(pipsD, i, pipsD, j, pips_width);
-                        log(v);
                         atomicAdd(&XX[bin],v);
                     }
                 }
