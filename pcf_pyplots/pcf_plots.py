@@ -24,15 +24,19 @@ def estim_2p_ls(histo_dd, histo_rr, histo_dr):
     """
     # Sets the same value in the three histograms where the histo_rr == 0 in a form
     # that the ls == 0 where histo_rr == 0
-    norm = np.sum(histo_dd)/np.sum(histo_rr)
-    norm2 = np.sum(histo_dr)/np.sum(histo_rr)
+    # norm = np.sum(histo_dd)/np.sum(histo_rr)
+    # norm2 = np.sum(histo_dr)/np.sum(histo_rr)
 
     rr_zeros = histo_rr == 0
     histo_dd[rr_zeros] = 1
     histo_dr[rr_zeros] = 1
     histo_rr[rr_zeros] = 1
+    histo_dd = histo_dd/histo_dd.sum()
+    histo_dr = histo_dr/histo_dr.sum()
+    histo_rr = histo_rr/histo_rr.sum()
 
-    return ((histo_dd/norm) - 2*(histo_dr/norm2) + histo_rr)/histo_rr
+    # return ((histo_dd/norm) - 2*(histo_dr/norm2) + histo_rr)/histo_rr
+    return (histo_dd - 2*(histo_dr) + histo_rr)/histo_rr
 
 def estim_3p_ls(histo_dd, histo_rr, histo_rd, histo_dr):
     """
