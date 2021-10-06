@@ -256,7 +256,7 @@ void read_random_files(char ***rand_files, char ***histo_names, int **rnp, Point
 int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np)
 {
     int row, col, mom, idx, non_zero_idx, len, non_zero_nodes;
-    float pips_weight;
+    int32_t pips_weight;
     Node *hnode = (Node *)calloc(partitions*partitions*partitions, sizeof(Node));
 
     // First allocate memory as an empty node:
@@ -323,7 +323,7 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
                 (*pips)[(len + n_pto)*pips_width + n_pip] = hnode[idx].pips[n_pto*pips_width + n_pip];
                 pips_weight += __builtin_popcount(hnode[idx].pips[n_pto*pips_width + n_pip]);
             }
-            (*dat)[len + n_pto].w = pips_weight / (float)(32*pips_width);
+            (*dat)[len + n_pto].w = (float)(pips_weight) / (float)(32*pips_width);
         }
         len += hnode[idx].len;
         (*nod)[non_zero_idx].end = len;
