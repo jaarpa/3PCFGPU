@@ -88,6 +88,10 @@ Returns:
 */
 int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, int partitions, float size_node, int np);
 
+/*
+*/
+void compute_iips(PointW3D **dat, int32_t *pips, int pips_width, int np);
+
 //int create_nodes(DNode **nod, PointW3D **dat, int partitions, float size_node, int np);
 
 //================== Saving the histograms ===========================

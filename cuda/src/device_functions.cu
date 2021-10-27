@@ -6,11 +6,10 @@ __device__ double get_weight(
 )
 {
     int i;
-    double weight = 0, totbits = pips_width*32;
+    double pcnt = 0, totbits = pips_width*32;
     for (i = 0; i < pips_width; i++)
-        weight += __popc(pipsA[A_i*pips_width + i] & pipsB[B_i*pips_width + i]);
-
-    return weight/totbits;
+        pcnt += __popc(pipsA[A_i*pips_width + i] & pipsB[B_i*pips_width + i]);
+    return pcnt > 0 ? (float)(totbits) / (float)(pcnt) : 0;
 }
 
 __device__ double get_3d_weight(
@@ -19,12 +18,11 @@ __device__ double get_3d_weight(
 )
 {
     int i;
-    double weight = 0, totbits = pips_width*32;
+    double pcnt = 0, totbits = pips_width*32;
     for (i = 0; i < pips_width; i++)
-        weight += __popc(
+        pcnt += __popc(
             pipsA[A_i*pips_width + i] & pipsB[B_i*pips_width + i]
             & pipsC[C_i*pips_width + i]
         );
-
-    return weight/totbits;
+    return pcnt > 0 ? (float)(totbits) / (float)(pcnt) : 0;
 }
