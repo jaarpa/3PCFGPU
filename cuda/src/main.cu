@@ -11,24 +11,23 @@
 #include "create_grid.cuh"
 #include "pcf3iso.cuh"
 //#include "pcf3ani.cuh"
-#include "pcf2ani.cuh"
-#include "pcf2iso.cuh"
 //#include "pcf3aniBPC.cuh"
 //#include "pcf3isoBPC.cuh"
+#include "pcf2iso.cuh"
+#include "bf_2iso.cuh"
+#include "pcf2ani.cuh"
 #include "pcf2aniBPC.cuh"
 #include "pcf2isoBPC.cuh"
 
 /*
 Main function to calculate the correlation function of 2 and 3 points either isotropic or anisotropic. This is the master
 script which calls the correct function, and reads and settles the data. The file must contain 4 columns
-the first 3 columns in file are the x,y,z coordinates and the 4 the weight of the measurment. Even if pips calculation (-P)
+the first 3 columns in file are the x,y,z coordinates and the 4 the weight of the measurment. Even if pips calculation (-PIP)
 will be performed the data file (-f) and random files (-r or -rd) must have 4 columns separated by spaces.
 
 The pip files must have a list of int32 integers every integer in row must be separated by spaces and it must have at least the
 same number of rows as its data counterpart.
 
-A random sample of the data can be obtained specifying the argument (-n) every file must have at least -n rows, if that is not the case
-or -n is not specified the sample size is set to the number of rows of the file with less rows.
 */
 int main(int argc, char **argv)
 {
@@ -51,7 +50,10 @@ int main(int argc, char **argv)
         show_help();
         return 0;
     }
-    else if (strcmp(argv[1],"3iso") != 0 && strcmp(argv[1],"3ani") != 0 && strcmp(argv[1],"2iso") != 0 && strcmp(argv[1],"2ani") != 0)
+    else if (
+        strcmp(argv[1],"3iso") != 0 && strcmp(argv[1],"3ani") != 0 &&
+        strcmp(argv[1],"2iso") != 0 && strcmp(argv[1],"2ani") != 0
+    )
     {
         fprintf(stderr, 
             "Invalid <calc_type> option or not enough parameters. \n"
@@ -61,13 +63,13 @@ int main(int argc, char **argv)
     }
 
     int bins = 0, partitions = 35;
-    //Used as bools
+    // Used as bools
     int bpc = 0, analytic = 0, rand_dir = 0, rand_required = 0;
-    int IIP = 0, pip_calculation = 0;
+    int IIP = 0, pip_calculation = 0, BF=0;
     float size_box_provided = 0, dmax = 0;
     char *data_name = NULL, *rand_name = NULL;
 
-    //Read the parameters from command line
+    // Read the parameters from command line
     for (int idpar = 2; idpar < argc; idpar++)
     {
         if (strcmp(argv[idpar],"-f") == 0)
@@ -159,11 +161,13 @@ int main(int argc, char **argv)
             pip_calculation = 1;
         else if (strcmp(argv[idpar],"-bpc") == 0)
             bpc = 1;
+        else if (strcmp(argv[idpar],"-BF") == 0)
+            BF = 1;
         else if (strcmp(argv[idpar],"-a") == 0)
             analytic = 1;
     }
 
-    //Figure out if something very necessary is missing
+    // Figure out if something very necessary is missing
     if (data_name == NULL)
     {
         fprintf(stderr, "Missing data file (-f). \n");
@@ -198,12 +202,11 @@ int main(int argc, char **argv)
 
     clock_t stop_timmer_host, start_timmer_host;
     cudaEvent_t DDcopy_done, *RRcopy_done;
-
     
     // In 3 PCF DD is used for DDD, RR for RRR
     // New streams are created for mixed histograms within functions
     cudaStream_t streamDD, *streamRR;
-    start_timmer_host = clock(); //To check time setting up data
+    start_timmer_host = clock(); // To check time setting up data
     
     float size_node = 0, htime = 0, size_box = 0;
     float max_x = 0, max_y = 0, max_z = 0;
@@ -211,13 +214,13 @@ int main(int argc, char **argv)
     int np = 0;
     char **histo_names = NULL;
 
-    //Declare variables for data.
+    // Declare variables for data.
     DNode *h_nodeD = NULL, *d_nodeD = NULL;
     PointW3D *dataD = NULL, *d_dataD = NULL;
     int32_t *pipsD = NULL, *d_pipsD = NULL;
     int nonzero_Dnodes = 0, pips_width = 0;
     
-    //Declare variables for random.
+    // Declare variables for random.
     char **rand_files = NULL;
     PointW3D **dataR = NULL, **d_dataR=NULL;
     DNode **h_nodeR = NULL, **d_nodeR = NULL;
@@ -230,15 +233,14 @@ int main(int argc, char **argv)
 
     /* ============================ Read data ================================*/
     open_files(&dataD, &np, data_name);
-    //Read PIPs if required
+    // Read PIPs if required
     if (pip_calculation)
         open_pip_files(&pipsD, &pips_width, data_name, np);
     
-    //Read rand only if rand was required.
+    // Read rand only if rand was required.
     if (rand_required)
     {
-
-        //read_random_files
+        // Read_random_files
         read_random_files(
             &rand_files, &histo_names, &rnp, &dataR, &n_randfiles,
             rand_name, rand_dir
@@ -331,10 +333,6 @@ int main(int argc, char **argv)
     partitions
     */
 
-    //Set nodes size
-    size_node = size_box/(float)(partitions);
-
-    /* ================ Make the nodes and copy to device ===================*/
 
     // Create the streams for async copy
     streamRR = (cudaStream_t*)malloc(n_randfiles*sizeof(cudaStream_t));
@@ -348,18 +346,35 @@ int main(int argc, char **argv)
     RRcopy_done = (cudaEvent_t*)malloc(n_randfiles*sizeof(cudaEvent_t));
     for (int i = 0; i < n_randfiles; i++)
         CUCHECK(cudaEventCreate(&RRcopy_done[i]));
+        
+    if (!(BF))
+    {
+        printf("Creating data nodes...");
+        /* ================ Make the nodes ===================*/
+        //Set nodes size
+        size_node = size_box/(float)(partitions);
+        
+        //Data nodes
+        nonzero_Dnodes = create_nodes(&h_nodeD, &dataD, &pipsD, pips_width, partitions, size_node, np);
+
+        //Copy the data nodes to the device asynchronously
+        CUCHECK(cudaMalloc(&d_nodeD, nonzero_Dnodes*sizeof(DNode)));
+        CUCHECK(cudaMemcpyAsync(d_nodeD, h_nodeD, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
+
+    }
+    else if (pip_calculation)
+    {
+        compute_iips(&dataD, pipsD, pips_width, np);
+    }
     
-    //Data nodes
-    nonzero_Dnodes = create_nodes(&h_nodeD, &dataD, &pipsD, pips_width, partitions, size_node, np);
+
+    /* ================ Copy data to device ===================*/
     if (IIP)
     {
         pip_calculation = 0;
         CUCHECK(cudaFreeHost(pipsD));
         pipsD = NULL;
     }
-
-    //Copy the data nodes to the device asynchronously
-    CUCHECK(cudaMalloc(&d_nodeD, nonzero_Dnodes*sizeof(DNode)));
     CUCHECK(cudaMalloc(&d_dataD,  np*sizeof(PointW3D)));
     if (pipsD != NULL)
     {
@@ -367,90 +382,82 @@ int main(int argc, char **argv)
         //This potentially could become async
         CUCHECK(cudaMemcpyAsync(d_pipsD, pipsD, np*pips_width*sizeof(int32_t), cudaMemcpyHostToDevice, streamDD));
     }
-    CUCHECK(cudaMemcpyAsync(d_nodeD, h_nodeD, nonzero_Dnodes*sizeof(DNode), cudaMemcpyHostToDevice, streamDD));
     CUCHECK(cudaMemcpyAsync(d_dataD, dataD, np*sizeof(PointW3D), cudaMemcpyHostToDevice, streamDD));
     CUCHECK(cudaEventRecord(DDcopy_done, streamDD));
-    
+
     //Random nodes grid
     if (rand_required)
     {
-        nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
-        CHECKALLOC(nonzero_Rnodes);
-        h_nodeR =(DNode**)malloc(n_randfiles*sizeof(DNode*));
-        CHECKALLOC(h_nodeR);
-        d_nodeR =(DNode**)malloc(n_randfiles*sizeof(DNode*));
-        CHECKALLOC(d_nodeR);
+        if (!(BF))
+        {
+    
+            /* ================ Make the nodes ===================*/
+            printf("Creating random data nodes...");
+
+            nonzero_Rnodes = (int*)calloc(n_randfiles,sizeof(int));
+            CHECKALLOC(nonzero_Rnodes);
+            h_nodeR =(DNode**)malloc(n_randfiles*sizeof(DNode*));
+            CHECKALLOC(h_nodeR);
+            d_nodeR =(DNode**)malloc(n_randfiles*sizeof(DNode*));
+            CHECKALLOC(d_nodeR);
+            for (int i = 0; i < n_randfiles; i++)
+            {
+                nonzero_Rnodes[i] = create_nodes(&h_nodeR[i], &dataR[i], NULL, pips_width, partitions, size_node, rnp[i]);
+                CUCHECK(cudaMalloc(&d_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode)));
+                CUCHECK(cudaMemcpyAsync(d_nodeR[i], h_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode), cudaMemcpyHostToDevice, streamRR[i]));
+            }
+        }
+
+        /* ================ Copy random data ===================*/
+
         d_dataR = (PointW3D**)malloc(n_randfiles*sizeof(PointW3D*));
         CHECKALLOC(d_dataR);
-
         for (int i = 0; i < n_randfiles; i++)
-        {
-            nonzero_Rnodes[i] = create_nodes(&h_nodeR[i], &dataR[i], NULL, pips_width, partitions, size_node, rnp[i]);
-            CUCHECK(cudaMalloc(&d_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode)));
+            {
             CUCHECK(cudaMalloc(&d_dataR[i],  rnp[i]*sizeof(PointW3D)));
-
-            CUCHECK(cudaMemcpyAsync(d_nodeR[i], h_nodeR[i], nonzero_Rnodes[i]*sizeof(DNode), cudaMemcpyHostToDevice, streamRR[i]));
             CUCHECK(cudaMemcpyAsync(d_dataR[i], dataR[i], rnp[i]*sizeof(PointW3D), cudaMemcpyHostToDevice, streamRR[i]));
 
             CUCHECK(cudaEventRecord(RRcopy_done[i], streamRR[i]));
-
         }
     }
 
     stop_timmer_host = clock();
     htime = ((float)(stop_timmer_host-start_timmer_host))/CLOCKS_PER_SEC;
     printf("All set up for computations in %f ms in host. \n", htime*1000);
-    
-    /* =======================================================================*/
-    /* ======================= Launch the cuda code ==========================*/
-    /* =======================================================================*/
+        
+    if (BF)
+    {
+        // Use brute force
+        printf("Using brute force algorithm...\n");
+        pcf_bf_2iso(
+            d_dataD, d_pipsD, streamDD, DDcopy_done, np,
+            d_dataR, streamRR, RRcopy_done, rnp,
+            histo_names, n_randfiles, bins, dmax,
+            pips_width
+        );
 
-    /*
-     else if (strcmp(argv[1],"3ani")==0){
-        if (bpc){
-            pcf_3aniBPC(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
-        } else {
-            pcf_3ani(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, dmax);
-        }
-    */
-    if (strcmp(argv[1],"2ani")==0)
-    {
-        if (bpc)
-        {
-            pcf_2aniBPC(
-                d_nodeD, d_dataD,
-                nonzero_Dnodes, streamDD, DDcopy_done, 
-                d_nodeR, d_dataR,
-                nonzero_Rnodes, streamRR, RRcopy_done,
-                histo_names, n_randfiles, bins, size_node, dmax,
-                size_box
-            );
-        }
-        else
-        {
-            pcf_2ani(
-                d_nodeD, d_dataD, d_pipsD, nonzero_Dnodes, streamDD, DDcopy_done,
-                d_nodeR, d_dataR, nonzero_Rnodes, streamRR, RRcopy_done,
-                histo_names, n_randfiles, bins, size_node, dmax,
-                pips_width
-            );
-        }
     }
-    else if (strcmp(argv[1],"2iso")==0)
+    else
     {
-        if (bpc)
-        {
-            if (analytic){
-                pcf_2iso_BPCanalytic(
-                    d_nodeD, d_dataD,
-                    nonzero_Dnodes, streamDD,
-                    bins, np, size_node, size_box, dmax,
-                    data_name
-                );
+        // Grid algorithm
+        /* =======================================================================*/
+        /* ======================= Launch the cuda code ==========================*/
+        /* =======================================================================*/
+
+        /*
+        else if (strcmp(argv[1],"3ani")==0){
+            if (bpc){
+                pcf_3aniBPC(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
+            } else {
+                pcf_3ani(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, dmax);
             }
-            else
+        */
+        if (strcmp(argv[1],"2ani")==0)
+        {
+
+            if (bpc)
             {
-                pcf_2iso_BPC(
+                pcf_2aniBPC(
                     d_nodeD, d_dataD,
                     nonzero_Dnodes, streamDD, DDcopy_done, 
                     d_nodeR, d_dataR,
@@ -459,62 +466,95 @@ int main(int argc, char **argv)
                     size_box
                 );
             }
+            else
+            {
+                pcf_2ani(
+                    d_nodeD, d_dataD, d_pipsD, nonzero_Dnodes, streamDD, DDcopy_done,
+                    d_nodeR, d_dataR, nonzero_Rnodes, streamRR, RRcopy_done,
+                    histo_names, n_randfiles, bins, size_node, dmax,
+                    pips_width
+                );
+            }
         }
-        else
+        else if (strcmp(argv[1],"2iso")==0)
         {
-            pcf_2iso(
-                d_nodeD, d_dataD, d_pipsD, nonzero_Dnodes, streamDD, DDcopy_done,
-                d_nodeR, d_dataR, nonzero_Rnodes, streamRR, RRcopy_done,
-                histo_names, n_randfiles, bins, size_node, dmax,
-                pips_width
-            );
+            if (bpc)
+            {
+                if (analytic){
+                    pcf_2iso_BPCanalytic(
+                        d_nodeD, d_dataD,
+                        nonzero_Dnodes, streamDD,
+                        bins, np, size_node, size_box, dmax,
+                        data_name
+                    );
+                }
+                else
+                {
+                    pcf_2iso_BPC(
+                        d_nodeD, d_dataD,
+                        nonzero_Dnodes, streamDD, DDcopy_done, 
+                        d_nodeR, d_dataR,
+                        nonzero_Rnodes, streamRR, RRcopy_done,
+                        histo_names, n_randfiles, bins, size_node, dmax,
+                        size_box
+                    );
+                }
+            }
+            else
+            {
+                pcf_2iso(
+                    d_nodeD, d_dataD, d_pipsD, nonzero_Dnodes, streamDD, DDcopy_done,
+                    d_nodeR, d_dataR, nonzero_Rnodes, streamRR, RRcopy_done,
+                    histo_names, n_randfiles, bins, size_node, dmax,
+                    pips_width
+                );
+            }
         }
-    }
-    else if (strcmp(argv[1],"3iso")==0)
-    {
-        if (bpc)
+        else if (strcmp(argv[1],"3iso")==0)
         {
-            // if (analytic)
-            // {
-            //     pcf_3isoBPC_analytic(data_name, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, bins, np, size_node, size_box, dmax);
-            // }
-            // else
-            // {
-            //     pcf_3isoBPC(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
-            // }
+            if (bpc)
+            {
+                // if (analytic)
+                // {
+                //     pcf_3isoBPC_analytic(data_name, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, bins, np, size_node, size_box, dmax);
+                // }
+                // else
+                // {
+                //     pcf_3isoBPC(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
+                // }
+            }
+            else
+            {
+                pcf_3iso(
+                    d_nodeD, d_dataD, d_pipsD,
+                    nonzero_Dnodes, streamDD, DDcopy_done, 
+                    d_nodeR, d_dataR,
+                    nonzero_Rnodes, streamRR, RRcopy_done,
+                    histo_names, n_randfiles, bins, size_node, dmax,
+                    pips_width
+                );
+            }
         }
-        else
-        {
-            pcf_3iso(
-                d_nodeD, d_dataD, d_pipsD,
-                nonzero_Dnodes, streamDD, DDcopy_done, 
-                d_nodeR, d_dataR,
-                nonzero_Rnodes, streamRR, RRcopy_done,
-                histo_names, n_randfiles, bins, size_node, dmax,
-                pips_width
-            );
-        }
-    }
-    else if (strcmp(argv[1],"3ani")==0){
-        if (bpc){
-            // pcf_3aniBPC(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
-        }
-        else
-        {
-            // pcf_3ani(
-            //     d_nodeD, d_dataD, d_pipsD,
-            //     nonzero_Dnodes, streamDD, DDcopy_done, 
-            //     d_nodeR, d_dataR,
-            //     nonzero_Rnodes, streamRR, RRcopy_done,
-            //     histo_names, n_randfiles, bins, size_node, dmax,
-            //     pips_width
-            // );
+        else if (strcmp(argv[1],"3ani")==0){
+            if (bpc){
+                // pcf_3aniBPC(histo_names, d_nodeD, d_ordered_pointsD, nonzero_Dnodes, d_nodeR, d_ordered_pointsR, nonzero_Rnodes, acum_nonzero_Rnodes, n_randfiles, bins, size_node, size_box, dmax);
+            }
+            else
+            {
+                // pcf_3ani(
+                //     d_nodeD, d_dataD, d_pipsD,
+                //     nonzero_Dnodes, streamDD, DDcopy_done, 
+                //     d_nodeR, d_dataR,
+                //     nonzero_Rnodes, streamRR, RRcopy_done,
+                //     histo_names, n_randfiles, bins, size_node, dmax,
+                //     pips_width
+                // );
+            }
         }
     }
     /* =======================================================================*/
     /* ========================== Free memory ================================*/
     /* =======================================================================*/
-
     CUCHECK(cudaEventDestroy(DDcopy_done));
     for (int i = 0; i < n_randfiles; i++)
         CUCHECK(cudaEventDestroy(RRcopy_done[i]));
@@ -522,11 +562,24 @@ int main(int argc, char **argv)
 
     free(data_name);
     CUCHECK(cudaFreeHost(dataD));
-    CUCHECK(cudaFreeHost(h_nodeD));
-
-    CUCHECK(cudaFree(d_nodeD));
     CUCHECK(cudaFree(d_dataD));
+    if (!(BF))
+    {
+        CUCHECK(cudaFreeHost(h_nodeD));
+        CUCHECK(cudaFree(d_nodeD));
+        if (rand_required)
+        {
+            for (int i = 0; i < n_randfiles; i++)
+            {
+                CUCHECK(cudaFreeHost(h_nodeR[i]));
+                CUCHECK(cudaFree(d_nodeR[i]));
+            }
+            free(h_nodeR);
 
+            free(d_nodeR);
+        }
+    }
+    
     if (pip_calculation)
     {
         CUCHECK(cudaFreeHost(pipsD));
@@ -540,16 +593,11 @@ int main(int argc, char **argv)
         {
             free(rand_files[i]);
             CUCHECK(cudaFreeHost(dataR[i]));
-            CUCHECK(cudaFreeHost(h_nodeR[i]));
-            CUCHECK(cudaFree(d_nodeR[i]));
             CUCHECK(cudaFree(d_dataR[i]));
         }
         free(rand_files);
         free(dataR);
         free(rnp);
-        free(h_nodeR);
-
-        free(d_nodeR);
         free(d_dataR);
         free(nonzero_Rnodes);
         for (int i = 0; i < n_randfiles + 1; i++)

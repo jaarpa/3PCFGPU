@@ -17,14 +17,24 @@
 #endif
 
 //==================== Files reading ================================
+/*
+This function opens the file in the path ../data/name_file and puts the number
+of lines in the direction pointed by *pts and the points in the array at **data.
+If the file does not have a fourth column it stores 1s in the weight column.
+
+Inputs:
+PointW3D **data: pointer to an array of PointW3D which will contain the data in the file
+int *pts: pointer to the integer with the length of the data
+char *name_file: path relative to DATADIR of the file
+
+*/
 void open_files(PointW3D **data, int *pts, char *name_file)
 {
 
     //These will be function variables
     char mypathto_files[] = DATADIR;
     char *full_path;
-    full_path = (char *)calloc(strlen(mypathto_files)+strlen(name_file)+1, sizeof(char));
-
+    full_path = (char *)malloc((strlen(mypathto_files)+strlen(name_file)+1)*sizeof(char));
     CHECKALLOC(full_path);
 
     strcpy(full_path, mypathto_files);
@@ -41,15 +51,16 @@ void open_files(PointW3D **data, int *pts, char *name_file)
     size_t len = 0;
     while (getline(&line, &len, file) != -1) (*pts)++;
     
+    free(line);
     rewind(file);
+    line = NULL;
+    len = 0;
 
     //Allocate memory for data
     CUCHECK(cudaMallocHost(data, (*pts)*sizeof(PointW3D)));
     CHECKALLOC(*data);
 
     //Read line by line again
-    line = NULL;
-    len = 0;
     char *number;
     int j=0;
 
@@ -80,6 +91,13 @@ void open_files(PointW3D **data, int *pts, char *name_file)
     full_path = NULL;
 }
 
+/*
+Opens and read the data of pips weights. It assumes that the name of the pips files
+is the same of the data files is the same but with extension *.pip. It is assumed that
+the pip file has the same number of lines as the data file and fails if it doesn't.
+Stores the the number of integers per line in the n_pips direction and stores all the 
+weights in an array of length np*n_pips.
+*/
 void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
 {
 
@@ -87,7 +105,7 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
     char mypathto_files[] = DATADIR;
     char *full_path;
 
-    full_path = (char *)calloc(strlen(mypathto_files)+strlen(name_file)+1, sizeof(char));
+    full_path = (char *)malloc((strlen(mypathto_files)+strlen(name_file)+1)*sizeof(char));
     CHECKALLOC(full_path);
     strcpy(full_path, mypathto_files);
     strcat(full_path, name_file); //Set up the full path
@@ -117,9 +135,8 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
     full_path[last_point+3] = 'p';
     full_path[last_point+4] = '\0';
 
-    FILE *file;
+    FILE *file = NULL;
     file = fopen(full_path,"r"); //Open the file
-
     CHECKOPENFILE(file);
 
     //Read line by line
@@ -173,6 +190,14 @@ void open_pip_files(int32_t **pips, int *n_pips, char *name_file, int np)
     full_path = NULL;
 }
 
+/*
+This function receives the rand_name and if it is a directory (rand_dir). Then counts the number of
+files in the directory DATADIR/rand_name/ and sets it in the direction *n_randfiles or sets to 1 if
+it is not a directory. The name of the rand names is stored in the array of stringrs histo_names to
+identify the histograms in the results. Then call the function open_files for each files and stores
+each the number of points in each file in each entry of the direction of the  array **rnp. and stores
+the data in the array of arrays of PointW3D in ***dataR.
+*/
 void read_random_files(char ***rand_files, char ***histo_names, int **rnp, PointW3D ***dataR, int *n_randfiles, char *rand_name, int rand_dir)
 {
     //Check if a directory of random files was provided to change n_randfiles
@@ -342,6 +367,22 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
 
     return non_zero_nodes;    
 
+}
+
+void compute_iips(PointW3D **dat, int32_t *pips, int pips_width, int np)
+{
+    int pips_weight = 0;
+    for (int n_pto = 0; n_pto < np; n_pto++)
+    {
+        pips_weight = 0;
+        for (int n_pip = 0; n_pip < pips_width; n_pip++)
+        {
+            pips_weight += __builtin_popcount(pips[n_pto*pips_width + n_pip]);
+        }
+
+        (*dat)[n_pto].w = pips_weight > 0 ? (float)(32*pips_width) / (float)(pips_weight) : 0;
+    }
+    
 }
 
 //================== Saving the histograms ===========================
