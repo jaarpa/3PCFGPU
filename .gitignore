@@ -11,3 +11,4 @@ cuda/obj/
 cuda/tests/bin/
 data/DataXYZ/
 data/DataXYZ.zip
+bf_cu/

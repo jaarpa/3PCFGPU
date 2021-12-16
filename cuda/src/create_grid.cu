@@ -9,8 +9,8 @@
 #include "create_grid.cuh"
 
 #ifdef __CUDACC_DEBUG__
-#define DATADIR "/home/jaarpa/3PCFGPU/data/"
-#define RESULTDIR "/home/jaarpa/3PCFGPU/results/"
+#define DATADIR "/home/jaarpa/aProjects/ugto/3PCFGPU/data/"
+#define RESULTDIR "/home/jaarpa/aProjects/ugto/3PCFGPU/results/"
 #else
 #define DATADIR "../data/"
 #define RESULTDIR "../results/"

@@ -5,11 +5,11 @@ def compute_2iso(h):
     """
     Computes the 2iso pcf using cdiss and stores the results in three histograms
     """
-    DATA_PATH = "/home/jaarpa/3PCFGPU/data/data_aa.dat"
-    DATA_PIPS_PATH = "/home/jaarpa/3PCFGPU/data/data_aa.pip"
-    RAND_PATH = "/home/jaarpa/3PCFGPU/data/rand_aa.dat"
-    MAX_DISTANCE = 100
-    BINS = 40
+    DATA_PATH = "/home/jaarpa/aProjects/ugto/3PCFGPU/data/data_aa.dat"
+    DATA_PIPS_PATH = "/home/jaarpa/aProjects/ugto/3PCFGPU/data/data_aa.pip"
+    RAND_PATH = "/home/jaarpa/aProjects/ugto/3PCFGPU/data/rand_aa.dat"
+    MAX_DISTANCE = 150
+    BINS = 50
 
     data = np.loadtxt(DATA_PATH)
     random_data = np.loadtxt(RAND_PATH)
@@ -28,4 +28,4 @@ def compute_2iso(h):
         np.savetxt("dr.dat", dr[0], fmt='%1.4f')
 
 if __name__ == "__main__":
-    compute_2iso("dd")
+    compute_2iso("dr")
