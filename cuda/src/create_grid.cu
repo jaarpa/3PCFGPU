@@ -371,7 +371,8 @@ int create_nodes(DNode **nod, PointW3D **dat, int32_t **pips, int pips_width, in
 
 void compute_iips(PointW3D **dat, int32_t *pips, int pips_width, int np)
 {
-    int pips_weight = 0;
+    int pips_weight;
+    int tot_bits = sizeof(int32_t)*pips_width;
     for (int n_pto = 0; n_pto < np; n_pto++)
     {
         pips_weight = 0;
@@ -380,7 +381,7 @@ void compute_iips(PointW3D **dat, int32_t *pips, int pips_width, int np)
             pips_weight += __builtin_popcount(pips[n_pto*pips_width + n_pip]);
         }
 
-        (*dat)[n_pto].w = pips_weight > 0 ? (float)(32*pips_width) / (float)(pips_weight) : 0;
+        (*dat)[n_pto].w = pips_weight > 0 ? (float)(tot_bits) / (float)(pips_weight) : 0;
     }
     
 }
